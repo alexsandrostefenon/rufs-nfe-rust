@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+  "name": "rufs-crud",
+  "version": "1.0.0",
+  "description": "Demonstrates how to use permissions to load remote content",
+  "homepage_url": "http://localhost:8080/crud",
+  "offline_enabled": true,
+  "permissions": ["idle", "tabs"],
+  "start_url": ".",
+  "display": "standalone",
+  "developer": {
+    "name": "Your name",
+    "url": "http://example.com"
+  },
+  "type": "privileged",
+  "installs_allowed_from": [
+    "*"
+  ]
+}

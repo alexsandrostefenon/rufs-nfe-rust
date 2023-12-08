@@ -1,0 +1,1013 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "rufs-base-es6 openapi genetator",
+    "description": "CRUD operations",
+    "version": "0.0.0"
+  },
+  "paths": {
+    "/login": {
+      "post": {
+        "tags": [
+          "login"
+        ],
+        "description": "CRUD post operation over login",
+        "operationId": "login",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/login"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/login"
+          }
+        }
+      }
+    },
+    "/rufs_group": {
+      "get": {
+        "tags": [
+          "rufsGroup"
+        ],
+        "description": "CRUD get operation over rufsGroup",
+        "operationId": "zzz_get_rufsGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroup"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupList"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "rufsGroup"
+        ],
+        "description": "CRUD put operation over rufsGroup",
+        "operationId": "zzz_put_rufsGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroup"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsGroup"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroup"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "rufsGroup"
+        ],
+        "description": "CRUD post operation over rufsGroup",
+        "operationId": "zzz_post_rufsGroup",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsGroup"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroup"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "rufsGroup"
+        ],
+        "description": "CRUD delete operation over rufsGroup",
+        "operationId": "zzz_delete_rufsGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroup"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroup"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "rufsGroup"
+        ],
+        "description": "CRUD patch operation over rufsGroup",
+        "operationId": "zzz_patch_rufsGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroup"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsGroup"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroup"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      }
+    },
+    "/rufs_group_owner": {
+      "get": {
+        "tags": [
+          "rufsGroupOwner"
+        ],
+        "description": "CRUD get operation over rufsGroupOwner",
+        "operationId": "zzz_get_rufsGroupOwner",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroupOwner"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupOwnerList"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "rufsGroupOwner"
+        ],
+        "description": "CRUD put operation over rufsGroupOwner",
+        "operationId": "zzz_put_rufsGroupOwner",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroupOwner"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsGroupOwner"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupOwner"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "rufsGroupOwner"
+        ],
+        "description": "CRUD post operation over rufsGroupOwner",
+        "operationId": "zzz_post_rufsGroupOwner",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsGroupOwner"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupOwner"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "rufsGroupOwner"
+        ],
+        "description": "CRUD delete operation over rufsGroupOwner",
+        "operationId": "zzz_delete_rufsGroupOwner",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroupOwner"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupOwner"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "rufsGroupOwner"
+        ],
+        "description": "CRUD patch operation over rufsGroupOwner",
+        "operationId": "zzz_patch_rufsGroupOwner",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroupOwner"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsGroupOwner"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupOwner"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      }
+    },
+    "/rufs_group_user": {
+      "get": {
+        "tags": [
+          "rufsGroupUser"
+        ],
+        "description": "CRUD get operation over rufsGroupUser",
+        "operationId": "zzz_get_rufsGroupUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroupUser"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupUserList"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "rufsGroupUser"
+        ],
+        "description": "CRUD put operation over rufsGroupUser",
+        "operationId": "zzz_put_rufsGroupUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroupUser"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsGroupUser"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupUser"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "rufsGroupUser"
+        ],
+        "description": "CRUD post operation over rufsGroupUser",
+        "operationId": "zzz_post_rufsGroupUser",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsGroupUser"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupUser"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "rufsGroupUser"
+        ],
+        "description": "CRUD delete operation over rufsGroupUser",
+        "operationId": "zzz_delete_rufsGroupUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroupUser"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupUser"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "rufsGroupUser"
+        ],
+        "description": "CRUD patch operation over rufsGroupUser",
+        "operationId": "zzz_patch_rufsGroupUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsGroupUser"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsGroupUser"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsGroupUser"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      }
+    },
+    "/rufs_user": {
+      "get": {
+        "tags": [
+          "rufsUser"
+        ],
+        "description": "CRUD get operation over rufsUser",
+        "operationId": "zzz_get_rufsUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsUser"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsUserList"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "rufsUser"
+        ],
+        "description": "CRUD put operation over rufsUser",
+        "operationId": "zzz_put_rufsUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsUser"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsUser"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsUser"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "rufsUser"
+        ],
+        "description": "CRUD post operation over rufsUser",
+        "operationId": "zzz_post_rufsUser",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsUser"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsUser"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "rufsUser"
+        ],
+        "description": "CRUD delete operation over rufsUser",
+        "operationId": "zzz_delete_rufsUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsUser"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsUser"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "rufsUser"
+        ],
+        "description": "CRUD patch operation over rufsUser",
+        "operationId": "zzz_patch_rufsUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/rufsUser"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/rufsUser"
+        },
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "$ref": "#/components/responses/rufsUser"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "jwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY"
+      },
+      "basic": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Error response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "description"
+              ]
+            }
+          }
+        }
+      },
+      "login": {
+        "description": "response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/login"
+            }
+          }
+        }
+      },
+      "loginList": {
+        "description": "response list",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/login"
+              }
+            }
+          }
+        }
+      },
+      "rufsGroup": {
+        "description": "response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/rufsGroup"
+            }
+          }
+        }
+      },
+      "rufsGroupList": {
+        "description": "response list",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/rufsGroup"
+              }
+            }
+          }
+        }
+      },
+      "rufsGroupOwner": {
+        "description": "response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/rufsGroupOwner"
+            }
+          }
+        }
+      },
+      "rufsGroupOwnerList": {
+        "description": "response list",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/rufsGroupOwner"
+              }
+            }
+          }
+        }
+      },
+      "rufsGroupUser": {
+        "description": "response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/rufsGroupUser"
+            }
+          }
+        }
+      },
+      "rufsGroupUserList": {
+        "description": "response list",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/rufsGroupUser"
+              }
+            }
+          }
+        }
+      },
+      "rufsUser": {
+        "description": "response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/rufsUser"
+            }
+          }
+        }
+      },
+      "rufsUserList": {
+        "description": "response list",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/rufsUser"
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "rufsGroup": {
+        "in": "query",
+        "name": "primaryKey",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "x-identityGeneration": "BY DEFAULT",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "style": "form"
+      },
+      "rufsGroupOwner": {
+        "in": "query",
+        "name": "primaryKey",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "x-identityGeneration": "BY DEFAULT",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "style": "form"
+      },
+      "rufsGroupUser": {
+        "in": "query",
+        "name": "primaryKey",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "rufsUser": {
+              "x-$ref": "#/components/schemas/rufsUser",
+              "type": "integer"
+            },
+            "rufsGroup": {
+              "x-$ref": "#/components/schemas/rufsGroup",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "rufsUser",
+            "rufsGroup"
+          ]
+        },
+        "style": "form"
+      },
+      "rufsUser": {
+        "in": "query",
+        "name": "primaryKey",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "x-identityGeneration": "BY DEFAULT",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        "style": "form"
+      }
+    },
+    "requestBodies": {
+      "login": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "user",
+                "password"
+              ]
+            }
+          }
+        },
+        "required": true
+      },
+      "rufsGroup": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/rufsGroup"
+            }
+          }
+        },
+        "required": true
+      },
+      "rufsGroupOwner": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/rufsGroupOwner"
+            }
+          }
+        },
+        "required": true
+      },
+      "rufsGroupUser": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/rufsGroupUser"
+            }
+          }
+        },
+        "required": true
+      },
+      "rufsUser": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/rufsUser"
+            }
+          }
+        },
+        "required": true
+      }
+    },
+    "schemas": {
+      "login": {
+        "type": "object",
+        "properties": {
+          "tokenPayload": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tokenPayload"
+        ]
+      },
+      "rufsGroup": {
+        "x-primaryKeys": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "x-identityGeneration": "BY DEFAULT",
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "rufsGroupOwner": {
+        "x-primaryKeys": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "x-identityGeneration": "BY DEFAULT",
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "rufsGroupUser": {
+        "x-primaryKeys": [
+          "rufsUser",
+          "rufsGroup"
+        ],
+        "x-uniqueKeys": {},
+        "properties": {
+          "rufsUser": {
+            "x-$ref": "#/components/schemas/rufsUser",
+            "type": "integer"
+          },
+          "rufsGroup": {
+            "x-$ref": "#/components/schemas/rufsGroup",
+            "type": "integer"
+          }
+        }
+      },
+      "rufsUser": {
+        "x-primaryKeys": [
+          "id"
+        ],
+        "x-uniqueKeys": {},
+        "properties": {
+          "id": {
+            "x-identityGeneration": "BY DEFAULT",
+            "type": "integer"
+          },
+          "rufsGroupOwner": {
+            "x-$ref": "#/components/schemas/rufsGroupOwner",
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "password": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "mask": {
+                  "x-flags": [
+                    "get",
+                    "post",
+                    "put",
+                    "delete"
+                  ],
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "routes": {
+            "type": "array",
+            "items": {
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "controller": {
+                  "type": "string"
+                },
+                "templateUrl": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "menu": {
+            "type": "array",
+            "items": {
+              "properties": {
+                "group": {
+                  "default": "action",
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "path": {
+                  "default": "service/action?filter={}&aggregate={}",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "jwt": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "login"
+    },
+    {
+      "name": "rufsGroup"
+    },
+    {
+      "name": "rufsGroupOwner"
+    },
+    {
+      "name": "rufsGroupUser"
+    },
+    {
+      "name": "rufsUser"
+    }
+  ]
+}

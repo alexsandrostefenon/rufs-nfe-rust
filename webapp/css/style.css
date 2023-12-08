@@ -1,0 +1,9 @@
+/* Empty. Add your own CSS if you like */
+/* .nav, .pagination, .carousel, .panel-title a { cursor: pointer; } */
+
+body { padding-top: 70px; }
+
+canvas, video, textarea {
+  width: 100%;
+  height: auto;
+}
