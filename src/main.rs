@@ -1,11 +1,40 @@
 #[cfg(not(target_arch = "wasm32"))]
-async fn server(reset: bool) -> Result<Box<tide::Server<rufs_base_rust::rufs_micro_service::RufsMicroService<'static>>>, Box<dyn std::error::Error>> {
+use clap::Parser;
+
+#[cfg(debug_assertions)]
+#[derive(Clone, Parser, Debug)]
+struct Args {
+    #[arg(long,default_value = "8080")]
+    port: u16,
+    #[arg(long, num_args = 1.., value_delimiter = ' ', default_value = "rufs-nfe-rust/pkg rufs-nfe-rust/webapp")]
+    static_paths: Vec<String>,
+    #[arg(long, default_value = "rufs-nfe-rust/sql")]
+    migration_path: String,
+    #[arg(long,default_value = "true")]
+    reset_db: bool
+}
+
+#[cfg(not(debug_assertions))]
+#[derive(Clone, Parser, Debug)]
+struct Args {
+    #[arg(long,default_value = "8080")]
+    port: u16,
+    #[arg(long, num_args = 1.., value_delimiter = ' ', default_value = "pkg webapp")]
+    static_paths: Vec<String>,
+    #[arg(long, default_value = "sql")]
+    migration_path: String,
+    #[arg(long,default_value = "false")]
+    reset_db: bool
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+async fn server(args: Args) -> Result<Box<tide::Server<rufs_base_rust::rufs_micro_service::RufsMicroService<'static>>>, Box<dyn std::error::Error>> {
     use std::path::Path;
     use rufs_base_rust::{rufs_micro_service::RufsMicroService, micro_service_server::MicroServiceServer, openapi::RufsOpenAPI, rufs_tide_new};
     use serde_json::Value;
 
-    if reset {
-        let path = "openapi-rufs_nfe-rust.json";
+    if args.reset_db {
+        let path = "openapi-rufs_nfe_rust.json";
 
         if Path::new(path).exists() {
             std::fs::remove_file(path)?;
@@ -19,25 +48,20 @@ async fn server(reset: bool) -> Result<Box<tide::Server<rufs_base_rust::rufs_mic
             }
         });
 
-        println!("DROP DATABASE IF EXISTS rufs_nfe...");
-        db_client.execute("DROP DATABASE IF EXISTS rufs_nfe", &[]).await?;        
-        println!("...DROP DATABASE IF EXISTS rufs_nfe.");
-        println!("CREATE DATABASE rufs_nfe...");
-        db_client.execute("CREATE DATABASE rufs_nfe", &[]).await?;        
-        println!("...CREATE DATABASE rufs_nfe.");
+        println!("DROP DATABASE IF EXISTS rufs_nfe_rust...");
+        db_client.execute("DROP DATABASE IF EXISTS rufs_nfe_rust", &[]).await?;        
+        println!("...DROP DATABASE IF EXISTS rufs_nfe_rust.");
+        println!("CREATE DATABASE rufs_nfe_rust...");
+        db_client.execute("CREATE DATABASE rufs_nfe_rust", &[]).await?;        
+        println!("...CREATE DATABASE rufs_nfe_rust.");
     }
-
-    let base_dir = if std::env::current_dir()?.to_string_lossy().ends_with("/rufs-nfe-rust") {
-        "./"
-    } else {
-        "./rufs-nfe-rust"
-    };
 
     let mut rufs = RufsMicroService{
         check_rufs_tables: true,
-        migration_path: Path::new(base_dir).join("sql").to_string_lossy().to_string(),
+        migration_path: args.migration_path,
+        static_paths: args.static_paths,
         micro_service_server: MicroServiceServer{
-        app_name: "rufs_nfe".to_string(), ..Default::default()
+            app_name: "rufs_nfe_rust".to_string(), ..Default::default()
         }, 
         ..Default::default()
     };
@@ -69,19 +93,16 @@ async fn server(reset: bool) -> Result<Box<tide::Server<rufs_base_rust::rufs_mic
     }
 
     rufs.micro_service_server.store_open_api("")?;
-    rufs_tide_new(rufs, base_dir).await
+    rufs_tide_new(rufs).await
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::main]
 async fn main() {
     use std::process::exit;
-    #[cfg(debug_assertions)]
-    let reset = true;
-    #[cfg(not(debug_assertions))]
-    let reset = false;
+    let args = Args::parse();
 
-    let app = match server(reset).await {
+    let app = match server(args).await {
         Ok(app) => app,
         Err(err) => {
             println!("...server exited with error : {}", err);
@@ -110,28 +131,32 @@ mod tests {
     use rufs_nfe_rust::RufsNfe;
     use std::time::Duration;
     use rufs_crud_rust::{DataViewWatch};
-    use crate::{server};
+    use crate::{server,Args};
 
     #[tokio::test]
     async fn selelium() -> Result<(), Box<dyn std::error::Error>> {
         println!("server()...");
-        let app = server(true).await.unwrap();
+        let args = Args{ port: 8080, static_paths: vec!["rufs-nfe-rust/pkg".to_string(), "rufs-nfe-rust/webapp".to_string()], migration_path: "rufs-nfe-rust/sql".to_string(), reset_db: true };
+        let app = server(args).await.unwrap();
         println!("...server().");
         let rufs = app.state();
         let listen = format!("127.0.0.1:{}", rufs.micro_service_server.port);
 
         let listening = async {
             println!("app.listen({})...", listen);
-            app.listen(listen).await.unwrap()
+            app.listen(listen).await.map_err(|err| {
+                let dyn_err: Box<dyn std::error::Error> = Box::new(err);
+                dyn_err
+            })
         };
 
         let selelium = async {
             std::thread::sleep( Duration::from_secs( 1 ) );
             println!("selelium...");
-            rufs_crud_rust::tests::selelium(&RufsNfe{} as &dyn DataViewWatch, "/home/alexsandro/Downloads/webapp-rust.side", "http://localhost:8080").await.unwrap()
+            rufs_crud_rust::tests::selelium(&RufsNfe{} as &dyn DataViewWatch, "/home/alexsandro/Downloads/webapp-rust.side", "http://localhost:8080").await
         };
 
-        listening.race(selelium).await;
+        listening.race(selelium).await?;
         println!("...selelium.");
         println!("...app.listen().");
         Ok(())

@@ -1,4 +1,4 @@
-# rufs-nfe-es6
+# rufs-nfe-rust
 
 Restful Utilities for Full Stack - Brazilian NFE WebApp
 

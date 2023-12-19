@@ -28,6 +28,7 @@ rufs-crud-rust = { path = "../rufs-crud-rust", default-features = true, features
 tokio = { version = "1.24", features = ["full"] }
 tokio-postgres = {version = "0.7.7", features=[ "with-serde_json-1", "with-chrono-0_4" ]}
 tide = { version = "0.16" }
+clap = { version = "4.2.7", features = ["derive"] }
 
 [dependencies]
 thiserror = "1.0.38"

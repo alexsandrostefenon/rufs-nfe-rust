@@ -92,17 +92,17 @@ impl RufsNfe {
 impl DataViewWatch for RufsNfe {
 
     fn check_set_value(&self, data_view :&mut DataView, child_name: Option<&str>, server_connection: &ServerConnection, field_name: &str, field_value: &Value) -> Result<bool, Box<dyn std::error::Error>> {
-        println!("check_set_value 1 {}.{:?}.{} = {}", data_view.schema_name, child_name, field_name, field_value);
+        println!("check_set_value 1 {}.{:?}.{} = {}", data_view.element_id.schema_name, child_name, field_name, field_value);
 
-        if data_view.schema_name == "request" {
-            println!("check_set_value 1.1 {}.{:?}.{} = {}", data_view.schema_name, child_name, field_name, field_value);
+        if data_view.element_id.schema_name == "request" {
+            println!("check_set_value 1.1 {}.{:?}.{} = {}", data_view.element_id.schema_name, child_name, field_name, field_value);
 
             if let Some(child_name) = child_name {
-                println!("check_set_value 1.1.1 {}.{:?}.{} = {}", data_view.schema_name, child_name, field_name, field_value);
-                println!("check_set_value 1.1.2 {}.{:?}.{} = {}", data_view.schema_name, child_name, field_name, field_value);
+                println!("check_set_value 1.1.1 {}.{:?}.{} = {}", data_view.element_id.schema_name, child_name, field_name, field_value);
+                println!("check_set_value 1.1.2 {}.{:?}.{} = {}", data_view.element_id.schema_name, child_name, field_name, field_value);
 
                 if child_name == "requestProduct" && data_view.instance.get("product").is_some() && ["quantity", "value"].contains(&field_name) {
-                    if let Some(data_view) = data_view.childs.iter_mut().find(|item| item.schema_name == child_name) {
+                    if let Some(data_view) = data_view.childs.iter_mut().find(|item| item.element_id.schema_name == child_name) {
                         if data_view.instance.get("value").is_none() {
                             // TODO : se valor unitário está ausente, pegar o valor do cadastro de produtos.
                             data_view.set_value(None, server_connection, self, "value", &json!(0.0))?;
@@ -129,13 +129,13 @@ impl DataViewWatch for RufsNfe {
                     }
                 }
 
-                println!("check_set_value 1.1.3 {}.{:?}.{} = {}", data_view.schema_name, child_name, field_name, field_value);
+                println!("check_set_value 1.1.3 {}.{:?}.{} = {}", data_view.element_id.schema_name, child_name, field_name, field_value);
 
                 if child_name == "requestPayment" && ["type"].contains(&field_name) {
-                    println!("check_set_value 1.1.3.1 {}.{:?}.{} = {}", data_view.schema_name, child_name, field_name, field_value);
+                    println!("check_set_value 1.1.3.1 {}.{:?}.{} = {}", data_view.element_id.schema_name, child_name, field_name, field_value);
 
-                    if let Some(data_view_child) = data_view.childs.iter_mut().find(|item| item.schema_name == child_name) {
-                        println!("check_set_value 1.1.3.1.1 {}.{:?}.{} = {}", data_view.schema_name, child_name, field_name, field_value);
+                    if let Some(data_view_child) = data_view.childs.iter_mut().find(|item| item.element_id.schema_name == child_name) {
+                        println!("check_set_value 1.1.3.1.1 {}.{:?}.{} = {}", data_view.element_id.schema_name, child_name, field_name, field_value);
                         let typ = field_value.as_u64().unwrap_or(1);
                         // due_date
                         if [1,4,10,11,12,13].contains(&typ) {
@@ -171,12 +171,12 @@ impl DataViewWatch for RufsNfe {
     }
      
     fn check_save(&self, data_view :&mut DataView, child_name: Option<&str>, server_connection: &ServerConnection) -> Result<(bool, DataViewProcessAction), Box<dyn std::error::Error>> {
-        let action = if ["rufsUser", "request"].contains(&data_view.schema_name.as_str()) {
+        let action = if ["rufsUser", "request"].contains(&data_view.element_id.schema_name.as_str()) {
             if let Some(schema_name_child) = child_name {
-                if data_view.schema_name == "request" {
+                if data_view.element_id.schema_name == "request" {
 
                     if schema_name_child == "requestProduct" {
-                        let item = data_view.childs.iter().find(|item| item.schema_name == schema_name_child).context(format!("Missing child {} in parent {}", schema_name_child, data_view.schema_name))?;
+                        let item = data_view.childs.iter().find(|item| item.element_id.schema_name == schema_name_child).context(format!("Missing child {} in parent {}", schema_name_child, data_view.element_id.schema_name))?;
                         println!("[RufsNfe.check_save.request.requestProduct] 1 : instance = {}", item.instance);
                         let request_product: RequestProduct = serde_json::from_value(item.instance.clone())?;
                         println!("[RufsNfe.check_save.request.requestProduct] 2 : RequestProduct = {:?}", request_product);
@@ -190,12 +190,12 @@ impl DataViewWatch for RufsNfe {
                         data_view.set_value(None, server_connection, self, "descValue", &json!(desc_value_old - products_desc_value))?;
                         let sum_value = f64::trunc((sum_value_old + product_value - products_desc_value)*1000.0)/1000.0;
                         data_view.set_value(None, server_connection, self, "sumValue", &json!(sum_value))?;
-                        let data_view_payment = data_view.childs.iter_mut().find(|item| item.schema_name == "requestPayment").context(format!("Missing child {} in parent {}", "requestPayment", data_view.schema_name))?;
+                        let data_view_payment = data_view.childs.iter_mut().find(|item| item.element_id.schema_name == "requestPayment").context(format!("Missing child {} in parent {}", "requestPayment", data_view.element_id.schema_name))?;
                         let request: Request = serde_json::from_value(data_view.instance.clone())?;
                         RufsNfe::request_payment_adjusts(data_view_payment, self, server_connection, &request, None)?;
                     }
 /*
-                    let data_view_request_payment = data_view.childs.iter_mut().find(|item| item.schema_name == "requestPayment").context(format!("Missing child requestPayment in parent {}", data_view.schema_name))?;
+                    let data_view_request_payment = data_view.childs.iter_mut().find(|item| item.schema_name == "requestPayment").context(format!("Missing child requestPayment in parent {}", data_view.element_id.schema_name))?;
 
                     if schema_name_child != "requestPayment" {
                     }

@@ -2,7 +2,7 @@ import init, { DataViewManager } from '../rufs_nfe_rust.js';
 
 let dataViewManager;
 
-function updateChanges(changes) {
+function updateChanges(event, changes) {
 	if (changes == null) {
 		return;
 	}
@@ -12,13 +12,22 @@ function updateChanges(changes) {
 	for (let [formId, fields] of changes) {
 		const instanceFormId = `instance-${formId}`;
 		const form = document.getElementById(instanceFormId);
+		const divForm = document.getElementById(`div-instance-${formId}`);
 
-		if (form == null) {
+		if (form == null || divForm == null) {
 			console.error(`Missing form ${instanceFormId}`);
 			continue;
 		}
 
 		for (let [fieldName, value] of fields) {
+			if (form.hidden == true) {
+				form.hidden = false;
+			}
+
+			if (divForm.hidden == true) {
+				divForm.hidden = false;
+			}
+
 			if (Array.isArray(value)) {
 				console.error(`Unexpected array fild (${fieldName})`);
 			} else if (typeof value === 'object') {
@@ -48,6 +57,25 @@ function updateChanges(changes) {
 				}
 						
 				element.value = value;
+
+				for (let flagIndex = 0; flagIndex < 64; flagIndex++) {
+					const elementFlag = form[`${fieldName}-${flagIndex}`];
+					
+					if (elementFlag == null) {
+						break;
+					}
+
+					let flagValue = (value & (1 << flagIndex)) != 0;
+
+					if (event.target != elementFlag) {
+						if (fieldName == "mask" && flagIndex== 3 && flagValue == true)
+							console.log(`${fieldName}-${flagIndex}.checked = ${flagValue};`);
+
+						elementFlag.checked = flagValue;
+					} else {
+						setTimeout(() => elementFlag.checked = flagValue, 100);
+					}
+				}
 			}
 		}
 	}
@@ -69,7 +97,7 @@ var appOnChange = event => {
 	console.log(`appOnChange : ${element.id} =`, element.value);
 	dataViewManager.process_edit_target(element.id, element.value).
 	then(viewResponse => {
-		updateChanges(viewResponse.changes);
+		updateChanges(event, viewResponse.changes);
 	}).catch(err => {
 		console.error(err);
 		document.querySelector('#http-working').hidden = true;
@@ -95,47 +123,56 @@ var appOnClick = event => {
 		document.querySelector('#http-working').hidden = false;
 		dataViewManager.process_click_target(target).
 		then(viewResponse => {
+			console.log(viewResponse);
 			// DEBUG
 			if (target == "instance-delete-new-request-requestProduct") {
 				console.log(viewResponse);
 			}
 
-			if (viewResponse.form_id != null) {
-				const div_id = `div-${viewResponse.form_id}`;
+			const html = viewResponse.html;
+
+			if (viewResponse.form_id != null && html != null && html.length > 0) {
+				const div_id = `data_view-${viewResponse.form_id}`;
 				let dataView = document.getElementById(div_id);
-				
-				if (dataView == null) {
-					dataView = document.createElement("div");
-					dataView.id = div_id;
-					document.querySelector('#main').prepend(dataView);
-				}
-				//old_view.remove();
-				for (let name of ["instance", "html_search", "table"]) {
-					let section_id = `${div_id}-${name}`;
-					let section = document.getElementById(section_id);
 
-					if (/*name == "table" && */section != null) {
-						section.remove();
-						section = null;
-					}
-
-					if (section == null) {
-						const html = viewResponse[name];
-						
-						if (html != null && html.length > 0) {
-							section = document.createElement("div");
-							section.id = section_id;
-							section.innerHTML = html;
-							dataView.append(section);
-						}
-					}
+				if (dataView != null) {
+					dataView.remove();
+					dataView = null;
 				}
+
+				dataView = document.createElement("div");
+				dataView.id = div_id;
+				dataView.innerHTML = html;
+				document.querySelector('#main').prepend(dataView);
 			}
 
 			document.querySelector('#http-working').hidden = true;
 
 			if (viewResponse.changes != null) {
-				updateChanges(viewResponse.changes);
+				updateChanges(event, viewResponse.changes);
+			}
+
+			if (viewResponse.tables != null) {
+				for (let [formId, html] of viewResponse.tables) {
+					const div = document.getElementById(`div-table-${formId}`);
+			
+					if (div == null) {
+						console.error(`Missing table ${formId}`);
+						continue;
+					}
+			
+					div.innerHTML = html;
+					
+					if (div.hidden == true) {
+						div.hidden = false;
+					}
+
+					const divForm = document.getElementById(`div-instance-${formId}`);
+					
+					if (divForm != null && divForm.hidden == true) {
+						divForm.hidden = false;
+					}
+				}
 			}
 		}).catch(err => {
 			console.error(err);
