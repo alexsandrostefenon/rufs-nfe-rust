@@ -99,17 +99,81 @@ async fn server(args: Args) -> Result<Box<tide::Server<rufs_base_rust::rufs_micr
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::main]
 async fn main() {
-    use std::process::exit;
+    use anyhow::Context;
+    use rufs_base_rust::rufs_micro_service::RufsMicroService;
+    use rufs_crud_rust::{DataViewManager, DataViewWatch};
+    use rufs_nfe_rust::RufsNfe;
+    use serde_json::Value;
+
     let args = Args::parse();
 
-    let app = match server(args).await {
+    let mut app = match server(args).await {
         Ok(app) => app,
         Err(err) => {
             println!("...server exited with error : {}", err);
-            exit(1);
+            std::process::exit(1);
         },
     };
 
+    lazy_static::lazy_static! {
+        static ref DATA_VIEW_MANAGER_MAP: tokio::sync::Mutex<std::collections::HashMap<String, DataViewManager<'static>>>  = {
+            let data_view_manager_map = std::collections::HashMap::new();
+            tokio::sync::Mutex::new(data_view_manager_map)
+        }; 
+        static ref WATCHER: Box<dyn DataViewWatch> = Box::new(RufsNfe{}) as Box<dyn DataViewWatch>;
+    }
+
+    async fn wasm_login(mut req: tide::Request<RufsMicroService<'_>>) -> tide::Result {
+        let data_in = req.body_json::<Value>().await?;
+        let mut data_view_manager_map = DATA_VIEW_MANAGER_MAP.lock().await;
+        let state = req.state();
+        //, data_in.get("path").context("Missing param path")?.as_str().context("Param path is not string")?
+        let path = format!("http://127.0.0.1:{}", state.micro_service_server.port);
+        let mut data_view_manager = DataViewManager::new(&path, &WATCHER);
+
+        let data_out = match data_view_manager.login(data_in).await {
+            Ok(data_out) => data_out,
+            Err(err) => {
+                let mut response = tide::Response::from(err.to_string());
+                response.set_status(401);
+                return Ok(response);
+            }
+        };
+
+        data_view_manager_map.insert(data_view_manager.server_connection.login_response.jwt_header.clone(), data_view_manager);
+        Ok(data_out.into())
+    }
+        
+    app.at("/wasm_ws/login").post(wasm_login);
+
+    async fn wasm_process(mut req: tide::Request<RufsMicroService<'_>>) -> tide::Result {
+        let authorization_header_prefix = "Bearer ";
+        let token_raw = req.header("Authorization").context("Missing header Authorization")?.last().as_str();
+
+        let jwt = if token_raw.starts_with(authorization_header_prefix) {
+            &token_raw[authorization_header_prefix.len()..]
+        } else {
+            return None.context("broken token")?;
+        };
+
+        let mut data_view_manager_map = DATA_VIEW_MANAGER_MAP.lock().await;
+        let data_view_manager = data_view_manager_map.get_mut(jwt).context("Missing session")?;
+        let data_in = req.body_json::<Value>().await?;
+
+        let data_out = match data_view_manager.process(data_in).await {
+            Ok(data_out) => data_out,
+            Err(err) => {
+                let mut response = tide::Response::from(err.to_string());
+                response.set_status(500);
+                return Ok(response);
+            }
+        };
+
+        let data_out = serde_json::to_value(data_out)?;
+        Ok(data_out.into())
+    }
+        
+    app.at("/wasm_ws/process").post(wasm_process);
     let rufs = app.state();
     let listen = format!("127.0.0.1:{}", rufs.micro_service_server.port);
     println!("Staring rufs-nfe server at {}", listen);
@@ -118,7 +182,7 @@ async fn main() {
         Ok(_) => println!("...server exited."),
         Err(err) => {
             println!("...server exited with error : {}", err);
-            exit(2);
+            std::process::exit(2);
         },
     }
 }
@@ -150,10 +214,14 @@ mod tests {
             })
         };
 
+        lazy_static::lazy_static! {
+            static ref WATCHER: Box<dyn DataViewWatch> = Box::new(RufsNfe{}) as Box<dyn DataViewWatch>; 
+        }
+
         let selelium = async {
             std::thread::sleep( Duration::from_secs( 1 ) );
             println!("selelium...");
-            rufs_crud_rust::tests::selelium(&RufsNfe{} as &dyn DataViewWatch, "/home/alexsandro/Downloads/webapp-rust.side", "http://localhost:8080").await
+            rufs_crud_rust::tests::selelium(&WATCHER, "/home/alexsandro/Downloads/webapp-rust.side", "http://localhost:8080").await
         };
 
         listening.race(selelium).await?;

@@ -1,25 +1,39 @@
-import init, { DataViewManager } from '../rufs_nfe_rust.js';
-
 let dataViewManager;
+let aggregateChartOptions = {};
+let aggregateChart = {};
 
 function updateChanges(event, changes) {
 	if (changes == null) {
 		return;
 	}
 	
+	if (changes instanceof Map) {
+		changes = Object.fromEntries(changes);
+	}
+
 	console.log(changes);
 
-	for (let [formId, fields] of changes) {
-		const instanceFormId = `instance-${formId}`;
-		const form = document.getElementById(instanceFormId);
-		const divForm = document.getElementById(`div-instance-${formId}`);
+	for (let [formId, fields] of Object.entries(changes)) {
+		if (fields instanceof Map) {
+			fields = Object.fromEntries(fields);
+		}
 
-		if (form == null || divForm == null) {
+		const instanceFormId = `${formId}`;
+		const form = document.getElementById(instanceFormId);
+		const divFormId = `div-${formId}`;
+		const divForm = document.getElementById(divFormId);
+
+		if (form == null) {
 			console.error(`Missing form ${instanceFormId}`);
 			continue;
 		}
 
-		for (let [fieldName, value] of fields) {
+		if (divForm == null) {
+			console.error(`Missing divForm ${divFormId}`);
+			continue;
+		}
+
+		for (let [fieldName, value] of Object.entries(fields)) {
 			if (form.hidden == true) {
 				form.hidden = false;
 			}
@@ -50,7 +64,7 @@ function updateChanges(event, changes) {
 				}
 	*/
 			} else {
-				const element = form[fieldName];
+				const element = form.elements[fieldName];
 				
 				if (element == null) {
 					throw new Error(`Missing element ${fieldName} in form ${form.name} !`);
@@ -81,6 +95,37 @@ function updateChanges(event, changes) {
 	}
 }
 
+function updateTables(event, tables) {
+	if (tables == null) {
+		return;
+	}
+	
+	if (tables instanceof Map) {
+		tables = Object.fromEntries(tables);
+	}
+
+	for (let [formId, html] of Object.entries(tables)) {
+		const div = document.getElementById(`div-table-${formId}`);
+
+		if (div == null) {
+			console.error(`Missing table ${formId}`);
+			continue;
+		}
+
+		div.innerHTML = html;
+		
+		if (div.hidden == true) {
+			div.hidden = false;
+		}
+
+		const divForm = document.getElementById(`div-instance-${formId}`);
+		
+		if (divForm != null && divForm.hidden == true) {
+			divForm.hidden = false;
+		}
+	}
+}
+
 var appOnChange = event => {
     let element = event.target;
 
@@ -94,25 +139,65 @@ var appOnChange = event => {
 		return;
 	}
 
-	console.log(`appOnChange : ${element.id} =`, element.value);
-	dataViewManager.process_edit_target(element.id, element.value).
+	let value = element.value;
+
+	if (element.type == "checkbox") {
+		value = element.checked.toString();
+	}
+
+	const form = element.form;
+
+	if (form != null) {
+		form.inert = true;
+	}
+
+	console.log(`appOnChange : ${element.id} =`, value);
+	let data = {};
+	data[element.id] = value;
+	dataViewManager.process({form_id: element.id, event: "OnChange", data}).
 	then(viewResponse => {
+		if (viewResponse instanceof Map) {
+			viewResponse = Object.fromEntries(viewResponse);
+		}
+
 		updateChanges(event, viewResponse.changes);
+		updateTables(event, viewResponse.tables);
 	}).catch(err => {
 		console.error(err);
 		document.querySelector('#http-working').hidden = true;
 		document.querySelector('#http-error').innerHTML = err;
 		document.querySelector('#http-error').hidden = false;
+	}).then(() => {
+		if (form != null) {
+			form.inert = false;
+		}
 	});
 }
 
 var appOnClick = event => {
     let element = event.target;
+
+	if (["button"].includes(element.localName) == false && element.href == null) {
+		return;
+	}
+
+	if (["button", "a"].includes(element.localName) && element.dataset.bsToggle != null) {
+		return;
+	}
+
+	if (element.tagName == "I") {
+		element = element.parentElement;
+	}
+
+	if (element.type == "text") {
+		return;
+	}
+	
 	//event.stopPropagation();
 	event.preventDefault();
 	let target = element.id;
 
-	if (element.href != null && element.href.includes("#!")) {
+	if (target == "" && element.href != null && element.href.includes("#!")) {
 		target = element.href;
 	}
 
@@ -121,14 +206,13 @@ var appOnClick = event => {
 		document.querySelector('#http-error').hidden = true;
 		document.querySelector('#http-working').innerHTML = "Processando...";
 		document.querySelector('#http-working').hidden = false;
-		dataViewManager.process_click_target(target).
+		dataViewManager.process({form_id: target, event: "OnClick", data: {}}).
 		then(viewResponse => {
-			console.log(viewResponse);
-			// DEBUG
-			if (target == "instance-delete-new-request-requestProduct") {
-				console.log(viewResponse);
+			if (viewResponse instanceof Map) {
+				viewResponse = Object.fromEntries(viewResponse);
 			}
 
+			console.log(viewResponse);
 			const html = viewResponse.html;
 
 			if (viewResponse.form_id != null && html != null && html.length > 0) {
@@ -147,31 +231,39 @@ var appOnClick = event => {
 			}
 
 			document.querySelector('#http-working').hidden = true;
+			updateChanges(event, viewResponse.changes);
+			updateTables(event, viewResponse.tables);
 
-			if (viewResponse.changes != null) {
-				updateChanges(event, viewResponse.changes);
-			}
+			if (viewResponse.aggregates != null) {
+				if (viewResponse.aggregates instanceof Map) {
+					viewResponse.aggregates = Object.fromEntries(viewResponse.aggregates);
+				}
 
-			if (viewResponse.tables != null) {
-				for (let [formId, html] of viewResponse.tables) {
-					const div = document.getElementById(`div-table-${formId}`);
+				for (let [formId, aggregateResults] of Object.entries(viewResponse.aggregates)) {
+					if (aggregateResults instanceof Map) {
+						aggregateResults = Object.fromEntries(aggregateResults);
+					}
 			
-					if (div == null) {
-						console.error(`Missing table ${formId}`);
+					const id = `chart-aggregate-${formId}`;
+					const chart = document.getElementById(id);
+			
+					if (chart == null) {
+						console.error(`Missing chart ${id}`);
 						continue;
 					}
-			
-					div.innerHTML = html;
-					
-					if (div.hidden == true) {
-						div.hidden = false;
-					}
 
-					const divForm = document.getElementById(`div-instance-${formId}`);
+					const ctx = chart.getContext('2d');
+					const xData = Array.from(Object.keys(aggregateResults));
+					const yData = Array.from(Object.values(aggregateResults));
 					
-					if (divForm != null && divForm.hidden == true) {
-						divForm.hidden = false;
+					if (aggregateChartOptions[formId] == null) {
+						aggregateChartOptions[formId] = {type: 'bar', data: {labels: [], datasets: [{label: "", data: []}]}};
+						aggregateChart[formId] = new Chart(ctx, aggregateChartOptions[formId]);
 					}
+					
+					aggregateChartOptions[formId].data.labels = xData;
+					aggregateChartOptions[formId].data.datasets[0].data = yData;
+					aggregateChart[formId].update();
 				}
 			}
 		}).catch(err => {
@@ -194,14 +286,14 @@ var login = event => {
 	if (form.reportValidity()) {
 		//event.stopPropagation();
 		event.preventDefault();
-		const path = window.location.origin;// + window.location.pathname;
-		dataViewManager = new DataViewManager(path);
-		const user = form.user.value;
-		const password = form.password.value;
-		dataViewManager.login("/login", user, password).
+		dataViewManager.login({path: "/login", user: form.user.value, password: form.password.value}).
 		then(loginResponse => {
 			const addToParent = (menu, list) => {
-				for (let [name, field] of menu) {
+				if (menu instanceof Map) {
+					menu = Object.fromEntries(menu);
+				}
+
+				for (let [name, field] of Object.entries(menu)) {
 					if (typeof field === 'object') {
 						list.push(
 						`<li class='nav-item dropdown'><a class='nav-link dropdown-toggle' href='#' role='button' data-bs-toggle="dropdown" aria-expanded='false' id="menu-${name}">${name}</a><ul class='dropdown-menu'>`);
@@ -213,9 +305,13 @@ var login = event => {
 				}
 			};
 
+			if (loginResponse instanceof Map) {
+				loginResponse = Object.fromEntries(loginResponse);
+			}
+
 			let list = [];
 			list.push(`<ul class='nav nav-pills'>`);
-			addToParent(loginResponse.get("menu"), list);
+			addToParent(loginResponse.menu, list);
 			list.push(`</ul>`);
 			const str = list.join("\n");
 			let div = document.createElement("div");
@@ -225,7 +321,7 @@ var login = event => {
 			form.hidden = true;
 			document.querySelector('#http-working').hidden = true;
 
-			for (let element of document.querySelectorAll(`a[href='#!/app/${loginResponse.get("path")}']`)) {
+			for (let element of document.querySelectorAll(`a[href='#!/app/${loginResponse.path}']`)) {
 				element.click();
 			}
 		}).catch(err => {
@@ -237,8 +333,67 @@ var login = event => {
 	}
 }
 
+class DataViewManagerWs {
+
+	constructor(path) {
+		this.path = path;
+    }
+
+	login(obj_in) {
+		let url = `${this.path}/wasm_ws/login`;
+		return fetch(url, {method: "POST", body: JSON.stringify(obj_in)}).
+		then(response => {
+			if (response.status != 200) {
+				return response.text().
+				then(text => {
+					throw text
+				});
+			}
+			
+			return response.json();
+		}).
+		then(loginResponse => {
+			this.token = loginResponse.jwt_header;
+			return loginResponse;
+		});
+    }
+
+    process(obj_in) {
+		let options = {method: "POST", body: JSON.stringify(obj_in), headers: {}};
+
+		if (this.token != undefined) {
+			options.headers["Authorization"] = "Bearer " + this.token;
+		}
+
+		let url = `${this.path}/wasm_ws/process`;
+		return fetch(url, options).
+		then(response => {
+			if (response.status != 200) {
+				return response.text().
+				then(text => {
+					throw text
+				});
+			}
+			
+			return response.json();
+		});
+    }
+
+}
+
 async function run() {
-	await init();
+	const path = window.location.origin;
+	const urlParams = new URLSearchParams(document.location.search);
+
+	if (urlParams.get("mode") == "ws") {
+		dataViewManager = new DataViewManagerWs(path);
+	} else {
+		// import init, { DataViewManager } from '../rufs_nfe_rust.js';
+		const rufs_nfe_rust = await import("../rufs_nfe_rust.js");
+		await rufs_nfe_rust.default();
+		dataViewManager = new rufs_nfe_rust.DataViewManager(path);
+	}
+	
 	document.querySelector('#login-send').addEventListener('click', login);
 	document.querySelector('#main').addEventListener('click', appOnClick);
 	document.querySelector('#main').addEventListener('change', appOnChange);
