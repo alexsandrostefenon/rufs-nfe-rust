@@ -105,7 +105,7 @@ function updateTables(event, tables) {
 	}
 
 	for (let [formId, html] of Object.entries(tables)) {
-		const div = document.getElementById(`div-table-${formId}`);
+		const div = document.getElementById(`div-table--${formId}`);
 
 		if (div == null) {
 			console.error(`Missing table ${formId}`);
@@ -118,7 +118,7 @@ function updateTables(event, tables) {
 			div.hidden = false;
 		}
 
-		const divForm = document.getElementById(`div-instance-${formId}`);
+		const divForm = document.getElementById(`div-instance--${formId}`);
 		
 		if (divForm != null && divForm.hidden == true) {
 			divForm.hidden = false;
@@ -177,16 +177,16 @@ var appOnChange = event => {
 var appOnClick = event => {
     let element = event.target;
 
+	if (["i"].includes(element.localName)) {
+		element = element.parentElement;
+	}
+
 	if (["button"].includes(element.localName) == false && element.href == null) {
 		return;
 	}
 
 	if (["button", "a"].includes(element.localName) && element.dataset.bsToggle != null) {
 		return;
-	}
-
-	if (element.tagName == "I") {
-		element = element.parentElement;
 	}
 
 	if (element.type == "text") {
@@ -244,7 +244,7 @@ var appOnClick = event => {
 						aggregateResults = Object.fromEntries(aggregateResults);
 					}
 			
-					const id = `chart-aggregate-${formId}`;
+					const id = `chart-aggregate--${formId}`;
 					const chart = document.getElementById(id);
 			
 					if (chart == null) {

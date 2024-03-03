@@ -1,8 +1,8 @@
 use anyhow::{Context};
 use chrono::NaiveDateTime;
-use rufs_crud_rust::{DataView, DataViewWatch, ServerConnection, DataViewProcessAction, HtmlElementId};
+use rufs_base_rust::client::{DataView, DataViewWatch, ServerConnection, DataViewProcessAction, HtmlElementId, FormType};
 #[cfg(target_arch = "wasm32")]
-use rufs_crud_rust::DataViewManagerWrapper;
+use rufs_base_rust::client::DataViewManagerWrapper;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 //use convert_case::Casing;
@@ -152,7 +152,7 @@ impl DataViewWatch for RufsNfe {
                         let desc_value_old = request.desc_value.unwrap_or(0.0);
                         let request_products_value_new = products_value_old - product_value_old + product_value_new;
                         let request_desc_value_new = desc_value_old - product_desc_value_old + product_desc_value_new;
-                        let element_id_parent = &HtmlElementId::new(data_view.data_view_id.schema_name.clone(), None, rufs_crud_rust::FormType::Instance, None, None, None);
+                        let element_id_parent = &HtmlElementId::new(data_view.data_view_id.schema_name.clone(), None, FormType::Instance, None, None, None);
                         data_view.set_value(server_connection, self, "productsValue", &json!(request_products_value_new), element_id_parent)?;
                         data_view.set_value(server_connection, self, "descValue", &json!(request_desc_value_new), element_id_parent)?;
                         data_view.set_value(server_connection, self, "sumValue", &json!(((request_products_value_new - request_desc_value_new) * 100.0).trunc()/100.0), element_id_parent)?;
@@ -266,7 +266,7 @@ impl DataViewManagerWrapperNfe {
 
     #[wasm_bindgen(constructor)]
 	pub fn new(path: &str) -> Self {
-        use rufs_crud_rust::DataViewManager;
+        use rufs_base_rust::client::DataViewManager;
         let data_view_manager = DataViewManager::new(path, &WATCHER);
         let data_view_manager_wrapper = DataViewManagerWrapper{data_view_manager};
         Self {data_view_manager_wrapper}

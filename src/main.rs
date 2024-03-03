@@ -30,8 +30,10 @@ struct Args {
 #[cfg(not(target_arch = "wasm32"))]
 async fn server(args: Args) -> Result<Box<tide::Server<rufs_base_rust::rufs_micro_service::RufsMicroService<'static>>>, Box<dyn std::error::Error>> {
     use std::path::Path;
-    use rufs_base_rust::{rufs_micro_service::RufsMicroService, micro_service_server::MicroServiceServer, openapi::RufsOpenAPI, rufs_tide_new};
+    use rufs_base_rust::{rufs_micro_service::RufsMicroService, micro_service_server::MicroServiceServer, openapi::RufsOpenAPI, client::DataViewWatch, db_adapter_postgres::DbAdapterPostgres, db_adapter_file::DbAdapterFile};
+    use rufs_nfe_rust::RufsNfe;
     use serde_json::Value;
+    use std::sync::Arc;
 
     if args.reset_db {
         let path = "openapi-rufs_nfe_rust.json";
@@ -56,6 +58,10 @@ async fn server(args: Args) -> Result<Box<tide::Server<rufs_base_rust::rufs_micr
         println!("...CREATE DATABASE rufs_nfe_rust.");
     }
 
+    lazy_static::lazy_static! {
+        static ref WATCHER: Box<dyn DataViewWatch> = Box::new(RufsNfe{}) as Box<dyn DataViewWatch>;
+    }
+
     let mut rufs = RufsMicroService{
         check_rufs_tables: true,
         migration_path: args.migration_path,
@@ -63,7 +69,11 @@ async fn server(args: Args) -> Result<Box<tide::Server<rufs_base_rust::rufs_micr
         micro_service_server: MicroServiceServer{
             app_name: "rufs_nfe_rust".to_string(), ..Default::default()
         }, 
-        ..Default::default()
+        watcher: &WATCHER,
+        entity_manager: DbAdapterPostgres::default(),
+        db_adapter_file: DbAdapterFile::default(),
+        ws_server_connections: Arc::default(),
+        ws_server_connections_tokens: Arc::default(),
     };
 
     rufs.connect(&format!("postgres://development:123456@localhost:5432/{}", rufs.micro_service_server.app_name)).await?;
@@ -93,21 +103,15 @@ async fn server(args: Args) -> Result<Box<tide::Server<rufs_base_rust::rufs_micr
     }
 
     rufs.micro_service_server.store_open_api("")?;
-    rufs_tide_new(rufs).await
+    rufs_base_rust::rufs_micro_service::rufs_tide_new(rufs).await
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::main]
 async fn main() {
-    use anyhow::Context;
-    use rufs_base_rust::rufs_micro_service::RufsMicroService;
-    use rufs_crud_rust::{DataViewManager, DataViewWatch};
-    use rufs_nfe_rust::RufsNfe;
-    use serde_json::Value;
-
     let args = Args::parse();
 
-    let mut app = match server(args).await {
+    let app = match server(args).await {
         Ok(app) => app,
         Err(err) => {
             println!("...server exited with error : {}", err);
@@ -115,65 +119,6 @@ async fn main() {
         },
     };
 
-    lazy_static::lazy_static! {
-        static ref DATA_VIEW_MANAGER_MAP: tokio::sync::Mutex<std::collections::HashMap<String, DataViewManager<'static>>>  = {
-            let data_view_manager_map = std::collections::HashMap::new();
-            tokio::sync::Mutex::new(data_view_manager_map)
-        }; 
-        static ref WATCHER: Box<dyn DataViewWatch> = Box::new(RufsNfe{}) as Box<dyn DataViewWatch>;
-    }
-
-    async fn wasm_login(mut req: tide::Request<RufsMicroService<'_>>) -> tide::Result {
-        let data_in = req.body_json::<Value>().await?;
-        let mut data_view_manager_map = DATA_VIEW_MANAGER_MAP.lock().await;
-        let state = req.state();
-        //, data_in.get("path").context("Missing param path")?.as_str().context("Param path is not string")?
-        let path = format!("http://127.0.0.1:{}", state.micro_service_server.port);
-        let mut data_view_manager = DataViewManager::new(&path, &WATCHER);
-
-        let data_out = match data_view_manager.login(data_in).await {
-            Ok(data_out) => data_out,
-            Err(err) => {
-                let mut response = tide::Response::from(err.to_string());
-                response.set_status(401);
-                return Ok(response);
-            }
-        };
-
-        data_view_manager_map.insert(data_view_manager.server_connection.login_response.jwt_header.clone(), data_view_manager);
-        Ok(data_out.into())
-    }
-        
-    app.at("/wasm_ws/login").post(wasm_login);
-
-    async fn wasm_process(mut req: tide::Request<RufsMicroService<'_>>) -> tide::Result {
-        let authorization_header_prefix = "Bearer ";
-        let token_raw = req.header("Authorization").context("Missing header Authorization")?.last().as_str();
-
-        let jwt = if token_raw.starts_with(authorization_header_prefix) {
-            &token_raw[authorization_header_prefix.len()..]
-        } else {
-            return None.context("broken token")?;
-        };
-
-        let mut data_view_manager_map = DATA_VIEW_MANAGER_MAP.lock().await;
-        let data_view_manager = data_view_manager_map.get_mut(jwt).context("Missing session")?;
-        let data_in = req.body_json::<Value>().await?;
-
-        let data_out = match data_view_manager.process(data_in).await {
-            Ok(data_out) => data_out,
-            Err(err) => {
-                let mut response = tide::Response::from(err.to_string());
-                response.set_status(500);
-                return Ok(response);
-            }
-        };
-
-        let data_out = serde_json::to_value(data_out)?;
-        Ok(data_out.into())
-    }
-        
-    app.at("/wasm_ws/process").post(wasm_process);
     let rufs = app.state();
     let listen = format!("127.0.0.1:{}", rufs.micro_service_server.port);
     println!("Staring rufs-nfe server at {}", listen);
@@ -194,7 +139,7 @@ mod tests {
     use async_std::prelude::FutureExt;
     use rufs_nfe_rust::RufsNfe;
     use std::time::Duration;
-    use rufs_crud_rust::{DataViewWatch};
+    use rufs_base_rust::client::{DataViewWatch};
     use crate::{server,Args};
 
     #[tokio::test]
@@ -221,7 +166,7 @@ mod tests {
         let selelium = async {
             std::thread::sleep( Duration::from_secs( 1 ) );
             println!("selelium...");
-            rufs_crud_rust::tests::selelium(&WATCHER, "/home/alexsandro/Downloads/webapp-rust.side", "http://localhost:8080").await
+            rufs_base_rust::client::tests::selelium(&WATCHER, "/home/alexsandro/Downloads/webapp-rust.side", "http://localhost:8080").await
         };
 
         listening.race(selelium).await?;
