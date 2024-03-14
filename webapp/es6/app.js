@@ -2,6 +2,24 @@ let dataViewManager;
 let aggregateChartOptions = {};
 let aggregateChart = {};
 
+function data_view_show(form_id) {
+	const div_id = `data_view-${form_id}`;
+	let data_view = document.getElementById(div_id);
+
+	if (data_view != null && data_view.hidden == true) {
+		data_view.hidden = false;
+	}
+}
+
+function data_view_hide(form_id) {
+	const div_id = `data_view-${form_id}`;
+	let data_view = document.getElementById(div_id);
+
+	if (data_view != null && data_view.hidden == false) {
+		data_view.hidden = true;
+	}
+}
+
 function updateChanges(event, changes) {
 	if (changes == null) {
 		return;
@@ -33,6 +51,8 @@ function updateChanges(event, changes) {
 			continue;
 		}
 
+		data_view_show(formId);
+		
 		for (let [fieldName, value] of Object.entries(fields)) {
 			if (form.hidden == true) {
 				form.hidden = false;
@@ -105,6 +125,7 @@ function updateTables(event, tables) {
 	}
 
 	for (let [formId, html] of Object.entries(tables)) {
+		data_view_show(formId);
 		const div = document.getElementById(`div-table--${formId}`);
 
 		if (div == null) {
@@ -264,6 +285,22 @@ var appOnClick = event => {
 					aggregateChartOptions[formId].data.labels = xData;
 					aggregateChartOptions[formId].data.datasets[0].data = yData;
 					aggregateChart[formId].update();
+				}
+			}
+
+			if (viewResponse.forms != null) {
+				if (viewResponse.forms instanceof Map) {
+					viewResponse.forms = Object.fromEntries(viewResponse.forms);
+				}
+
+				for (let [formId, form] of Object.entries(viewResponse.forms)) {
+					if (form.visible == false) {
+						data_view_hide(formId);
+					}
+
+					if (form.visible == true) {
+						data_view_show(formId);
+					}
 				}
 			}
 		}).catch(err => {

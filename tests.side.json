@@ -24,7 +24,7 @@
       "id": "a16d854f-1f61-4602-bf31-c42ad5431fd3",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/request/new?overwrite.type=1&overwrite.state=10')]",
+      "target": "xpath=//a[contains(@href, '#!/app/request/new?instance.type=1&instance.state=10')]",
       "targets": [],
       "value": ""
     }, {
@@ -2414,7 +2414,7 @@
       "id": "4d2e0471-8f9b-4df8-82e9-ac1cdc670572",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/request/import?overwrite.type=1&overwrite.state=10')]",
+      "target": "xpath=//a[contains(@href, '#!/app/request/import?instance.type=1&instance.state=10')]",
       "targets": [],
       "value": ""
     }, {

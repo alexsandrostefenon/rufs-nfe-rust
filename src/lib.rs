@@ -59,7 +59,7 @@ impl RufsNfe {
             data_view_payment.set_value(server_connection, watcher, "value", &value, element_id)?;
         }
 
-        let account = data_view_payment.instance.get("account").unwrap_or(&Value::Null);
+        let account = data_view_payment.params.instance.get("account").unwrap_or(&Value::Null);
         println!("[request_payment_adjusts] : old account  = {}", account);
 
         if account.is_null() {
@@ -68,7 +68,7 @@ impl RufsNfe {
             let typ = if let Some(typ) = typ {
                 typ
             } else {
-                data_view_payment.instance.get("type").unwrap_or(&json!(1)).as_u64().unwrap_or(1)
+                data_view_payment.params.instance.get("type").unwrap_or(&json!(1)).as_u64().unwrap_or(1)
             };
     
             if typ == 1 {
@@ -98,20 +98,20 @@ impl DataViewWatch for RufsNfe {
             if let Some(child_name) = child_name {
                 if child_name == "requestProduct" && ["quantity", "value", "valueDesc"].contains(&field_name) {
                     if let Some(data_view_child) = data_view.childs.iter_mut().find(|item| item.data_view_id.schema_name == child_name) {
-                        if data_view_child.instance.get("product").is_none() {
+                        if data_view_child.params.instance.get("product").is_none() {
                             return Ok(true);
                         }
 
-                        if field_name != "value" && data_view_child.instance.get("value").is_none() {
+                        if field_name != "value" && data_view_child.params.instance.get("value").is_none() {
                             // TODO : se valor unitário está ausente, pegar o valor do cadastro de produtos.
                             data_view_child.set_value(server_connection, self, "value", &json!(0.0), element_id)?;
                         }
 
-                        if field_name != "quantity" && data_view_child.instance.get("quantity").is_none() {
+                        if field_name != "quantity" && data_view_child.params.instance.get("quantity").is_none() {
                             data_view_child.set_value(server_connection, self, "quantity", &json!(1.0), element_id)?;
                         }
 
-                        if field_name != "valueDesc" && data_view_child.instance.get("valueDesc").is_none() {
+                        if field_name != "valueDesc" && data_view_child.params.instance.get("valueDesc").is_none() {
                             data_view_child.set_value(server_connection, self, "valueDesc", &json!(0.0), element_id)?;
                         }
 
@@ -120,7 +120,7 @@ impl DataViewWatch for RufsNfe {
                             _ => todo!(),
                         };
 
-                        let mut request_product: RequestProduct = serde_json::from_value(data_view_child.instance.clone())?;
+                        let mut request_product: RequestProduct = serde_json::from_value(data_view_child.params.instance.clone())?;
 
                         let value_item = if field_name == "quantity" {
                             let value_desc = request_product.value_desc.unwrap_or(0.0);
@@ -147,7 +147,7 @@ impl DataViewWatch for RufsNfe {
 
                         let product_value_new = f64::trunc(request_product.quantity * request_product.value * 100.0) / 100.0;
                         let product_desc_value_new = request_product.value_desc.unwrap_or(0.0);
-                        let request: Request = serde_json::from_value(data_view.instance.clone())?;
+                        let request: Request = serde_json::from_value(data_view.params.instance.clone())?;
                         let products_value_old = request.products_value.unwrap_or(0.0);
                         let desc_value_old = request.desc_value.unwrap_or(0.0);
                         let request_products_value_new = products_value_old - product_value_old + product_value_new;
@@ -157,7 +157,7 @@ impl DataViewWatch for RufsNfe {
                         data_view.set_value(server_connection, self, "descValue", &json!(request_desc_value_new), element_id_parent)?;
                         data_view.set_value(server_connection, self, "sumValue", &json!(((request_products_value_new - request_desc_value_new) * 100.0).trunc()/100.0), element_id_parent)?;
                         let data_view_payment = data_view.childs.iter_mut().find(|item| item.data_view_id.schema_name == "requestPayment").context(format!("Missing child {} in parent {}", "requestPayment", data_view.data_view_id.schema_name))?;
-                        let request: Request = serde_json::from_value(data_view.instance.clone())?;
+                        let request: Request = serde_json::from_value(data_view.params.instance.clone())?;
                         RufsNfe::request_payment_adjusts(data_view_payment, self, server_connection, &request, None, element_id)?;
                     }
                 }
@@ -167,17 +167,17 @@ impl DataViewWatch for RufsNfe {
                         let typ = field_value.as_u64().unwrap_or(1);
                         // due_date
                         if [1,4,10,11,12,13].contains(&typ) {
-                            let value = data_view.instance.get("date").context("check_set_value 1 : context")?;
+                            let value = data_view.params.instance.get("date").context("check_set_value 1 : context")?;
                             data_view_child.set_value(server_connection, self, "dueDate", value, element_id)?;
                         }
                         // payday
                         if [1,4,10,11,12,13].contains(&typ) {
-                            let value = data_view.instance.get("date").context("check_set_value 2 : context")?;
-                            //data_view_child.instance["payday"] = value.clone();
+                            let value = data_view.params.instance.get("date").context("check_set_value 2 : context")?;
+                            //data_view_child.params.instance["payday"] = value.clone();
                             data_view_child.set_value(server_connection, self, "payday", value, element_id)?;
                         }
 
-                        let request: Request = serde_json::from_value(data_view.instance.clone())?;
+                        let request: Request = serde_json::from_value(data_view.params.instance.clone())?;
                         RufsNfe::request_payment_adjusts(data_view_child, self, server_connection, &request, Some(typ), element_id)?;
                     }
                 }
@@ -185,7 +185,7 @@ impl DataViewWatch for RufsNfe {
                 /*
                 if ["sumValue"].contains(&field_name) {
                     if let Some(data_view_payment) = data_view.childs.iter_mut().find(|item| item.schema_name == "requestPayment") {
-                        let request: Request = serde_json::from_value(data_view.instance.clone())?;
+                        let request: Request = serde_json::from_value(data_view.params.instance.clone())?;
                         RufsNfe::request_payment_adjusts(data_view_payment, self, server_connection, &request, None)?;
                     }
                 }
@@ -233,9 +233,9 @@ impl DataViewWatch for RufsNfe {
                 "Estoque": "stock/search",
             },
             "Rotinas": {
-                "Compra": "request/new?overwrite.type=1&overwrite.state=10",
-                "Venda": "request/new?overwrite.type=2&overwrite.state=10",
-                "Importar": "request/import?overwrite.type=1&overwrite.state=10",
+                "Compra": "request/new?instance.type=1&instance.state=10",
+                "Venda": "request/new?instance.type=2&instance.state=10",
+                "Importar": "request/import?instance.type=1&instance.state=10",
             },
             "Tabelas": {
                 "Pessoas": "person/search",
