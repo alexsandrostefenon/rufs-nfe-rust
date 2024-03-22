@@ -1,39 +1,25 @@
 #[cfg(not(target_arch = "wasm32"))]
 use clap::Parser;
 
-#[cfg(debug_assertions)]
+#[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Parser, Debug)]
 struct Args {
     #[arg(long,default_value = "8080")]
     port: u16,
-    #[arg(long, num_args = 1.., value_delimiter = ' ', default_value = "rufs-nfe-rust/pkg rufs-nfe-rust/webapp")]
-    static_paths: Vec<String>,
-    #[arg(long, default_value = "rufs-nfe-rust/sql")]
-    migration_path: String,
+    #[cfg(debug_assertions)]
     #[arg(long,default_value = "true")]
-    reset_db: bool
-}
-
-#[cfg(not(debug_assertions))]
-#[derive(Clone, Parser, Debug)]
-struct Args {
-    #[arg(long,default_value = "8080")]
-    port: u16,
-    #[arg(long, num_args = 1.., value_delimiter = ' ', default_value = "pkg webapp")]
-    static_paths: Vec<String>,
-    #[arg(long, default_value = "sql")]
-    migration_path: String,
+    reset_db: bool,
+    #[cfg(not(debug_assertions))]
     #[arg(long,default_value = "false")]
-    reset_db: bool
+    reset_db: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn server(args: Args) -> Result<Box<tide::Server<rufs_base_rust::rufs_micro_service::RufsMicroService<'static>>>, Box<dyn std::error::Error>> {
+async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     use std::path::Path;
-    use rufs_base_rust::{rufs_micro_service::RufsMicroService, micro_service_server::MicroServiceServer, openapi::RufsOpenAPI, client::DataViewWatch, db_adapter_postgres::DbAdapterPostgres, db_adapter_file::DbAdapterFile};
+    use rufs_base_rust::{rufs_micro_service::{RufsMicroService, RufsParams}, openapi::RufsOpenAPI, client::DataViewWatch};
     use rufs_nfe_rust::RufsNfe;
     use serde_json::Value;
-    use std::sync::Arc;
 
     if args.reset_db {
         let path = "openapi-rufs_nfe_rust.json";
@@ -62,48 +48,74 @@ async fn server(args: Args) -> Result<Box<tide::Server<rufs_base_rust::rufs_micr
         static ref WATCHER: Box<dyn DataViewWatch> = Box::new(RufsNfe{}) as Box<dyn DataViewWatch>;
     }
 
-    let mut rufs = RufsMicroService{
-        check_rufs_tables: true,
-        migration_path: args.migration_path,
-        static_paths: args.static_paths,
-        micro_service_server: MicroServiceServer{
-            app_name: "rufs_nfe_rust".to_string(), ..Default::default()
-        }, 
-        watcher: &WATCHER,
-        entity_manager: DbAdapterPostgres::default(),
-        db_adapter_file: DbAdapterFile::default(),
-        ws_server_connections: Arc::default(),
-        ws_server_connections_tokens: Arc::default(),
+    let params = RufsParams {
+        app_name: "rufs_nfe_rust".to_string(), 
+        ..Default::default()
     };
 
-    rufs.connect(&format!("postgres://development:123456@localhost:5432/{}", rufs.micro_service_server.app_name)).await?;
+    #[cfg(not(debug_assertions))]
+    let fs_prefix = "";
+    #[cfg(debug_assertions)]
+    let fs_prefix = "rufs-nfe-rust/";
 
-    if let Some(field) = rufs.micro_service_server.openapi.get_property_mut("requestProduct", "request") {
+    let db_uri = format!("postgres://development:123456@localhost:5432/{}", params.app_name);
+    let mut rufs = RufsMicroService::connect(&db_uri, true, &format!("{}sql", fs_prefix), params, &WATCHER).await?;
+
+    if let Some(field) = rufs.openapi.get_property_mut("requestProduct", "request") {
         field.schema_data.extensions.insert("x-title".to_string(), Value::String("Lista de produtos/componentes".to_string()));
     }
 
-    if let Some(field) = rufs.micro_service_server.openapi.get_property_mut("requestPayment", "request") {
+    if let Some(field) = rufs.openapi.get_property_mut("requestPayment", "request") {
         field.schema_data.extensions.insert("x-title".to_string(), Value::String("Lista de pagamentos".to_string()));
     }
 
-    if let Some(field) = rufs.micro_service_server.openapi.get_property_mut("person", "cnpjCpf") {
+    if let Some(field) = rufs.openapi.get_property_mut("person", "cnpjCpf") {
         field.schema_data.extensions.insert("x-shortDescription".to_string(), Value::Bool(true));
     }
 
-    if let Some(field) = rufs.micro_service_server.openapi.get_property_mut("person", "name") {
+    if let Some(field) = rufs.openapi.get_property_mut("person", "name") {
         field.schema_data.extensions.insert("x-shortDescription".to_string(), Value::Bool(true));
     }
 
-    if let Some(field) = rufs.micro_service_server.openapi.get_property_mut("account", "person") {
+    if let Some(field) = rufs.openapi.get_property_mut("account", "person") {
         field.schema_data.extensions.insert("x-shortDescription".to_string(), Value::Bool(true));
     }
 
-    if let Some(field) = rufs.micro_service_server.openapi.get_property_mut("account", "description") {
+    if let Some(field) = rufs.openapi.get_property_mut("account", "description") {
         field.schema_data.extensions.insert("x-shortDescription".to_string(), Value::Bool(true));
     }
 
-    rufs.micro_service_server.store_open_api("")?;
-    rufs_base_rust::rufs_micro_service::rufs_tide_new(rufs).await
+    rufs.store_open_api("")?;
+
+    #[cfg(feature = "warp")]
+    #[cfg(not(feature = "tide"))]
+    {
+        use warp::Filter;
+
+        let rufs_routes = rufs_base_rust::rufs_micro_service::rufs_warp(rufs).await;
+        let listener = format!("127.0.0.1:{}", args.port);
+        println!("Staring rufs-nfe server at {}", listener);
+        let dedicated = warp::path("nfe_dedicated").and(warp::get()).map(|| {"Hello from rufs-nfe!".to_string()});
+        let routes = dedicated
+            .or(rufs_routes)
+            .or(warp::path("pkg").and(warp::fs::dir(format!("{}pkg", fs_prefix))))
+            .or(warp::path("webapp").and(warp::fs::dir(format!("{}webapp", fs_prefix))))
+            .or(warp::path::end().and(warp::fs::file(format!("{}webapp/index.html", fs_prefix))))
+            ;
+        warp::serve(routes).run(([127, 0, 0, 1], args.port)).await;
+    }
+
+    #[cfg(feature = "tide")]
+    #[cfg(not(feature = "warp"))]
+    {
+        let mut app = Box::new(tide::with_state(rufs));
+        rufs_base_rust::rufs_micro_service::rufs_tide(&mut app).await?;
+        let listener = format!("127.0.0.1:{}", args.port);
+        println!("Staring rufs-nfe server at {}", listener);
+        app.listen(listener).await?;
+    }
+
+    Ok(())
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -111,24 +123,9 @@ async fn server(args: Args) -> Result<Box<tide::Server<rufs_base_rust::rufs_micr
 async fn main() {
     let args = Args::parse();
 
-    let app = match server(args).await {
-        Ok(app) => app,
-        Err(err) => {
-            println!("...server exited with error : {}", err);
-            std::process::exit(1);
-        },
-    };
-
-    let rufs = app.state();
-    let listen = format!("127.0.0.1:{}", rufs.micro_service_server.port);
-    println!("Staring rufs-nfe server at {}", listen);
-
-    match app.listen(listen).await {
-        Ok(_) => println!("...server exited."),
-        Err(err) => {
-            println!("...server exited with error : {}", err);
-            std::process::exit(2);
-        },
+    if let Err(err) = server(&args).await {
+        println!("...server exited with error : {}", err);
+        std::process::exit(1);
     }
 }
         
@@ -139,24 +136,15 @@ mod tests {
     use async_std::prelude::FutureExt;
     use rufs_nfe_rust::RufsNfe;
     use std::time::Duration;
-    use rufs_base_rust::client::{DataViewWatch};
+    use rufs_base_rust::client::DataViewWatch;
     use crate::{server,Args};
 
     #[tokio::test]
     async fn selelium() -> Result<(), Box<dyn std::error::Error>> {
-        println!("server()...");
-        let args = Args{ port: 8080, static_paths: vec!["rufs-nfe-rust/pkg".to_string(), "rufs-nfe-rust/webapp".to_string()], migration_path: "rufs-nfe-rust/sql".to_string(), reset_db: true };
-        let app = server(args).await.unwrap();
-        println!("...server().");
-        let rufs = app.state();
-        let listen = format!("127.0.0.1:{}", rufs.micro_service_server.port);
-
         let listening = async {
-            println!("app.listen({})...", listen);
-            app.listen(listen).await.map_err(|err| {
-                let dyn_err: Box<dyn std::error::Error> = Box::new(err);
-                dyn_err
-            })
+            println!("server()...");
+            let args = Args{ port: 8080, reset_db: true };
+            server(&args).await
         };
 
         lazy_static::lazy_static! {
@@ -164,7 +152,7 @@ mod tests {
         }
 
         let selelium = async {
-            std::thread::sleep( Duration::from_secs( 1 ) );
+            std::thread::sleep( Duration::from_secs( 5 ) );
             println!("selelium...");
             rufs_base_rust::client::tests::selelium(&WATCHER, "/home/alexsandro/Downloads/webapp-rust.side", "http://localhost:8080").await
         };

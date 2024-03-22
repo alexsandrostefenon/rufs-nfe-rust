@@ -378,7 +378,9 @@ class DataViewManagerWs {
 
 	login(obj_in) {
 		let url = `${this.path}/wasm_ws/login`;
-		return fetch(url, {method: "POST", body: JSON.stringify(obj_in)}).
+		let options = {method: "POST", body: JSON.stringify(obj_in), headers: {}};
+		options.headers["Content-Type"] = "application/json";
+		return fetch(url, options).
 		then(response => {
 			if (response.status != 200) {
 				return response.text().
@@ -397,6 +399,7 @@ class DataViewManagerWs {
 
     process(obj_in) {
 		let options = {method: "POST", body: JSON.stringify(obj_in), headers: {}};
+		options.headers["Content-Type"] = "application/json";
 
 		if (this.token != undefined) {
 			options.headers["Authorization"] = "Bearer " + this.token;
@@ -425,8 +428,7 @@ async function run() {
 	if (urlParams.get("mode") == "ws") {
 		dataViewManager = new DataViewManagerWs(path);
 	} else {
-		// import init, { DataViewManager } from '../rufs_nfe_rust.js';
-		const rufs_nfe_rust = await import("../rufs_nfe_rust.js");
+		const rufs_nfe_rust = await import("../../pkg/rufs_nfe_rust.js");
 		await rufs_nfe_rust.default();
 		dataViewManager = new rufs_nfe_rust.DataViewManager(path);
 	}
