@@ -31,7 +31,6 @@ clap = { version = "4.2.7", features = ["derive"] }
 
 [dependencies]
 lazy_static = "1.4.0"
-anyhow = "1.0.69"
 chrono = { version = "0.4.26", features = ["alloc", "wasmbind", "serde"] }
 reqwest = { version = "0.11.17", features = ["json"] }
 workflow-websocket = "0.3.17"
@@ -43,15 +42,19 @@ regex = "1"
 indexmap = "1.9.2"
 openapiv3 = "1.0"
 convert_case = "0.6"
-queryst = "2.1"
-serde_qs = "0.12.0"
-nested_qs = "0.1.2"
+# queryst = "2.1"
+# serde_qs = "0.12.0"
+# nested_qs = "0.1.2"
 md5 = "0.7.0"
+rsfbclient = {version="0.24.0", features = ["pure_rust"], optional = true}
 
 [features]
-default = ["warp"]
+default = ["warp", "postgres"]
+# default = ["warp", "postgres", "clipp"]
 tide = ["dep:tide"]
 warp = ["dep:warp"]
+postgres = []
+clipp = ["dep:rsfbclient"]
 
 [dependencies.web-sys]
 version = "0.3"

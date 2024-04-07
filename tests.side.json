@@ -63,14 +63,14 @@
       "command": "select",
       "target": "id=instance--request--person",
       "targets": [],
-      "value": "label=93209765016110 - WMS SUPERMERCADOS DO BRASIL LTDA"
+      "value": "label=93.209.765/0161-10 - WMS SUPERMERCADOS DO BRASIL LTDA"
     }, {
       "id": "4a2ecc87-7554-402e-b231-3900e105b616",
       "comment": "",
       "command": "select",
       "target": "id=instance--request--personDest",
       "targets": [],
-      "value": "label=80803792034 - ALEXSANDRO STEFENON"
+      "value": "label=808.037.920-34 - ALEXSANDRO STEFENON"
     }, {
       "id": "99308d4f-0796-4390-b461-4d5a0d55d76c",
       "comment": "",
@@ -290,7 +290,7 @@
       "command": "assertSelectedValue",
       "target": "id=instance--request-request_payment--account",
       "targets": [],
-      "value": "80803792034 - ALEXSANDRO STEFENON - Caixa Interno"
+      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
     }, {
       "id": "876d0341-3fad-4e4c-8e5c-c490a730a2bb",
       "comment": "",
@@ -816,14 +816,14 @@
       "id": "0e9fcc52-8aef-4d94-bb13-736a23ba0b34",
       "comment": "",
       "command": "click",
-      "target": "xpath=(//a[contains(@href, '#!/app/account/edit?id=1&rufsGroupOwner=2')])",
+      "target": "xpath=(//a[contains(@href, '#!/app/account/edit?id=1')])",
       "targets": [
         ["id=table_row-edit--account--1", "id"],
         ["css=#table-row-edit-account-1", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[2]", "xpath:link"],
         ["xpath=//a[@id='table-row-edit-account-1']", "xpath:attributes"],
         ["xpath=//table[@id='table-account']/tbody/tr[2]/td/a[2]", "xpath:idRelative"],
-        ["xpath=(//a[contains(@href, '#!/app/account/edit?id=1&rufsGroupOwner=2')])[2]", "xpath:href"],
+        ["xpath=(//a[contains(@href, '#!/app/account/edit?id=1')])[2]", "xpath:href"],
         ["xpath=//tr[2]/td/a[2]", "xpath:position"]
       ],
       "value": ""
@@ -850,7 +850,7 @@
       "id": "eb4c954f-9f56-477a-870c-29b6ccdeb509",
       "comment": "",
       "command": "click",
-      "target": "xpath=(//a[contains(@href, '#!/app/account/edit?id=2&rufsGroupOwner=2')])",
+      "target": "xpath=(//a[contains(@href, '#!/app/account/edit?id=2')])",
       "targets": [
         ["id=table_row-edit--account--0", "id"],
         ["linkText=Edit", "linkText"],
@@ -858,7 +858,7 @@
         ["xpath=//a[contains(text(),'Edit')]", "xpath:link"],
         ["xpath=//a[@id='table-row-edit-account-0']", "xpath:attributes"],
         ["xpath=//table[@id='table-account']/tbody/tr/td/a[2]", "xpath:idRelative"],
-        ["xpath=(//a[contains(@href, '#!/app/account/edit?id=2&rufsGroupOwner=2')])[2]", "xpath:href"],
+        ["xpath=(//a[contains(@href, '#!/app/account/edit?id=2')])[2]", "xpath:href"],
         ["xpath=//td/a[2]", "xpath:position"],
         ["xpath=//a[contains(.,'Edit')]", "xpath:innerText"]
       ],
@@ -905,16 +905,8 @@
       "id": "67111833-174f-426f-96ee-4b2722ff6dc0",
       "comment": "",
       "command": "clickAt",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93209765016110')]",
-      "targets": [
-        ["linkText=View", "linkText"],
-        ["css=td:nth-child(1) > .ng-binding", "css:finder"],
-        ["xpath=//a[contains(text(),'View')]", "xpath:link"],
-        ["xpath=//tbody[@id='edit-person-crud-table-body']/tr/td/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93209765016110')]", "xpath:href"],
-        ["xpath=//td/a", "xpath:position"],
-        ["xpath=//a[contains(.,' View')]", "xpath:innerText"]
-      ],
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93.209.765%2F0161-10')]",
+      "targets": [],
       "value": ""
     }, {
       "id": "5d17bb44-97bd-4251-b9c0-1662a2fda63b",
@@ -927,23 +919,15 @@
       "id": "92a3b14a-913d-4bfc-9359-cc86b42a95f5",
       "comment": "",
       "command": "waitForElementNotPresent",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93209765016110')]",
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93.209.765%2F0161-10')]",
       "targets": [],
       "value": "30000"
     }, {
       "id": "4f9b2f1f-a223-4c57-b9ee-057351aec9e8",
       "comment": "",
       "command": "clickAt",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=80803792034')]",
-      "targets": [
-        ["linkText=View", "linkText"],
-        ["css=td:nth-child(1) > .ng-binding", "css:finder"],
-        ["xpath=//a[contains(text(),'View')]", "xpath:link"],
-        ["xpath=//tbody[@id='edit-person-crud-table-body']/tr/td/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=80803792034')]", "xpath:href"],
-        ["xpath=//td/a", "xpath:position"],
-        ["xpath=//a[contains(.,' View')]", "xpath:innerText"]
-      ],
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=808.037.920-34')]",
+      "targets": [],
       "value": ""
     }, {
       "id": "9223cbd7-14e1-44c6-b7a0-b6c1f9449e2d",
@@ -956,23 +940,15 @@
       "id": "27999a6f-6ba9-4b10-856a-30f77ff17ab4",
       "comment": "",
       "command": "waitForElementNotPresent",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=80803792034')]",
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=808.037.920-34')]",
       "targets": [],
       "value": "30000"
     }, {
       "id": "9960881e-93c9-41bc-817f-8f8d0fff568a",
       "comment": "",
       "command": "clickAt",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60701190000104')]",
-      "targets": [
-        ["linkText=View", "linkText"],
-        ["css=td:nth-child(1) > .ng-binding", "css:finder"],
-        ["xpath=//a[contains(text(),'View')]", "xpath:link"],
-        ["xpath=//tbody[@id='edit-person-crud-table-body']/tr/td/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93209765016110')]", "xpath:href"],
-        ["xpath=//td/a", "xpath:position"],
-        ["xpath=//a[contains(.,' View')]", "xpath:innerText"]
-      ],
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60.701.190%2F0001-04')]",
+      "targets": [],
       "value": ""
     }, {
       "id": "90062dc9-f073-4474-81eb-82b09003d9c5",
@@ -985,7 +961,7 @@
       "id": "ec7acbf0-41b8-4593-8af0-f5b0ab524d57",
       "comment": "",
       "command": "waitForElementNotPresent",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60701190000104')]",
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60.701.190%2F0001-04')]",
       "targets": [],
       "value": "30000"
     }, {
@@ -993,24 +969,14 @@
       "comment": "",
       "command": "waitForElementNotVisible",
       "target": "id=http-error",
-      "targets": [
-        ["css=strong.ng-binding", "css"],
-        ["css=#http-error > .ng-binding", "css:finder"],
-        ["xpath=//div[@id='http-error']/strong", "xpath:idRelative"],
-        ["xpath=//strong", "xpath:position"]
-      ],
+      "targets": [],
       "value": "1000"
     }, {
       "id": "e4c68e73-7fe7-41fa-b89c-d202a82c7266",
       "comment": "",
       "command": "clickAt",
       "target": "id=menu-Cadastros",
-      "targets": [
-        ["id=menu-Cadastros", "id"],
-        ["css=#single-button-form", "css"],
-        ["xpath=//button[@id='single-button-form']", "xpath:attributes"],
-        ["xpath=//div[3]/button", "xpath:position"]
-      ],
+      "targets": [],
       "value": "29,25"
     }, {
       "id": "60275aa3-fc19-497e-b681-fe156b456cb6",
@@ -1024,15 +990,7 @@
       "comment": "",
       "command": "clickAt",
       "target": "xpath=//a[contains(@href, '#!/app/product/view?id=1')]",
-      "targets": [
-        ["linkText=View", "linkText"],
-        ["css=td:nth-child(1) > .ng-binding", "css:finder"],
-        ["xpath=//a[contains(text(),'View')]", "xpath:link"],
-        ["xpath=//tbody[@id='edit-person-crud-table-body']/tr/td/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93209765016110')]", "xpath:href"],
-        ["xpath=//td/a", "xpath:position"],
-        ["xpath=//a[contains(.,' View')]", "xpath:innerText"]
-      ],
+      "targets": [],
       "value": ""
     }, {
       "id": "c9cf7f45-162f-47e9-aa0c-c338334c2929",
@@ -1046,12 +1004,7 @@
       "comment": "",
       "command": "waitForElementNotVisible",
       "target": "id=http-error",
-      "targets": [
-        ["css=strong.ng-binding", "css"],
-        ["css=#http-error > .ng-binding", "css:finder"],
-        ["xpath=//div[@id='http-error']/strong", "xpath:idRelative"],
-        ["xpath=//strong", "xpath:position"]
-      ],
+      "targets": [],
       "value": "1000"
     }]
   }, {
@@ -1281,7 +1234,7 @@
       "id": "54293877-749a-4b07-91d1-d95e181af435",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/request/edit?id=1&rufsGroupOwner=2')]",
+      "target": "xpath=//a[contains(@href, '#!/app/request/edit?id=1')]",
       "targets": [
         ["id=table_row-edit--request--0", "id"],
         ["linkText=Edit", "linkText"],
@@ -1289,7 +1242,7 @@
         ["xpath=//a[contains(text(),'Edit')]", "xpath:link"],
         ["xpath=//a[@id='table-row-edit-request-0']", "xpath:attributes"],
         ["xpath=//table[@id='table-request']/tbody/tr/td/a[2]", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/request/edit?id=1&rufsGroupOwner=2')]", "xpath:href"],
+        ["xpath=//a[contains(@href, '#!/app/request/edit?id=1')]", "xpath:href"],
         ["xpath=//td/a[2]", "xpath:position"],
         ["xpath=//a[contains(.,'Edit')]", "xpath:innerText"]
       ],
@@ -1298,16 +1251,8 @@
       "id": "d245a86a-2d19-4739-a5c2-0e97213bf6ad",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/request-request_product/edit?id=1&rufsGroupOwner=2')]",
-      "targets": [
-        ["id=table-row-edit-request-request_product-0", "id"],
-        ["css=#table-row-edit-request-request_product-0", "css:finder"],
-        ["xpath=(//a[contains(text(),'Edit')])[2]", "xpath:link"],
-        ["xpath=//a[@id='table-row-edit-request-request_product-0']", "xpath:attributes"],
-        ["xpath=//table[@id='table-request-request_product']/tbody/tr/td/a[2]", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/request-request_product/edit?id=1&rufsGroupOwner=2')]", "xpath:href"],
-        ["xpath=//div[2]/div/table/tbody/tr/td/a[2]", "xpath:position"]
-      ],
+      "target": "xpath=//a[contains(@href, '#!/app/request-request_product/edit?product=1&request=1&serials=')]",
+      "targets": [],
       "value": ""
     }, {
       "id": "ce1d368c-d361-47ef-945c-18b2968bd995",
@@ -1334,40 +1279,22 @@
       "id": "b86188c6-a29d-4b65-876d-228fcfe2c8c0",
       "comment": "",
       "command": "waitForElementNotPresent",
-      "target": "xpath=//a[contains(@href, '#!/app/request-request_product/edit?id=1&rufsGroupOwner=2')]",
+      "target": "xpath=//a[contains(@href, '#!/app/request-request_product/edit?product=1&request=1&serials=')]",
       "targets": [],
       "value": "30000"
     }, {
       "id": "856d4561-ccd5-4bc8-9ff6-df6cca1549ce",
       "comment": "",
       "command": "assertElementNotPresent",
-      "target": "xpath=//a[contains(@href, '#!/app/request-request_product/edit?id=1&rufsGroupOwner=2')]",
-      "targets": [
-        ["id=table-row-view-request-request_product-0", "id"],
-        ["css=#table-row-view-request-request_product-0", "css:finder"],
-        ["xpath=(//a[contains(text(),'View')])[2]", "xpath:link"],
-        ["xpath=//a[@id='table-row-view-request-request_product-0']", "xpath:attributes"],
-        ["xpath=//table[@id='table-request-request_product']/tbody/tr/td/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/request-request_product/edit?id=1&rufsGroupOwner=2')]", "xpath:href"],
-        ["xpath=//div[2]/table/tbody/tr/td/a", "xpath:position"]
-      ],
+      "target": "xpath=//a[contains(@href, '#!/app/request-request_product/edit?product=1&request=1&serials=')]",
+      "targets": [],
       "value": "41,8"
     }, {
       "id": "94632626-2dde-42e1-b347-3a9d40c509b2",
       "comment": "",
       "command": "click",
-      "target": "xpath=(//a[contains(@href, '#!/app/request-request_payment/edit?id=1&rufsGroupOwner=2')])",
-      "targets": [
-        ["id=table-row-edit-request-request_payment-0", "id"],
-        ["linkText=Edit", "linkText"],
-        ["css=#table-row-edit-request-request_payment-0", "css:finder"],
-        ["xpath=//a[contains(text(),'Edit')]", "xpath:link"],
-        ["xpath=//a[@id='table-row-edit-request-request_payment-0']", "xpath:attributes"],
-        ["xpath=//table[@id='table-request-request_payment']/tbody/tr/td/a[2]", "xpath:idRelative"],
-        ["xpath=(//a[contains(@href, '#!/app/request-request_payment/edit?id=1&rufsGroupOwner=2')])[2]", "xpath:href"],
-        ["xpath=//td/a[2]", "xpath:position"],
-        ["xpath=//a[contains(.,'Edit')]", "xpath:innerText"]
-      ],
+      "target": "xpath=(//a[contains(@href, '#!/app/request-request_payment/edit?id=1')])",
+      "targets": [],
       "value": ""
     }, {
       "id": "18e8e342-9627-4759-8c46-cb97d847eb6f",
@@ -1392,7 +1319,7 @@
       "id": "e108ce7c-468d-41c5-88e1-dcbd36c40dc3",
       "comment": "",
       "command": "assertElementNotPresent",
-      "target": "xpath=(//a[contains(@href, '#!/app/request-request_payment/edit?id=1&rufsGroupOwner=2')])",
+      "target": "xpath=(//a[contains(@href, '#!/app/request-request_payment/edit?id=1')])",
       "targets": [],
       "value": ""
     }, {
@@ -1532,14 +1459,8 @@
       "command": "type",
       "target": "id=instance--person--cnpjCpf",
       "targets": [
-        ["id=person-cnpjCpf", "id"],
-        ["name=cnpjCpf", "name"],
-        ["css=#person-cnpjCpf", "css:finder"],
-        ["xpath=//input[@id='person-cnpjCpf']", "xpath:attributes"],
-        ["xpath=//div[@id='field-person-cnpjCpf_controls']/input", "xpath:idRelative"],
-        ["xpath=//input", "xpath:position"]
       ],
-      "value": "93209765016110"
+      "value": "93.209.765/0161-10"
     }, {
       "id": "f268ae28-e99b-4325-84d0-17da5e552388",
       "comment": "",
@@ -1593,7 +1514,7 @@
       "command": "type",
       "target": "id=instance--person--zip",
       "targets": [],
-      "value": "92310001"
+      "value": "92310-001"
     }, {
       "id": "18a3a55e-c691-4f89-a186-11fef80d26cb",
       "comment": "",
@@ -1692,7 +1613,7 @@
       "id": "c0457880-30e9-4805-a38a-006c08b8849e",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93209765016110')]",
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93.209.765%2F0161-10')]",
       "targets": [],
       "value": ""
     }, {
@@ -1708,7 +1629,7 @@
       "command": "assertValue",
       "target": "id=instance--person--cnpjCpf",
       "targets": [],
-      "value": "93209765016110"
+      "value": "93.209.765/0161-10"
     }, {
       "id": "3123bcb1-6804-4a06-a37b-2507e72718f4",
       "comment": "",
@@ -1729,7 +1650,7 @@
       "command": "assertValue",
       "target": "id=instance--person--zip",
       "targets": [],
-      "value": "92310001"
+      "value": "92310-001"
     }, {
       "id": "833eb452-820c-49c5-b5a6-4ae954149554",
       "comment": "",
@@ -2012,7 +1933,7 @@
       "command": "type",
       "target": "id=instance--person--cnpjCpf",
       "targets": [],
-      "value": "80803792034"
+      "value": "808.037.920-34"
     }, {
       "id": "854e3dc1-afc8-4243-abcb-97aedfe00786",
       "comment": "",
@@ -2083,14 +2004,8 @@
       "id": "ed37c170-9800-4e6d-9b3e-782a2aff4e36",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=80803792034')]",
-      "targets": [
-        ["css=.ng-scope:nth-child(2) > td:nth-child(1) > .ng-binding", "css:finder"],
-        ["xpath=(//a[contains(text(),'View')])[2]", "xpath:link"],
-        ["xpath=//tbody[@id='edit-person-crud-table-body']/tr[2]/td/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=80803792034')]", "xpath:href"],
-        ["xpath=//tr[2]/td/a", "xpath:position"]
-      ],
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=808.037.920-34')]",
+      "targets": [],
       "value": ""
     }, {
       "id": "9d501148-4766-4d50-a707-adb28b6fb9e5",
@@ -2105,7 +2020,7 @@
       "command": "assertValue",
       "target": "id=instance--person--cnpjCpf",
       "targets": [],
-      "value": "80803792034"
+      "value": "808.037.920-34"
     }, {
       "id": "db3b035b-ec8f-4a46-878b-d40b3f89834a",
       "comment": "",
@@ -2144,7 +2059,7 @@
       "command": "select",
       "target": "id=instance--account--person",
       "targets": [],
-      "value": "label=80803792034 - ALEXSANDRO STEFENON"
+      "value": "label=808.037.920-34 - ALEXSANDRO STEFENON"
     }, {
       "id": "7cfaa811-5ecc-430e-9c70-5303c55854f3",
       "comment": "",
@@ -2214,7 +2129,7 @@
       "command": "select",
       "target": "id=instance--account--person",
       "targets": [],
-      "value": "60701190000104 - ITAÚ UNIBANCO S.A."
+      "value": "60.701.190/0001-04 - ITAÚ UNIBANCO S.A."
     }, {
       "id": "9b17fbb4-2864-48be-8126-655fc6cfc894",
       "comment": "",
@@ -2284,7 +2199,7 @@
       "command": "type",
       "target": "id=instance--person--cnpjCpf",
       "targets": [],
-      "value": "60701190000104"
+      "value": "60.701.190/0001-04"
     }, {
       "id": "8326865e-ae2b-415d-93a0-2c677f3a4bfb",
       "comment": "",
@@ -2355,14 +2270,8 @@
       "id": "93462c1c-2f43-456a-9f2d-5b6eebdb799e",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60701190000104')]",
-      "targets": [
-        ["css=.ng-scope:nth-child(2) > td:nth-child(1) > .ng-binding", "css:finder"],
-        ["xpath=(//a[contains(text(),'View')])[2]", "xpath:link"],
-        ["xpath=//tbody[@id='edit-person-crud-table-body']/tr[2]/td/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60701190000104')]", "xpath:href"],
-        ["xpath=//tr[2]/td/a", "xpath:position"]
-      ],
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60.701.190%2F0001-04')]",
+      "targets": [],
       "value": ""
     }, {
       "id": "6722bc8c-e313-4d74-8586-97305edfd0ae",
@@ -2377,7 +2286,7 @@
       "command": "assertValue",
       "target": "id=instance--person--cnpjCpf",
       "targets": [],
-      "value": "60701190000104"
+      "value": "60.701.190/0001-04"
     }, {
       "id": "83f18a10-13a1-4958-a52a-552b262d4618",
       "comment": "",
@@ -2401,14 +2310,7 @@
       "comment": "",
       "command": "click",
       "target": "id=menu-Rotinas",
-      "targets": [
-        ["id=menu-Rotinas", "id"],
-        ["css=#single-button-actions", "css:finder"],
-        ["xpath=//button[@id='single-button-actions']", "xpath:attributes"],
-        ["xpath=//div[@id='header']/div/div[2]/ul/div[2]/button", "xpath:idRelative"],
-        ["xpath=//div[2]/button", "xpath:position"],
-        ["xpath=//button[contains(.,'Actions')]", "xpath:innerText"]
-      ],
+      "targets": [],
       "value": ""
     }, {
       "id": "4d2e0471-8f9b-4df8-82e9-ac1cdc670572",

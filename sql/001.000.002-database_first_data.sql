@@ -22,7 +22,7 @@ INSERT INTO request_state (id, description, name, next, prev, stock_action, type
 (220, NULL, 'Montando Orçamento', NULL, 210, NULL, 2),
 (230, NULL, 'Enviar Orçamento', NULL, 220, NULL, 2),
 (240, NULL, 'Aguardando Resposta', NULL, 230, NULL, 2),
-(250, NULL, 'Recusado, efetuado em outro fornecedor', NULL, 240, NULL, 2),
+(250, NULL, 'Recusado', NULL, 240, NULL, 2),
 (260, NULL, 'Aprovado, dar andamento', NULL, 240, 8, 2),
 (270, NULL, 'Aprovado, aguardando peças', NULL, 260, 8, 2),
 (280, NULL, 'Aprovado, efetuar serviços', NULL, 260, 8, 2),
@@ -41,7 +41,7 @@ array[
 '{"group":"actions","label":"Compra","path":"request/new?overwrite[type]=1&overwrite[state]=10"}',
 '{"group":"actions","label":"Venda","path":"request/new?overwrite[type]=2&overwrite[state]=10"}',
 '{"group":"form","label":"Financeiro","path":"request_payment/search"}',
-'{"group":"form","label":"Estoque","path":"stock/search"}',
+--'{"group":"form","label":"Estoque","path":"stock/search"}',
 '{"group":"form","label":"Produtos","path":"product/search"}',
 '{"group":"form","label":"Clientes e Fornecedores","path":"person/search"}',
 '{"group":"form","label":"Requisições","path":"request/search"}',
@@ -69,12 +69,13 @@ array[
 '{"path": "/service", "mask": 7}',
 '{"path": "/barcode", "mask": 7}',
 '{"path": "/request", "mask": 23}',
+'{"path": "/request_repair", "mask": 23}',
 '{"path": "/request_product", "mask": 23}',
 '{"path": "/request_service", "mask": 23}',
 '{"path": "/request_payment", "mask": 23}',
 '{"path": "/request_nfe", "mask": 23}',
-'{"path": "/request_freight", "mask": 23}',
-'{"path": "/stock", "mask": 7}'
+--'{"path": "/stock", "mask": 7}'
+'{"path": "/request_freight", "mask": 23}'
 ]::jsonb[], 
 array['{"path":"/app/request/:action","controller":"RequestController"}']::jsonb[] 
 FROM rufs_group_owner WHERE name='nfe_guest_group';

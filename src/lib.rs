@@ -1,11 +1,9 @@
-use anyhow::{Context};
 use chrono::NaiveDateTime;
 use rufs_base_rust::client::{DataView, DataViewWatch, ServerConnection, DataViewProcessAction, HtmlElementId, FormType};
 #[cfg(target_arch = "wasm32")]
 use rufs_base_rust::client::DataViewManagerWrapper;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-//use convert_case::Casing;
 #[cfg(target_arch = "wasm32")]
 use web_log::println;
 
@@ -14,7 +12,7 @@ pub struct RufsNfe {}
 #[derive(Deserialize,Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Request {
-     rufs_group_owner: usize,
+     //rufs_group_owner: usize,
      id              : usize,
      #[serde(rename = "type")]
      typ            : usize,
@@ -35,7 +33,7 @@ struct Request {
 #[serde(rename_all = "camelCase")]
 struct RequestProduct {
     id :Option<usize>,
-    rufs_group_owner :usize,
+    //rufs_group_owner :usize,
     request :usize,
     product :usize,
     quantity :f64,
@@ -63,7 +61,7 @@ impl RufsNfe {
         println!("[request_payment_adjusts] : old account  = {}", account);
 
         if account.is_null() {
-            let accounts = data_view_payment.field_results.get("account").context("expected list of accounts")?;
+            let accounts = data_view_payment.field_results.get("account").ok_or("expected list of accounts")?;
 
             let typ = if let Some(typ) = typ {
                 typ
@@ -73,13 +71,13 @@ impl RufsNfe {
     
             if typ == 1 {
                 if accounts.len() > 0 {
-                    let account = accounts[accounts.len()-1].get("id").context("missing field id in account")?.clone();//accounts[0].id;//
+                    let account = accounts[accounts.len()-1].get("id").ok_or("missing field id in account")?.clone();//accounts[0].id;//
                     //println!("[request_payment_adjusts] 1 : new account  = {}", account);
                     data_view_payment.set_value(server_connection, watcher, "account", &account, element_id)?;
                 }
             } else {
                 if accounts.len() > 1 {
-                    let account = accounts[accounts.len()-2].get("id").context("missing field id in account")?.clone();//accounts.len()-2
+                    let account = accounts[accounts.len()-2].get("id").ok_or("missing field id in account")?.clone();//accounts.len()-2
                     //println!("[request_payment_adjusts] 2 : new account  = {}", account);
                     data_view_payment.set_value(server_connection, watcher, "account", &account, element_id)?;
                 }
@@ -116,7 +114,7 @@ impl DataViewWatch for RufsNfe {
                         }
 
                         let field_value :f64 = match field_value {
-                            Value::Number(field_value) => field_value.as_f64().context("expected type is f64")?,
+                            Value::Number(field_value) => field_value.as_f64().ok_or("expected type is f64")?,
                             _ => todo!(),
                         };
 
@@ -156,7 +154,7 @@ impl DataViewWatch for RufsNfe {
                         data_view.set_value(server_connection, self, "productsValue", &json!(request_products_value_new), element_id_parent)?;
                         data_view.set_value(server_connection, self, "descValue", &json!(request_desc_value_new), element_id_parent)?;
                         data_view.set_value(server_connection, self, "sumValue", &json!(((request_products_value_new - request_desc_value_new) * 100.0).trunc()/100.0), element_id_parent)?;
-                        let data_view_payment = data_view.childs.iter_mut().find(|item| item.data_view_id.schema_name == "requestPayment").context(format!("Missing child {} in parent {}", "requestPayment", data_view.data_view_id.schema_name))?;
+                        let data_view_payment = data_view.childs.iter_mut().find(|item| item.data_view_id.schema_name == "requestPayment").ok_or_else(|| format!("Missing child {} in parent {}", "requestPayment", data_view.data_view_id.schema_name))?;
                         let request: Request = serde_json::from_value(data_view.params.instance.clone())?;
                         RufsNfe::request_payment_adjusts(data_view_payment, self, server_connection, &request, None, element_id)?;
                     }
@@ -167,12 +165,12 @@ impl DataViewWatch for RufsNfe {
                         let typ = field_value.as_u64().unwrap_or(1);
                         // due_date
                         if [1,4,10,11,12,13].contains(&typ) {
-                            let value = data_view.params.instance.get("date").context("check_set_value 1 : context")?;
+                            let value = data_view.params.instance.get("date").ok_or("check_set_value 1 : context")?;
                             data_view_child.set_value(server_connection, self, "dueDate", value, element_id)?;
                         }
                         // payday
                         if [1,4,10,11,12,13].contains(&typ) {
-                            let value = data_view.params.instance.get("date").context("check_set_value 2 : context")?;
+                            let value = data_view.params.instance.get("date").ok_or("check_set_value 2 : context")?;
                             //data_view_child.params.instance["payday"] = value.clone();
                             data_view_child.set_value(server_connection, self, "payday", value, element_id)?;
                         }
@@ -224,6 +222,7 @@ impl DataViewWatch for RufsNfe {
             "Cadastros": {
                 "Clientes e Fornecedores": "person/search",
                 "Produtos": "product/search",
+                "Serviços": "service/search",
                 "Contas": "account/search",
                 "Requisições": "request/search",
                 "Usuários": "rufs_user/search",
@@ -231,10 +230,14 @@ impl DataViewWatch for RufsNfe {
             "Movimento": {
                 "Financeiro": "request_payment/search",
                 "Estoque": "stock/search",
+                "Vendas": "request_product/search",
+                "Serviços": "request_service/search",
+                "Consertos": "request_repair/search",
             },
             "Rotinas": {
                 "Compra": "request/new?instance.type=1&instance.state=10",
                 "Venda": "request/new?instance.type=2&instance.state=10",
+                "Conserto": "request/new?instance.type=2&instance.state=10",
                 "Importar": "request/import?instance.type=1&instance.state=10",
             },
             "Tabelas": {
