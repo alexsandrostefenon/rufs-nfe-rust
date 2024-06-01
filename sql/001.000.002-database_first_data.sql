@@ -35,7 +35,7 @@ INSERT INTO rufs_group_owner (name) VALUES ('nfe_guest_group');
 --split
 INSERT INTO rufs_group (name) VALUES ('Mercado');
 
-INSERT INTO rufs_user (rufs_group_owner, name, password, path, menu, roles, routes) SELECT id, 'guest', 'e10adc3949ba59abbe56e057f20f883e', 'request/search', 
+INSERT INTO rufs_user (rufs_group_owner, name, password, path, menu, roles, routes) SELECT name, 'guest', 'e10adc3949ba59abbe56e057f20f883e', 'request/search', 
 array[
 '{"group":"actions","label":"Importar","path":"request/import?overwrite[type]=1&overwrite[state]=10"}',
 '{"group":"actions","label":"Compra","path":"request/new?overwrite[type]=1&overwrite[state]=10"}',
@@ -80,7 +80,7 @@ array[
 array['{"path":"/app/request/:action","controller":"RequestController"}']::jsonb[] 
 FROM rufs_group_owner WHERE name='nfe_guest_group';
 
-INSERT INTO rufs_group_user (rufs_user, rufs_group) SELECT u.id, g.id FROM rufs_user AS u, rufs_group AS g WHERE u.name='guest' AND g.name='Mercado';
+--INSERT INTO rufs_group_user (rufs_user, rufs_group, rufs_group_owner) SELECT u.name, g.name, go.name FROM rufs_user AS u, rufs_group AS g, rufs_group_owner AS go WHERE u.name='guest' AND g.name='Mercado' AND go.name='nfe_guest_group';
 
 INSERT INTO payment_type (id,name) VALUES
 (1, 'Dinheiro'),

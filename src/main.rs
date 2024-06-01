@@ -11,6 +11,7 @@ struct Args {
     port: u16,
     #[cfg(debug_assertions)]
     #[cfg(feature = "postgres")]
+    //#[arg(long,default_value = "false")]
     #[arg(long,default_value = "true")]
     reset_db: bool,
     #[cfg(not(debug_assertions))]
@@ -22,8 +23,6 @@ struct Args {
 #[cfg(feature = "clipp")]
 async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::error::Error>> {
     use std::collections::HashMap;
-
-    use anyhow::Context;
     use convert_case::Casing;
     use rsfbclient::{prelude::*, FbError};
     use rufs_base_rust::entity_manager::EntityManager;
@@ -83,7 +82,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
                 Ok(value) => value,
                 Err(err) => {
                     if err.to_string().contains(r#"duplicate key value violates unique constraint "person_pkey""#) {
-                        map.insert(obj.get("idImport").context("broken id_import")?.as_u64().context("broken u64")?, obj.get("cnpjCpf").context("broken cnpj_cpf")?.as_str().context("broken str")?.to_string());
+                        map.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj.get("cnpjCpf").ok_or("broken cnpj_cpf")?.as_str().ok_or("broken str")?.to_string());
                         continue;
                     }
 
@@ -91,7 +90,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
                 },
             };
 
-            map.insert(obj.get("idImport").context("broken id_import")?.as_u64().context("broken u64")?, obj.get("cnpjCpf").context("broken cnpj_cpf")?.as_str().context("broken str")?.to_string());
+            map.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj.get("cnpjCpf").ok_or("broken cnpj_cpf")?.as_str().ok_or("broken str")?.to_string());
         }
 
         map
@@ -103,7 +102,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
         id_status,
         2 as type,
         id_status as state,
-        '90.000.000/0001-00' as person,
+        '90.979.337/0001-85' as person,
         id_cliente,
         (dt_os || 'T' || hr_os) as "date",
         left(observacao,255) as additional_data,
@@ -123,9 +122,9 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
             };
 
             let mut obj = get_json(&row)?;
-            let client_id = obj.get("idCliente").context("broken")?.as_u64().context("broken")?;
+            let client_id = obj.get("idCliente").ok_or("broken")?.as_u64().ok_or("broken")?;
             obj["personDest"] = json!(map_person.get(&client_id));
-            let obj_id_status_in = obj.get("idStatus").context("Missing id_status")?.as_u64().context("broken u64")?;
+            let obj_id_status_in = obj.get("idStatus").ok_or("Missing id_status")?.as_u64().ok_or("broken u64")?;
 
             for (id_in, id_out) in vec![(1, 220),(2, 250), (3, 270), (4, 280), (5, 250), (6, 220), (7, 260), (9, 320), (10, 310), (11, 240), (12, 320)] {
                 if obj_id_status_in == id_in {
@@ -145,7 +144,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
                 },
             };
 
-            map.insert(obj.get("idImport").context("broken id_import")?.as_u64().context("broken u64")?, obj_out.get("id").context("broken request id")?.as_u64().context("broken u64")?);
+            map.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj_out.get("id").ok_or("broken request id")?.as_u64().ok_or("broken u64")?);
         }
 
         map
@@ -172,7 +171,8 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
 
         for row in rows {
             let obj = get_json(&row?)?;
-            let id_tipo_item = obj.get("idTipoitem").context("broken id_tipoitem")?.as_str().context("broken id_tipoitem str")?;
+            let id_tipo_item = obj.get("idTipoitem").ok_or("broken id_tipoitem")?.as_str().ok_or("broken id_tipoitem str")?;
+            let id_import = obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?;
 
             if ["9"].contains(&id_tipo_item) {
                 let obj_out = match rufs.entity_manager.insert(&rufs.openapi, "service", &obj).await {
@@ -182,7 +182,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
                     },
                 };
 
-                map_service.insert(obj.get("idImport").context("broken id_import")?.as_u64().context("broken u64")?, obj_out.get("id").context("broken service id")?.as_u64().context("broken service id u64")?);
+                map_service.insert(id_import, obj_out.get("id").ok_or("broken service id")?.as_u64().ok_or("broken service id u64")?);
             } else {
                 let obj_out = match rufs.entity_manager.insert(&rufs.openapi, "product", &obj).await {
                     Ok(value) => value,
@@ -191,13 +191,49 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
                     },
                 };
 
-                map_product.insert(obj.get("idImport").context("broken id_import")?.as_u64().context("broken u64")?, obj_out.get("id").context("broken product id")?.as_u64().context("broken u64")?);
+                map_product.insert(id_import, obj_out.get("id").ok_or("broken product id")?.as_u64().ok_or("broken u64")?);
             }
 
         }
 
         (map_product, map_service)
     };
+
+    {
+        let sql = r#"
+        select
+        prc_venda as "value",
+        prc_custo as value_cost,
+        margem_lb as margin_sale,
+        id_estoque as id_import
+        from tb_estoque order by id_import
+        "#;
+
+        let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ())?;
+
+        for row in rows {
+            let mut obj = get_json(&row?)?;
+            let id_import = obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?;
+
+            if let Some(id) = map_service.get(&id_import) {
+                obj["id"] = json!(id);
+                match rufs.entity_manager.insert(&rufs.openapi, "stock_service", &obj).await {
+                    Ok(_value) => {},
+                    Err(err) => {
+                        return Err(err)?;
+                    },
+                }
+            } else if let Some(id) = map_product.get(&id_import) {
+                obj["id"] = json!(id);
+                match rufs.entity_manager.insert(&rufs.openapi, "stock_product", &obj).await {
+                    Ok(_value) => {},
+                    Err(err) => {
+                        return Err(err)?;
+                    },
+                };
+            }
+        }
+    }
 
     let _map_request_repair = {
         let sql = r#"
@@ -225,7 +261,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
             };
 
             let mut obj = get_json(&row)?;
-            let id_os = obj.get("idImport").context("Missing idOs")?.as_u64().context("broken u64 idOs")?;
+            let id_os = obj.get("idImport").ok_or("Missing idOs")?.as_u64().ok_or("broken u64 idOs")?;
 
             let Some(request) = map_request.get(&id_os) else {
                 println!("{}", serde_json::to_string_pretty(&obj)?);
@@ -249,7 +285,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
                 },
             };
 
-            map.insert(obj.get("idImport").context("broken id_import")?.as_u64().context("broken u64")?, obj_out.get("request").context("broken request id in request repair.")?.as_u64().context("broken u64")?);
+            map.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj_out.get("request").ok_or("broken request id in request repair.")?.as_u64().ok_or("broken u64")?);
         }
 
         map
@@ -281,8 +317,8 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
             };
 
             let mut obj = get_json(&row)?;
-            let id_identificador = obj.get("idIdentificador").context("Missing idIdentificador")?.as_u64().context("broken u64 idIdentificador")?;
-            let id_os = obj.get("idOs").context("Missing idOs")?.as_u64().context("broken u64 idOs")?;
+            let id_identificador = obj.get("idIdentificador").ok_or("Missing idIdentificador")?.as_u64().ok_or("broken u64 idIdentificador")?;
+            let id_os = obj.get("idOs").ok_or("Missing idOs")?.as_u64().ok_or("broken u64 idOs")?;
 
             let Some(request) = map_request.get(&id_os) else {
                 println!("{}", serde_json::to_string_pretty(&obj)?);
@@ -305,7 +341,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
                     },
                 };
     
-                map_request_product.insert(obj.get("idImport").context("broken id_import")?.as_u64().context("broken u64")?, obj_out);
+                map_request_product.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj_out);
             } else if let Some(service) = map_service.get(&id_identificador) {
                 obj["service"] = json!(service);
 
@@ -320,7 +356,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
                     },
                 };
     
-                map_request_service.insert(obj.get("idImport").context("broken id_import")?.as_u64().context("broken u64")?, obj_out);
+                map_request_service.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj_out);
             } else {
                 println!("{}", serde_json::to_string_pretty(&obj)?);
                 return Err("idIdentificador is not product or service")?;
@@ -336,6 +372,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
 #[cfg(not(target_arch = "wasm32"))]
 async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     use std::path::Path;
+    use rufs_base_rust::rufs_micro_service::RufsMicroServiceAuthenticator;
     use serde_json::Value;
     use rufs_nfe_rust::RufsNfe;
 
@@ -362,6 +399,17 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         println!("...CREATE DATABASE rufs_nfe_rust.");
     }
 
+    #[derive(Clone)]
+    pub struct State {
+        authenticator: RufsMicroServiceAuthenticator
+    }
+        
+    lazy_static::lazy_static! {
+        static ref RUFS_STATE : State = State {
+            authenticator: RufsMicroServiceAuthenticator()
+        };
+    }
+
     lazy_static::lazy_static! {
         static ref WATCHER: Box<dyn DataViewWatch> = Box::new(RufsNfe{}) as Box<dyn DataViewWatch>;
     }
@@ -371,10 +419,12 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    #[cfg(not(debug_assertions))]
-    let fs_prefix = "";
     #[cfg(debug_assertions)]
     let fs_prefix = "rufs-nfe-rust/";
+    #[cfg(not(debug_assertions))]
+    let fs_prefix = "";
+    println!("std::env::current_dir() : {:?}", std::env::current_dir()?);
+    println!("fs_prefix = {:?}", fs_prefix);
 
     let db_uri = format!("postgres://development:123456@localhost:5432/{}", params.app_name);
     let mut rufs = RufsMicroService::connect(&db_uri, true, &format!("{}sql", fs_prefix), params, &WATCHER).await?;
@@ -385,6 +435,10 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
 
     if let Some(field) = rufs.openapi.get_property_mut("requestProduct", "request") {
         field.schema_data.extensions.insert("x-title".to_string(), Value::String("Lista de produtos/componentes".to_string()));
+    }
+
+    if let Some(field) = rufs.openapi.get_property_mut("requestService", "request") {
+        field.schema_data.extensions.insert("x-title".to_string(), Value::String("Lista de serviços".to_string()));
     }
 
     if let Some(field) = rufs.openapi.get_property_mut("requestPayment", "request") {
@@ -407,7 +461,7 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         field.schema_data.extensions.insert("x-shortDescription".to_string(), Value::Bool(true));
     }
 
-    rufs.store_open_api("")?;
+    rufs.store_open_api()?;
 
     if args.reset_db {
         #[cfg(feature = "clipp")]
@@ -419,7 +473,7 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     {
         use warp::Filter;
 
-        let rufs_routes = rufs_base_rust::rufs_micro_service::rufs_warp(rufs).await;
+        let rufs_routes = rufs_base_rust::rufs_micro_service::rufs_warp(rufs, &RUFS_STATE.authenticator).await;
         let listener = format!("127.0.0.1:{}", args.port);
         println!("Staring rufs-nfe server at {}", listener);
         let dedicated = warp::path("nfe_dedicated").and(warp::get()).map(|| {"Hello from rufs-nfe!".to_string()});
@@ -460,7 +514,8 @@ async fn main() {
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(test)]
 mod tests {
-    use async_std::prelude::FutureExt;
+    //use async_std::prelude::FutureExt;
+    use futures_lite::future::FutureExt;
     use rufs_nfe_rust::RufsNfe;
     use std::time::Duration;
     use rufs_base_rust::client::DataViewWatch;

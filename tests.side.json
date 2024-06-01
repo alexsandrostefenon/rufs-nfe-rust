@@ -31,9 +31,9 @@
       "id": "0f2d161b-e43b-4d80-bf94-fd76235a2aea",
       "comment": "",
       "command": "waitForElementVisible",
-      "target": "id=instance--request--type",
+      "target": "id=new-request--type",
       "targets": [
-        ["id=instance--request--type", "id"],
+        ["id=new-request--type", "id"],
         ["name=type", "name"],
         ["css=#instance-request-type", "css:finder"],
         ["xpath=//select[@id='instance-request-type']", "xpath:attributes"],
@@ -46,9 +46,9 @@
       "id": "26ee6801-633b-4566-8c11-c032f09b1bec",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--request--type",
+      "target": "id=new-request--type",
       "targets": [
-        ["id=instance--request--type", "id"],
+        ["id=new-request--type", "id"],
         ["name=type", "name"],
         ["css=#edit-request-type", "css"],
         ["css=#edit-request-type", "css:finder"],
@@ -61,23 +61,23 @@
       "id": "34b5faf0-16c4-476d-83b8-9b57e543c961",
       "comment": "",
       "command": "select",
-      "target": "id=instance--request--person",
+      "target": "id=new-request--person",
       "targets": [],
       "value": "label=93.209.765/0161-10 - WMS SUPERMERCADOS DO BRASIL LTDA"
     }, {
       "id": "4a2ecc87-7554-402e-b231-3900e105b616",
       "comment": "",
       "command": "select",
-      "target": "id=instance--request--personDest",
+      "target": "id=new-request--personDest",
       "targets": [],
       "value": "label=808.037.920-34 - ALEXSANDRO STEFENON"
     }, {
       "id": "99308d4f-0796-4390-b461-4d5a0d55d76c",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--request--state",
+      "target": "id=new-request--state",
       "targets": [
-        ["id=instance--request--state", "id"],
+        ["id=new-request--state", "id"],
         ["name=state", "name"],
         ["css=#edit-request-state", "css"],
         ["css=#edit-request-state", "css:finder"],
@@ -90,9 +90,9 @@
       "id": "e97162a7-edce-4ad1-a64b-72c1b58c4054",
       "comment": "",
       "command": "type",
-      "target": "id=instance--request--date",
+      "target": "id=new-request--date",
       "targets": [
-        ["id=instance--request--date", "id"],
+        ["id=new-request--date", "id"],
         ["name=date", "name"],
         ["css=#edit-request-date", "css"],
         ["xpath=//input[@id='edit-request-date']", "xpath:attributes"],
@@ -116,9 +116,9 @@
       "id": "733a0f0b-6cb7-421e-a672-49af814128bd",
       "comment": "",
       "command": "click",
-      "target": "id=apply-instance--request",
+      "target": "id=apply-new-request",
       "targets": [
-        ["id=apply-instance--request", "id"],
+        ["id=apply-new-request", "id"],
         ["name=save", "name"],
         ["css=#edit-request-save", "css"],
         ["css=#edit-request-save", "css:finder"],
@@ -143,9 +143,9 @@
       "id": "f6b802bf-2777-4a4f-8847-e914bdb7ecdc",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--request--date",
+      "target": "id=new-request--date",
       "targets": [
-        ["id=instance--request--date", "id"],
+        ["id=new-request--date", "id"],
         ["name=date", "name"],
         ["css=#edit-request-date", "css"],
         ["css=#edit-request-date", "css:finder"],
@@ -158,63 +158,63 @@
       "id": "80520c0c-07b3-4d75-808f-4b100d4c7e85",
       "comment": "",
       "command": "waitForElementEditable",
-      "target": "id=instance--request-request_product--product",
+      "target": "id=edit-request--new-request_product--product",
       "targets": [],
       "value": "30000"
     }, {
       "id": "e50c4c69-ee9c-4539-9b78-d940fb5c61e0",
       "comment": "",
       "command": "select",
-      "target": "id=instance--request-request_product--product",
+      "target": "id=edit-request--new-request_product--product",
       "targets": [],
       "value": "REFRIGERANTE COCA COLA ZERO 2 LITROS"
     }, {
       "id": "5c991a43-a5a8-4f7c-8cde-b58ce0d79f48",
       "comment": "",
       "command": "waitForElementEditable",
-      "target": "id=instance--request-request_product--quantity",
+      "target": "id=edit-request--new-request_product--quantity",
       "targets": [],
       "value": "30000"
     }, {
       "id": "6c862906-8eb7-4eea-ba3b-b13921dd0c9b",
       "comment": "",
       "command": "type",
-      "target": "id=instance--request-request_product--quantity",
+      "target": "id=edit-request--new-request_product--quantity",
       "targets": [],
       "value": "8"
     }, {
       "id": "5b3858da-6899-4a41-a25a-2361e5416f93",
       "comment": "",
       "command": "type",
-      "target": "id=instance--request-request_product--value",
+      "target": "id=edit-request--new-request_product--value",
       "targets": [],
       "value": "5.29"
     }, {
       "id": "76cd4051-f056-47c0-9f05-f4c4b8932b70",
       "comment": "",
       "command": "type",
-      "target": "id=instance--request-request_product--valueDesc",
+      "target": "id=edit-request--new-request_product--valueDesc",
       "targets": [],
       "value": "26.40"
     }, {
       "id": "0b18bb0a-6580-4ea0-ba31-a10b70bd88c4",
       "comment": "",
       "command": "type",
-      "target": "id=instance--request-request_product--cfop",
+      "target": "id=edit-request--new-request_product--cfop",
       "targets": [],
       "value": "5102 - Venda de mercadoria adquirida ou recebida de terceiros"
     }, {
       "id": "7ab51e26-b83c-478c-86b0-64853aef4cba",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--request-request_product--value",
+      "target": "id=edit-request--new-request_product--value",
       "targets": [],
       "value": "5.29"
     }, {
       "id": "d7462c65-9dbc-4537-8f55-71fc53b27bdf",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--request-request_product--valueItem",
+      "target": "id=edit-request--new-request_product--valueItem",
       "targets": [],
       "value": "15.92"
     }, {
@@ -233,7 +233,7 @@
       "id": "51fe206a-1ece-4c3e-b260-d270d64dc97c",
       "comment": "",
       "command": "click",
-      "target": "id=apply-instance--request-request_product",
+      "target": "id=apply-edit-request--new-request_product",
       "targets": [],
       "value": ""
     }, {
@@ -252,31 +252,23 @@
       "id": "8edb500c-e734-47f9-9a0f-62c939fd188d",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--request--sumValue",
-      "targets": [
-        ["id=instance--request--sumValue", "id"],
-        ["name=sumValue", "name"],
-        ["css=#edit-request-sumValue", "css"],
-        ["css=#edit-request-sumValue", "css:finder"],
-        ["xpath=//input[@id='edit-request-sumValue']", "xpath:attributes"],
-        ["xpath=//div[@id='edit-request-sumValue_controls']/input", "xpath:idRelative"],
-        ["xpath=//div[7]/div/div/input", "xpath:position"]
-      ],
+      "target": "id=edit-request--sumValue",
+      "targets": [],
       "value": "15.92"
     }, {
       "id": "09e4f31f-3a21-4c09-bdec-d0fba8700b0c",
       "comment": "",
       "command": "select",
-      "target": "id=instance--request-request_payment--type",
+      "target": "id=edit-request--new-request_payment--type",
       "targets": [],
       "value": "0001 - Dinheiro"
     }, {
       "id": "5b06c194-009b-4ced-92a8-5868cc31ea93",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--request-request_payment--value",
+      "target": "id=edit-request--new-request_payment--value",
       "targets": [
-        ["id=instance--requestPayment--value", "id"],
+        ["id=new-requestPayment--value", "id"],
         ["css=#edit-requestPayment-value", "css"],
         ["css=#edit-requestPayment-value", "css:finder"],
         ["xpath=//input[@id='edit-requestPayment-value']", "xpath:attributes"],
@@ -288,16 +280,16 @@
       "id": "85231d53-6ed1-4fc3-ba5f-b8cde5cf7f19",
       "comment": "",
       "command": "assertSelectedValue",
-      "target": "id=instance--request-request_payment--account",
+      "target": "id=edit-request--new-request_payment--account",
       "targets": [],
       "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
     }, {
       "id": "876d0341-3fad-4e4c-8e5c-c490a730a2bb",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--request-request_payment--dueDate",
+      "target": "id=edit-request--new-request_payment--dueDate",
       "targets": [
-        ["id=instance--requestPayment--dueDate", "id"],
+        ["id=new-requestPayment--dueDate", "id"],
         ["name=dueDate", "name"],
         ["css=#edit-requestPayment-dueDate", "css"],
         ["css=#edit-requestPayment-dueDate", "css:finder"],
@@ -310,9 +302,9 @@
       "id": "3f6420b4-9bcf-42cb-9ada-4a362e091955",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--request-request_payment--payday",
+      "target": "id=edit-request--new-request_payment--payday",
       "targets": [
-        ["id=instance--requestPayment--payday", "id"],
+        ["id=new-requestPayment--payday", "id"],
         ["name=payday", "name"],
         ["css=#edit-requestPayment-payday", "css"],
         ["css=#edit-requestPayment-payday", "css:finder"],
@@ -325,7 +317,7 @@
       "id": "b189939b-f34a-41cb-a175-5209b5a0a6e2",
       "comment": "",
       "command": "click",
-      "target": "id=apply-instance--request-request_payment",
+      "target": "id=apply-edit-request--new-request_payment",
       "targets": [],
       "value": ""
     }, {
@@ -344,9 +336,8 @@
       "id": "85e6a828-4cee-4001-802f-7bfe1ad3c0c4",
       "comment": "",
       "command": "assertText",
-      "target": "id=table_row_col--request-request_payment--value-0",
-      "targets": [
-      ],
+      "target": "id=table_row-col-edit-request--search-request_payment--value-0",
+      "targets": [],
       "value": "15.92"
     }]
   }, {
@@ -416,27 +407,16 @@
       "id": "a1e80a65-d4ac-4bff-b603-d0855964967a",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?id=2')]",
-      "targets": [
-        ["id=instance--rufs_user--update", "id"],
-        ["linkText=Edit", "linkText"],
-        ["name=update", "name"],
-        ["css=#edit-rufs_user-update", "css:finder"],
-        ["xpath=//a[contains(text(),'Edit')]", "xpath:link"],
-        ["xpath=//a[@id='edit-rufs_user-update']", "xpath:attributes"],
-        ["xpath=//form[@id='rufsUserForm']/div[2]/div/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/rufs_user/edit?id=2')]", "xpath:href"],
-        ["xpath=//div[2]/div/a", "xpath:position"],
-        ["xpath=//a[contains(.,' Edit')]", "xpath:innerText"]
-      ],
+      "target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?name=guest&rufsGroupOwner=nfe_guest_group')]",
+      "targets": [],
       "value": ""
     }, {
       "id": "aa27b5c8-48c6-4e04-a2ab-a218317e2923",
       "comment": "",
       "command": "clickAt",
-      "target": "id=table_row-edit--rufs_user-roles--20",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--20",
       "targets": [
-        ["id=instance--rufs_user-edit--20", "id"],
+        ["id=new--rufs_user-edit--20", "id"],
         ["css=#edit-rufs_user-edit-20", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[21]", "xpath:link"],
         ["xpath=//a[@id='edit-rufs_user-edit-20']", "xpath:attributes"],
@@ -449,7 +429,7 @@
       "id": "1e8a5ee0-0e52-4f5b-85c9-84a1bfafb0f6",
       "comment": "",
       "command": "click",
-      "target": "id=instance--rufs_user-roles--mask-3",
+      "target": "id=edit-rufs_user--edit-roles--mask-3",
       "targets": [],
       "value": ""
     }, {
@@ -468,24 +448,23 @@
       "id": "67bc35c2-7df1-49ba-934d-544f876733ff",
       "comment": "",
       "command": "assertText",
-      "target": "id=table_row_col--rufs_user-roles--mask-20",
-      "targets": [
-      ],
+      "target": "id=table_row-col-edit-rufs_user--edit-roles--mask-20",
+      "targets": [],
       "value": "31"
     }, {
       "id": "70ac6aa6-734f-413c-ae3c-fe2770699fde",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--rufs_user-roles",
+      "target": "id=apply-edit-rufs_user--edit-roles",
       "targets": [],
       "value": "34,20"
     }, {
       "id": "bce13a6f-2270-4e8f-8e00-852fb00d6c60",
       "comment": "",
       "command": "clickAt",
-      "target": "id=table_row-edit--rufs_user-roles--17",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--17",
       "targets": [
-        ["id=instance--rufs_user-edit--17", "id"],
+        ["id=new--rufs_user-edit--17", "id"],
         ["css=#edit-rufs_user-edit-17", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[18]", "xpath:link"],
         ["xpath=//a[@id='edit-rufs_user-edit-17']", "xpath:attributes"],
@@ -498,7 +477,7 @@
       "id": "0ad141f2-c2c3-4181-b21f-1b130e3f03ab",
       "comment": "",
       "command": "click",
-      "target": "id=instance--rufs_user-roles--mask-3",
+      "target": "id=edit-rufs_user--edit-roles--mask-3",
       "targets": [],
       "value": ""
     }, {
@@ -517,16 +496,16 @@
       "id": "4841d0b6-f7ac-4ccb-bed7-4574943a8aac",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--rufs_user-roles",
+      "target": "id=apply-edit-rufs_user--edit-roles",
       "targets": [],
       "value": "36,17"
     }, {
       "id": "210c4a6c-f7d3-4b9e-a2d3-b4a78b1b57fe",
       "comment": "",
       "command": "clickAt",
-      "target": "id=table_row-edit--rufs_user-roles--10",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--10",
       "targets": [
-        ["id=instance--rufs_user-edit--10", "id"],
+        ["id=new--rufs_user-edit--10", "id"],
         ["css=#edit-rufs_user-edit-10", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[11]", "xpath:link"],
         ["xpath=//a[@id='edit-rufs_user-edit-10']", "xpath:attributes"],
@@ -539,7 +518,7 @@
       "id": "51216490-5382-43b8-a0d2-00a51e96c865",
       "comment": "",
       "command": "click",
-      "target": "id=instance--rufs_user-roles--mask-3",
+      "target": "id=edit-rufs_user--edit-roles--mask-3",
       "targets": [],
       "value": ""
     }, {
@@ -558,16 +537,16 @@
       "id": "1037d518-96fb-464e-a820-b51aaac9e4c0",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--rufs_user-roles",
+      "target": "id=apply-edit-rufs_user--edit-roles",
       "targets": [],
       "value": "36,17"
     }, {
       "id": "3df5c5b6-714d-4fa6-81a2-074e9a3554ec",
       "comment": "",
       "command": "click",
-      "target": "id=table_row-edit--rufs_user-roles--11",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--11",
       "targets": [
-        ["id=instance--rufs_user-edit--11", "id"],
+        ["id=new--rufs_user-edit--11", "id"],
         ["css=#edit-rufs_user-edit-11", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[12]", "xpath:link"],
         ["xpath=//a[@id='edit-rufs_user-edit-11']", "xpath:attributes"],
@@ -580,7 +559,7 @@
       "id": "59f70122-16fb-464b-9734-a9f74553c294",
       "comment": "",
       "command": "click",
-      "target": "id=instance--rufs_user-roles--mask-3",
+      "target": "id=edit-rufs_user--edit-roles--mask-3",
       "targets": [],
       "value": ""
     }, {
@@ -599,7 +578,7 @@
       "id": "fb728f00-575a-4e9b-8fb8-102f53190e2f",
       "comment": "",
       "command": "click",
-      "target": "id=apply-instance--rufs_user-roles",
+      "target": "id=apply-edit-rufs_user--edit-roles",
       "targets": [
         ["css=#edit-roles-add", "css:finder"],
         ["xpath=//button[@id='edit-roles-add']", "xpath:attributes"],
@@ -611,9 +590,9 @@
       "id": "e6fd0459-d814-4d5a-828a-0ae837035eee",
       "comment": "",
       "command": "click",
-      "target": "id=table_row-edit--rufs_user-roles--21",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--21",
       "targets": [
-        ["id=instance--rufs_user-edit--11", "id"],
+        ["id=new--rufs_user-edit--11", "id"],
         ["css=#edit-rufs_user-edit-11", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[12]", "xpath:link"],
         ["xpath=//a[@id='edit-rufs_user-edit-11']", "xpath:attributes"],
@@ -626,7 +605,7 @@
       "id": "3c3f9793-1ff1-44e4-b923-8943ae4ee1ef",
       "comment": "",
       "command": "click",
-      "target": "id=instance--rufs_user-roles--mask-3",
+      "target": "id=edit-rufs_user--edit-roles--mask-3",
       "targets": [],
       "value": ""
     }, {
@@ -645,7 +624,7 @@
       "id": "cfa31e31-ee43-4610-a6ad-2be4e191bf55",
       "comment": "",
       "command": "click",
-      "target": "id=apply-instance--rufs_user-roles",
+      "target": "id=apply-edit-rufs_user--edit-roles",
       "targets": [
         ["css=#edit-roles-add", "css:finder"],
         ["xpath=//button[@id='edit-roles-add']", "xpath:attributes"],
@@ -657,9 +636,9 @@
       "id": "4783cf74-a478-40ec-a62b-afcc01d95c84",
       "comment": "",
       "command": "click",
-      "target": "id=table_row-edit--rufs_user-roles--23",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--23",
       "targets": [
-        ["id=instance--rufs_user-edit--11", "id"],
+        ["id=new--rufs_user-edit--11", "id"],
         ["css=#edit-rufs_user-edit-11", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[12]", "xpath:link"],
         ["xpath=//a[@id='edit-rufs_user-edit-11']", "xpath:attributes"],
@@ -672,7 +651,7 @@
       "id": "cf2e85eb-93d9-42fa-961c-f6c1ea557a35",
       "comment": "",
       "command": "click",
-      "target": "id=instance--rufs_user-roles--mask-3",
+      "target": "id=edit-rufs_user--edit-roles--mask-3",
       "targets": [],
       "value": ""
     }, {
@@ -691,7 +670,7 @@
       "id": "75660f3a-cbf1-49b9-a004-8b48a7ddb335",
       "comment": "",
       "command": "click",
-      "target": "id=apply-instance--rufs_user-roles",
+      "target": "id=apply-edit-rufs_user",
       "targets": [
         ["css=#edit-roles-add", "css:finder"],
         ["xpath=//button[@id='edit-roles-add']", "xpath:attributes"],
@@ -831,7 +810,7 @@
       "id": "bd6912d4-0634-4a59-8431-451f6273a27a",
       "comment": "",
       "command": "clickAt",
-      "target": "id=delete-instance--account",
+      "target": "id=delete-edit-account",
       "targets": [],
       "value": "39,8"
     }, {
@@ -867,7 +846,7 @@
       "id": "9a83e393-30bd-4ca9-a26c-bd0ea7d9f4ca",
       "comment": "",
       "command": "clickAt",
-      "target": "id=delete-instance--account",
+      "target": "id=delete-edit-account",
       "targets": [],
       "value": "39,1"
     }, {
@@ -905,14 +884,14 @@
       "id": "67111833-174f-426f-96ee-4b2722ff6dc0",
       "comment": "",
       "command": "clickAt",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93.209.765%2F0161-10')]",
+      "target": "xpath=//a[contains(@href, '#!/app/person/edit?cnpjCpf=93.209.765%2F0161-10')]",
       "targets": [],
       "value": ""
     }, {
       "id": "5d17bb44-97bd-4251-b9c0-1662a2fda63b",
       "comment": "",
       "command": "clickAt",
-      "target": "id=delete-instance--person",
+      "target": "id=delete-edit-person",
       "targets": [],
       "value": ""
     }, {
@@ -926,14 +905,14 @@
       "id": "4f9b2f1f-a223-4c57-b9ee-057351aec9e8",
       "comment": "",
       "command": "clickAt",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=808.037.920-34')]",
+      "target": "xpath=//a[contains(@href, '#!/app/person/edit?cnpjCpf=808.037.920-34')]",
       "targets": [],
       "value": ""
     }, {
       "id": "9223cbd7-14e1-44c6-b7a0-b6c1f9449e2d",
       "comment": "",
       "command": "clickAt",
-      "target": "id=delete-instance--person",
+      "target": "id=delete-edit-person",
       "targets": [],
       "value": ""
     }, {
@@ -947,14 +926,14 @@
       "id": "9960881e-93c9-41bc-817f-8f8d0fff568a",
       "comment": "",
       "command": "clickAt",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60.701.190%2F0001-04')]",
+      "target": "xpath=//a[contains(@href, '#!/app/person/edit?cnpjCpf=60.701.190%2F0001-04')]",
       "targets": [],
       "value": ""
     }, {
       "id": "90062dc9-f073-4474-81eb-82b09003d9c5",
       "comment": "",
       "command": "clickAt",
-      "target": "id=delete-instance--person",
+      "target": "id=delete-edit-person",
       "targets": [],
       "value": ""
     }, {
@@ -989,14 +968,14 @@
       "id": "9a559199-0b48-4d4e-a18c-48f6e8033adb",
       "comment": "",
       "command": "clickAt",
-      "target": "xpath=//a[contains(@href, '#!/app/product/view?id=1')]",
+      "target": "xpath=//a[contains(@href, '#!/app/product/edit?id=1')]",
       "targets": [],
       "value": ""
     }, {
       "id": "c9cf7f45-162f-47e9-aa0c-c338334c2929",
       "comment": "",
       "command": "clickAt",
-      "target": "id=delete-instance--product",
+      "target": "id=delete-edit-product",
       "targets": [],
       "value": ""
     }, {
@@ -1176,9 +1155,9 @@
       "id": "89b766f9-b2ec-43fe-a9e2-c7039a4480c8",
       "comment": "",
       "command": "clickAt",
-      "target": "id=instance--crudUser--update",
+      "target": "id=new-crudUser--update",
       "targets": [
-        ["id=instance--crudUser--update", "id"],
+        ["id=new-crudUser--update", "id"],
         ["name=update", "name"],
         ["css=#edit-crudUser-update", "css"],
         ["xpath=//button[@id='edit-crudUser-update']", "xpath:attributes"],
@@ -1258,21 +1237,21 @@
       "id": "ce1d368c-d361-47ef-945c-18b2968bd995",
       "comment": "",
       "command": "waitForElementEditable",
-      "target": "id=instance--request-request_product--product",
+      "target": "id=edit-request--edit-request_product--product",
       "targets": [],
       "value": "30000"
     }, {
       "id": "7fe99fdb-763d-4582-8cb6-9373deb4c76b",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--request-request_product--product",
+      "target": "id=edit-request--edit-request_product--product",
       "targets": [],
       "value": "REFRIGERANTE COCA COLA ZERO 2 LITROS"
     }, {
       "id": "b105c773-b90a-4103-81b1-105eb17b59cd",
       "comment": "",
       "command": "click",
-      "target": "id=delete-instance--request-request_product",
+      "target": "id=delete-edit-request--edit-request_product",
       "targets": [],
       "value": ""
     }, {
@@ -1300,7 +1279,7 @@
       "id": "18e8e342-9627-4759-8c46-cb97d847eb6f",
       "comment": "",
       "command": "click",
-      "target": "id=delete-instance--request-request_payment",
+      "target": "id=delete-edit-request--edit-request_payment",
       "targets": [],
       "value": ""
     }, {
@@ -1326,7 +1305,7 @@
       "id": "54fda413-e40f-4617-a8c9-c41359178c7b",
       "comment": "",
       "command": "clickAt",
-      "target": "id=delete-instance--request",
+      "target": "id=delete-edit-request",
       "targets": [],
       "value": "37,25"
     }, {
@@ -1454,32 +1433,38 @@
       "targets": [],
       "value": "35,21"
     }, {
+      "id": "f3caa676-3edd-4a64-971e-c4ae043e2c3b",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=new-person--cnpjCpf",
+      "targets": [],
+      "value": "30000"
+    }, {
       "id": "9390572d-411a-439e-ba60-85b6b5c9606d",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--cnpjCpf",
-      "targets": [
-      ],
+      "target": "id=new-person--cnpjCpf",
+      "targets": [],
       "value": "93.209.765/0161-10"
     }, {
       "id": "f268ae28-e99b-4325-84d0-17da5e552388",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--name",
+      "target": "id=new-person--name",
       "targets": [],
       "value": "WMS SUPERMERCADOS DO BRASIL LTDA"
     }, {
       "id": "528bb4c2-dec5-481a-95f1-bbee0f00972e",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--ieRg",
+      "target": "id=new-person--ieRg",
       "targets": [],
       "value": "0240296389"
     }, {
       "id": "f68c225f-c3c1-43a6-b280-685b9e19ae40",
       "comment": "",
       "command": "click",
-      "target": "id=instance--person--cnae",
+      "target": "id=new-person--cnae",
       "targets": [
         ["id=menu-Cadastros", "id"],
         ["css=#single-button-form", "css"],
@@ -1493,7 +1478,7 @@
       "id": "90e1a6d4-f0e7-453d-8962-0300519899f9",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--cnae",
+      "target": "id=new-person--cnae",
       "targets": [],
       "value": "4711302 - Comércio varejista de mercadorias em geral, com predominância de produtos alimentícios - supermercados"
     }, {
@@ -1512,49 +1497,49 @@
       "id": "8b3c4fac-a40b-4eb7-8798-59526db26652",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--zip",
+      "target": "id=new-person--zip",
       "targets": [],
       "value": "92310-001"
     }, {
       "id": "18a3a55e-c691-4f89-a186-11fef80d26cb",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--country",
+      "target": "id=new-person--country",
       "targets": [],
       "value": "1058 - BR - Brazil"
     }, {
       "id": "047bdbc1-0f89-49bf-8779-9b6b25518c5b",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--uf",
+      "target": "id=new-person--uf",
       "targets": [],
       "value": "0043 - RS - Rio Grande do Sul"
     }, {
       "id": "3777e4e9-ba62-4f0a-830b-e0ea18a05101",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--city",
+      "target": "id=new-person--city",
       "targets": [],
       "value": "4304606 - Canoas - 0043 - RS - Rio Grande do Sul"
     }, {
       "id": "35187401-fae8-421a-a1ff-33612fd8e120",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--district",
+      "target": "id=new-person--district",
       "targets": [],
       "value": "Tabaí"
     }, {
       "id": "738e51e7-2b5c-42eb-ab60-671351dd61a4",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--address",
+      "target": "id=new-person--address",
       "targets": [],
       "value": "Av. Guilherme Schell"
     }, {
       "id": "9e1ad3de-6064-4b2a-a7f4-c08217439790",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--addressNumber",
+      "target": "id=new-person--addressNumber",
       "targets": [],
       "value": "8800"
     }, {
@@ -1573,7 +1558,7 @@
       "id": "f2fc7dae-cd39-419d-9aad-8503d4f0f969",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--person",
+      "target": "id=apply-new-person",
       "targets": [],
       "value": "-331,-1257"
     }, {
@@ -1620,77 +1605,77 @@
       "id": "a71b6115-2a3d-44b4-8a50-2466bcabf334",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--name",
+      "target": "id=new-person--name",
       "targets": [],
       "value": "WMS SUPERMERCADOS DO BRASIL LTDA"
     }, {
       "id": "d5c4512f-0ecc-4ff8-8f9b-429a725a1046",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--cnpjCpf",
+      "target": "id=new-person--cnpjCpf",
       "targets": [],
       "value": "93.209.765/0161-10"
     }, {
       "id": "3123bcb1-6804-4a06-a37b-2507e72718f4",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--ieRg",
+      "target": "id=new-person--ieRg",
       "targets": [],
       "value": "0240296389"
     }, {
       "id": "4ca4a86e-1243-4c80-919b-a16328685bc2",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--cnae",
+      "target": "id=new-person--cnae",
       "targets": [],
       "value": "4711302 - Comércio varejista de mercadorias em geral, com predominância de produtos alimentícios - supermercados"
     }, {
       "id": "8b8a8b7f-12af-4958-b064-fec50ffd8db1",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--zip",
+      "target": "id=new-person--zip",
       "targets": [],
       "value": "92310-001"
     }, {
       "id": "833eb452-820c-49c5-b5a6-4ae954149554",
       "comment": "",
       "command": "//assertValue",
-      "target": "id=instance--person--country",
+      "target": "id=new-person--country",
       "targets": [],
       "value": "1058 - Brasil - BR - Brazil"
     }, {
       "id": "8356d2d6-6ddb-4679-829c-96d44ce3f82d",
       "comment": "",
       "command": "//assertValue",
-      "target": "id=instance--person--uf",
+      "target": "id=new-person--uf",
       "targets": [],
       "value": "0043 - Rio Grande do Sul - RS - 1058 - Brasil - BR - Brazil"
     }, {
       "id": "1e3b1f60-93aa-49c9-98fe-858568ffdeb0",
       "comment": "",
       "command": "//assertValue",
-      "target": "id=instance--person--city",
+      "target": "id=new-person--city",
       "targets": [],
       "value": "Canoas - Rio Grande do Sul"
     }, {
       "id": "f082b70d-7389-47b1-b3a8-58edb4de9557",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--district",
+      "target": "id=new-person--district",
       "targets": [],
       "value": "Tabaí"
     }, {
       "id": "fbad3ae7-4b33-4669-b549-db521eb8b417",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--address",
+      "target": "id=new-person--address",
       "targets": [],
       "value": "Av. Guilherme Schell"
     }, {
       "id": "d0d6068e-b1ef-4fd7-beb4-19f2c59aefde",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--addressNumber",
+      "target": "id=new-person--addressNumber",
       "targets": [],
       "value": "8800"
     }]
@@ -1722,35 +1707,35 @@
       "id": "5b3946c8-746f-4f80-8885-772d0a6389b6",
       "comment": "",
       "command": "type",
-      "target": "id=instance--product--name",
+      "target": "id=new-product--name",
       "targets": [],
       "value": "REFRIGERANTE COCA COLA ZERO 2 LITROS"
     }, {
       "id": "e615cbc6-47c3-4e64-8aa3-8e9312206f65",
       "comment": "",
       "command": "type",
-      "target": "id=instance--product--ncm",
+      "target": "id=new-product--ncm",
       "targets": [],
       "value": "22021000 - AGUA INCLMINERAL/GASEIFADICIONACUCAR,AROMATIZADA,E"
     }, {
       "id": "7cbe1525-b4ff-4f5a-8b06-3bbb1ce55951",
       "comment": "",
       "command": "select",
-      "target": "id=instance--product--orig",
+      "target": "id=new-product--orig",
       "targets": [],
       "value": "label=0000 - Nacional, exceto as indicadas nos códigos de 3 a 5"
     }, {
       "id": "874f15cd-bb3c-4017-aa73-e1598e34b272",
       "comment": "",
       "command": "type",
-      "target": "id=instance--product--description",
+      "target": "id=new-product--description",
       "targets": [],
       "value": "refrigerante de cola sem açucar"
     }, {
       "id": "9aab1a64-ca5b-481d-9bcd-31db3a2c4c7c",
       "comment": "",
       "command": "type",
-      "target": "id=instance--product--weight",
+      "target": "id=new-product--weight",
       "targets": [],
       "value": "2.00"
     }, {
@@ -1769,7 +1754,7 @@
       "id": "1645637a-4584-4d5b-96d3-e1d14082f0eb",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--product",
+      "target": "id=apply-new-product",
       "targets": [],
       "value": "-331,-569"
     }, {
@@ -1931,21 +1916,21 @@
       "id": "3f334ce7-0736-4460-b661-98c937d734ff",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--cnpjCpf",
+      "target": "id=new-person--cnpjCpf",
       "targets": [],
       "value": "808.037.920-34"
     }, {
       "id": "854e3dc1-afc8-4243-abcb-97aedfe00786",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--name",
+      "target": "id=new-person--name",
       "targets": [],
       "value": "ALEXSANDRO STEFENON"
     }, {
       "id": "af3c3472-c2ea-4073-830b-6527f0d8896c",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--country",
+      "target": "id=new-person--country",
       "targets": [],
       "value": "1058 - BR - Brazil"
     }, {
@@ -1964,7 +1949,7 @@
       "id": "e58337bf-7c2e-414f-89ea-2ed394dd1c9f",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--person",
+      "target": "id=apply-new-person",
       "targets": [],
       "value": "-331,-1257"
     }, {
@@ -2011,21 +1996,21 @@
       "id": "9d501148-4766-4d50-a707-adb28b6fb9e5",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--name",
+      "target": "id=new-person--name",
       "targets": [],
       "value": "ALEXSANDRO STEFENON"
     }, {
       "id": "91327a4b-f9f5-47f5-a2ea-156aad037952",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--cnpjCpf",
+      "target": "id=new-person--cnpjCpf",
       "targets": [],
       "value": "808.037.920-34"
     }, {
       "id": "db3b035b-ec8f-4a46-878b-d40b3f89834a",
       "comment": "",
       "command": "//assertValue",
-      "target": "id=instance--person--country",
+      "target": "id=new-person--country",
       "targets": [],
       "value": "1058 - BR - Brazil"
     }]
@@ -2057,14 +2042,14 @@
       "id": "490abbdd-1eba-4978-ac20-a9d7aa9cb45d",
       "comment": "",
       "command": "select",
-      "target": "id=instance--account--person",
+      "target": "id=new-account--person",
       "targets": [],
       "value": "label=808.037.920-34 - ALEXSANDRO STEFENON"
     }, {
       "id": "7cfaa811-5ecc-430e-9c70-5303c55854f3",
       "comment": "",
       "command": "type",
-      "target": "id=instance--account--description",
+      "target": "id=new-account--description",
       "targets": [],
       "value": "Caixa Interno"
     }, {
@@ -2083,7 +2068,7 @@
       "id": "9d9c155b-e9f8-4d86-a6ea-1b95cacb8944",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--account",
+      "target": "id=apply-new-account",
       "targets": [],
       "value": "-331,-401"
     }, {
@@ -2127,14 +2112,14 @@
       "id": "13134fae-f0ef-48a1-abc4-0f3f5e9aa657",
       "comment": "",
       "command": "select",
-      "target": "id=instance--account--person",
+      "target": "id=new-account--person",
       "targets": [],
       "value": "60.701.190/0001-04 - ITAÚ UNIBANCO S.A."
     }, {
       "id": "9b17fbb4-2864-48be-8126-655fc6cfc894",
       "comment": "",
       "command": "type",
-      "target": "id=instance--account--description",
+      "target": "id=new-account--description",
       "targets": [],
       "value": "Conta Bancária Principal"
     }, {
@@ -2153,7 +2138,7 @@
       "id": "94d8eb5b-e292-4e3a-9c47-b059b42067c0",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--account",
+      "target": "id=apply-new-account",
       "targets": [],
       "value": "-331,-401"
     }, {
@@ -2197,21 +2182,21 @@
       "id": "60040dda-aca5-4937-ac07-1aff6946833e",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--cnpjCpf",
+      "target": "id=new-person--cnpjCpf",
       "targets": [],
       "value": "60.701.190/0001-04"
     }, {
       "id": "8326865e-ae2b-415d-93a0-2c677f3a4bfb",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--name",
+      "target": "id=new-person--name",
       "targets": [],
       "value": "ITAÚ UNIBANCO S.A."
     }, {
       "id": "61133a0a-d27f-409e-a020-1198b5fb1224",
       "comment": "",
       "command": "type",
-      "target": "id=instance--person--country",
+      "target": "id=new-person--country",
       "targets": [],
       "value": "1058 - BR - Brazil"
     }, {
@@ -2230,7 +2215,7 @@
       "id": "f39cb7a5-f0ff-4943-af37-560664d22ac6",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--person",
+      "target": "id=apply-new-person",
       "targets": [],
       "value": "-331,-1257"
     }, {
@@ -2277,21 +2262,21 @@
       "id": "6722bc8c-e313-4d74-8586-97305edfd0ae",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--name",
+      "target": "id=new-person--name",
       "targets": [],
       "value": "ITAÚ UNIBANCO S.A."
     }, {
       "id": "91cabc08-7cde-4ca1-a76d-88ba9e3656de",
       "comment": "",
       "command": "assertValue",
-      "target": "id=instance--person--cnpjCpf",
+      "target": "id=new-person--cnpjCpf",
       "targets": [],
       "value": "60.701.190/0001-04"
     }, {
       "id": "83f18a10-13a1-4958-a52a-552b262d4618",
       "comment": "",
       "command": "//assertValue",
-      "target": "id=instance--person--country",
+      "target": "id=new-person--country",
       "targets": [],
       "value": "1058 - Brazil - Brasil - BR"
     }]
@@ -2351,43 +2336,19 @@
       "targets": [],
       "value": ""
     }, {
-      "id": "eb0ce648-8392-4177-befc-8e12ef361b09",
-      "comment": "",
-      "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/rufs_user/view?id=2')]",
-      "targets": [
-        ["css=.ng-scope:nth-child(2) > td:nth-child(1) > .ng-binding", "css:finder"],
-        ["xpath=(//a[contains(text(),'View')])[2]", "xpath:link"],
-        ["xpath=//tbody[@id='edit-rufs_user-crud-table-body']/tr[2]/td/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/rufs_user/view?id=2')]", "xpath:href"],
-        ["xpath=//tr[2]/td/a", "xpath:position"]
-      ],
-      "value": ""
-    }, {
       "id": "f27f1d1e-982f-4836-abd1-591ddfe7ea5d",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?id=2')]",
-      "targets": [
-        ["id=instance--rufs_user--update", "id"],
-        ["linkText=Edit", "linkText"],
-        ["name=update", "name"],
-        ["css=#edit-rufs_user-update", "css:finder"],
-        ["xpath=//a[contains(text(),'Edit')]", "xpath:link"],
-        ["xpath=//a[@id='edit-rufs_user-update']", "xpath:attributes"],
-        ["xpath=//form[@id='rufsUserForm']/div[2]/div/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/rufs_user/edit?id=2')]", "xpath:href"],
-        ["xpath=//div[2]/div/a", "xpath:position"],
-        ["xpath=//a[contains(.,' Edit')]", "xpath:innerText"]
-      ],
+      "target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?name=guest&rufsGroupOwner=nfe_guest_group')]",
+      "targets": [],
       "value": ""
     }, {
       "id": "ad539c6c-dfe0-4344-b3eb-c4f01a61b4bd",
       "comment": "",
       "command": "clickAt",
-      "target": "id=table_row-edit--rufs_user-roles--20",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--20",
       "targets": [
-        ["id=table_row-edit--rufs_user-roles--20", "id"],
+        ["id=table_row-edit-edit-rufs_user--edit-roles--20", "id"],
         ["css=#rufsUser-roles-Form-edit-20", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[21]", "xpath:link"],
         ["xpath=//a[@id='rufsUser-roles-Form-edit-20']", "xpath:attributes"],
@@ -2400,9 +2361,9 @@
       "id": "cab46697-aa21-4050-99bc-bcf1181128e1",
       "comment": "",
       "command": "click",
-      "target": "id=instance--rufs_user-roles--mask-3",
+      "target": "id=edit-rufs_user--edit-roles--mask-3",
       "targets": [
-        ["id=instance--rufs_user-roles--mask-3", "id"],
+        ["id=edit-rufs_user--edit-roles--mask-3", "id"],
         ["css=#rufsUser-roles-Form-edit-mask-3", "css:finder"],
         ["xpath=//input[@id='rufsUser-roles-Form-edit-mask-3']", "xpath:attributes"],
         ["xpath=//form[@id='rufsUser-roles-Form']/div/div[2]/div[5]/div/label/input", "xpath:idRelative"],
@@ -2425,9 +2386,9 @@
       "id": "8c535de3-6c44-4c96-8cbd-12b37dbcbc35",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--rufs_user-roles",
+      "target": "id=apply-edit-rufs_user--edit-roles",
       "targets": [
-        ["id=apply-instance--rufs_user-roles", "id"],
+        ["id=apply-edit-rufs_user--edit-roles", "id"],
         ["name=add", "name"],
         ["css=#rufsUser-roles-Form-add", "css:finder"],
         ["xpath=//button[@id='rufsUser-roles-Form-add']", "xpath:attributes"],
@@ -2440,9 +2401,9 @@
       "id": "191a8bf8-8190-45f2-84db-c8e65d756ff5",
       "comment": "",
       "command": "clickAt",
-      "target": "id=table_row-edit--rufs_user-roles--17",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--17",
       "targets": [
-        ["id=table_row-edit--rufs_user-roles--17", "id"],
+        ["id=table_row-edit-edit-rufs_user--edit-roles--17", "id"],
         ["css=#rufsUser-roles-Form-edit-17", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[18]", "xpath:link"],
         ["xpath=//a[@id='rufsUser-roles-Form-edit-17']", "xpath:attributes"],
@@ -2455,7 +2416,7 @@
       "id": "3a9768b3-b9cf-41dc-8a1b-1a8d8dc036fd",
       "comment": "",
       "command": "click",
-      "target": "id=instance--rufs_user-roles--mask-3",
+      "target": "id=edit-rufs_user--edit-roles--mask-3",
       "targets": [],
       "value": ""
     }, {
@@ -2474,16 +2435,16 @@
       "id": "11c500a9-5f1a-451a-9e15-6c1b2782b3b5",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--rufs_user-roles",
+      "target": "id=apply-edit-rufs_user--edit-roles",
       "targets": [],
       "value": "36,17"
     }, {
       "id": "7c413a9f-fa27-46af-a117-3992c9138c48",
       "comment": "",
       "command": "clickAt",
-      "target": "id=table_row-edit--rufs_user-roles--10",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--10",
       "targets": [
-        ["id=table_row-edit--rufs_user-roles--10", "id"],
+        ["id=table_row-edit-edit-rufs_user--edit-roles--10", "id"],
         ["css=#rufsUser-roles-Form-edit-10", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[11]", "xpath:link"],
         ["xpath=//a[@id='rufsUser-roles-Form-edit-10']", "xpath:attributes"],
@@ -2496,7 +2457,7 @@
       "id": "dca7342c-ca1c-4080-a0fa-93f1011e8f0c",
       "comment": "",
       "command": "click",
-      "target": "id=instance--rufs_user-roles--mask-3",
+      "target": "id=edit-rufs_user--edit-roles--mask-3",
       "targets": [],
       "value": ""
     }, {
@@ -2515,16 +2476,16 @@
       "id": "54570755-cb1c-4199-a923-be787f5164a1",
       "comment": "",
       "command": "clickAt",
-      "target": "id=apply-instance--rufs_user-roles",
+      "target": "id=apply-edit-rufs_user--edit-roles",
       "targets": [],
       "value": "36,17"
     }, {
       "id": "6b26a292-78ff-4f78-b1a0-c3344b7074d7",
       "comment": "",
       "command": "click",
-      "target": "id=table_row-edit--rufs_user-roles--11",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--11",
       "targets": [
-        ["id=table_row-edit--rufs_user-roles--11", "id"],
+        ["id=table_row-edit-edit-rufs_user--edit-roles--11", "id"],
         ["css=#rufsUser-roles-Form-edit-11", "css:finder"],
         ["xpath=(//a[contains(text(),'Edit')])[12]", "xpath:link"],
         ["xpath=//a[@id='rufsUser-roles-Form-edit-11']", "xpath:attributes"],
@@ -2537,7 +2498,7 @@
       "id": "575ed15c-b8ec-4370-9919-716456678f1d",
       "comment": "",
       "command": "click",
-      "target": "id=instance--rufs_user-roles--mask-3",
+      "target": "id=edit-rufs_user--edit-roles--mask-3",
       "targets": [],
       "value": ""
     }, {
@@ -2556,7 +2517,7 @@
       "id": "147d6c9e-fc16-4ff6-bb60-4cab3ef70a2d",
       "comment": "",
       "command": "click",
-      "target": "id=apply-instance--rufs_user-roles",
+      "target": "id=apply-edit-rufs_user",
       "targets": [
         ["css=#edit-roles-add", "css:finder"],
         ["xpath=//button[@id='edit-roles-add']", "xpath:attributes"],

@@ -3,20 +3,15 @@ let aggregateChartOptions = {};
 let aggregateChart = {};
 
 function data_view_show(form_id) {
-	const div_id = `data_view-${form_id}`;
+	const div_id = `div-${form_id}`;
 	let data_view = document.getElementById(div_id);
 
-	if (data_view != null && data_view.hidden == true) {
+	if (data_view != null) {
+		if (data_view.hidden == true) {
 		data_view.hidden = false;
-	}
-}
-
-function data_view_hide(form_id) {
-	const div_id = `data_view-${form_id}`;
-	let data_view = document.getElementById(div_id);
-
-	if (data_view != null && data_view.hidden == false) {
-		data_view.hidden = true;
+		}
+	} else {
+		console.error(`Missing data_view ${div_id}`);
 	}
 }
 
@@ -66,28 +61,12 @@ function updateChanges(event, changes) {
 				console.error(`Unexpected array fild (${fieldName})`);
 			} else if (typeof value === 'object') {
 				console.error(`Unexpected array fild (${fieldName})`);
-/*
-				const fields = value;
-				const form_child = form[fieldName];
-
-				for (let [fieldName, value] of fields) {
-					if (typeof value === 'object') {
-					} else {
-						const element = form_child[fieldName];
-
-						if (element == null) {
-							throw new Error(`Missing element ${fieldName} in form ${form_child.name} !`);
-						}
-						
-						element.value = value;
-					}
-				}
-	*/
 			} else {
 				const element = form.elements[fieldName];
 				
 				if (element == null) {
-					throw new Error(`Missing element ${fieldName} in form ${form.name} !`);
+					console.log(`Missing element ${fieldName} in form ${form.name} !`);
+					continue;
 				}
 						
 				element.value = value;
@@ -124,12 +103,12 @@ function updateTables(event, tables) {
 		tables = Object.fromEntries(tables);
 	}
 
-	for (let [formId, html] of Object.entries(tables)) {
-		data_view_show(formId);
-		const div = document.getElementById(`div-table--${formId}`);
+	for (let [table_id, html] of Object.entries(tables)) {
+		data_view_show(table_id);
+		const div = document.getElementById(`div-table-${table_id}`);
 
 		if (div == null) {
-			console.error(`Missing table ${formId}`);
+			console.error(`Missing table ${table_id}`);
 			continue;
 		}
 
@@ -139,10 +118,15 @@ function updateTables(event, tables) {
 			div.hidden = false;
 		}
 
-		const divForm = document.getElementById(`div-instance--${formId}`);
+		const div_form_id = `div-${table_id}`;
+		const divForm = document.getElementById(div_form_id);
 		
-		if (divForm != null && divForm.hidden == true) {
+		if (divForm != null) {
+			if (divForm.hidden == true) {
 			divForm.hidden = false;
+			}
+		} else {
+			console.error(`Missing divForm ${div_form_id}`);
 		}
 	}
 }
@@ -234,10 +218,14 @@ var appOnClick = event => {
 			}
 
 			console.log(viewResponse);
-			const html = viewResponse.html;
+			let html_map = viewResponse.html;
 
-			if (viewResponse.form_id != null && html != null && html.length > 0) {
-				const div_id = `data_view-${viewResponse.form_id}`;
+			if (html_map instanceof Map) {
+				html_map = Object.fromEntries(html_map);
+			}
+
+			for (let [form_id, html] of Object.entries(html_map)) {
+				const div_id = `data_view_root-${form_id}`;
 				let dataView = document.getElementById(div_id);
 
 				if (dataView != null) {
@@ -288,18 +276,78 @@ var appOnClick = event => {
 				}
 			}
 
+			if (viewResponse.views != null) {
+				if (viewResponse.views instanceof Map) {
+					viewResponse.views = Object.fromEntries(viewResponse.views);
+				}
+
+				for (let [form_id, views] of Object.entries(viewResponse.views)) {
+					let data_view_id = `div-${form_id}`;
+					let data_view = document.getElementById(data_view_id);
+
+					if (data_view != null) {
+						if (views.hidden == true) {
+							if (data_view.hidden != true) {
+								data_view.hidden = true;
+							}
+						}
+	
+						if (views.hidden == false) {
+							if (data_view.hidden != false) {
+								data_view.hidden = false;
+							}
+						}
+					} else {
+						console.error(`Missing data_view ${data_view_id}`);
+					}
+				}
+			}
+
 			if (viewResponse.forms != null) {
 				if (viewResponse.forms instanceof Map) {
 					viewResponse.forms = Object.fromEntries(viewResponse.forms);
 				}
 
-				for (let [formId, form] of Object.entries(viewResponse.forms)) {
-					if (form.visible == false) {
-						data_view_hide(formId);
+				for (let [form_id, form_state] of Object.entries(viewResponse.forms)) {
+					if (form_state instanceof Map) {
+						form_state = Object.fromEntries(form_state);
 					}
 
-					if (form.visible == true) {
-						data_view_show(formId);
+					let fieldset_id = `fieldset-${form_id}`;
+					let fieldset = document.getElementById(fieldset_id);
+
+					if (fieldset != null) {
+						if (form_state.disabled == false && fieldset.disabled != false) {
+							fieldset.disabled = false;
+						}
+	
+						if (form_state.disabled == true && fieldset.disabled != true) {
+							fieldset.disabled = true;
+						}
+						
+						if (form_state.hidden == true && fieldset.hidden != true) {
+							fieldset.hidden = true;
+						}
+	
+						if (form_state.hidden == false && fieldset.hidden != false) {
+							fieldset.hidden = false;
+						}
+					} else {
+						console.error(`Missing fieldset ${fieldset_id}`);
+					}
+
+					let form = document.getElementById(form_id);
+					
+					if (form != null) {
+						if (form_state.hidden == true && form.hidden != true) {
+							form.hidden = true;
+						}
+	
+						if (form_state.hidden == false && form.hidden != false) {
+							form.hidden = false;
+						}
+					} else {
+						console.error(`Missing form ${form_id}`);
 					}
 				}
 			}
@@ -323,8 +371,11 @@ var login = event => {
 	if (form.reportValidity()) {
 		//event.stopPropagation();
 		event.preventDefault();
-		dataViewManager.login({path: "/login", user: form.user.value, password: form.password.value}).
+		dataViewManager.login({user: form.user.value, password: form.password.value}).
 		then(loginResponse => {
+			const regExMenuSearch = /\.(new|view|edit|search)(\?)?/;
+			const regExMenuReplace = "/$1$2";
+			
 			const addToParent = (menu, list) => {
 				if (menu instanceof Map) {
 					menu = Object.fromEntries(menu);
@@ -337,7 +388,8 @@ var login = event => {
 						addToParent(field, list);
 						list.push(`</ul>\n</li>`);
 					} else {
-						list.push(`<li><a class='dropdown-item' href='#!/app/${field}'>${name}</a></li>\n`);
+						let schema = field.replaceAll("/", ".").replace(regExMenuSearch, regExMenuReplace);
+						list.push(`<li><a class='dropdown-item' href='#!/app/${schema}'>${name}</a></li>\n`);
 					}
 				}
 			};
@@ -357,8 +409,9 @@ var login = event => {
 			document.querySelector('#menu').appendChild(div);
 			form.hidden = true;
 			document.querySelector('#http-working').hidden = true;
+			let schema = loginResponse.path.replaceAll("/", ".").replace(regExMenuSearch, regExMenuReplace);
 
-			for (let element of document.querySelectorAll(`a[href='#!/app/${loginResponse.path}']`)) {
+			for (let element of document.querySelectorAll(`a[href='#!/app/${schema}']`)) {
 				element.click();
 			}
 		}).catch(err => {
@@ -372,12 +425,12 @@ var login = event => {
 
 class DataViewManagerWs {
 
-	constructor(path) {
-		this.path = path;
+	constructor(server_url) {
+		this.server_url = server_url;
     }
 
 	login(obj_in) {
-		let url = `${this.path}/wasm_ws/login`;
+		let url = `${this.server_url}/wasm_ws/login`;
 		let options = {method: "POST", body: JSON.stringify(obj_in), headers: {}};
 		options.headers["Content-Type"] = "application/json";
 		return fetch(url, options).
@@ -405,7 +458,7 @@ class DataViewManagerWs {
 			options.headers["Authorization"] = "Bearer " + this.token;
 		}
 
-		let url = `${this.path}/wasm_ws/process`;
+		let url = `${this.server_url}/wasm_ws/process`;
 		return fetch(url, options).
 		then(response => {
 			if (response.status != 200) {
@@ -422,15 +475,21 @@ class DataViewManagerWs {
 }
 
 async function run() {
-	const path = window.location.origin;
+	let server_url = window.location.origin + window.location.pathname;
+	
+	if (server_url.endsWith("/")) {
+		server_url = server_url.substring(0, server_url.length - 1);
+	}
+
+	console.log(server_url);
 	const urlParams = new URLSearchParams(document.location.search);
 
 	if (urlParams.get("mode") == "ws") {
-		dataViewManager = new DataViewManagerWs(path);
+		dataViewManager = new DataViewManagerWs(server_url);
 	} else {
-		const rufs_nfe_rust = await import("../../pkg/rufs_nfe_rust.js");
-		await rufs_nfe_rust.default();
-		dataViewManager = new rufs_nfe_rust.DataViewManager(path);
+		const wasm_js = await import("../../pkg/rufs_nfe_rust.js");
+		await wasm_js.default();
+		dataViewManager = new wasm_js.DataViewManager(server_url);
 	}
 	
 	document.querySelector('#login-send').addEventListener('click', login);

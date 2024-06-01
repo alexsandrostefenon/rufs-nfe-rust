@@ -371,7 +371,7 @@ CREATE TABLE request_payment (
 	UNIQUE(request,due_date,type,account,account_other)--UNIQUE(rufs_group_owner,request,due_date,value)
 );
 
-CREATE TABLE stock (
+CREATE TABLE stock_product (
 --	rufs_group_owner integer references rufs_group_owner NOT NULL,
 	id integer references product NOT NULL primary key,
 	count_in numeric(9,3) DEFAULT 0.000,
@@ -390,6 +390,20 @@ CREATE TABLE stock (
 	sum_value_in numeric(9,3) DEFAULT 0.000,
 	sum_value_out numeric(9,3) DEFAULT 0.000,
 	sum_value_stock numeric(9,3) DEFAULT 0.000,
+	value_cost numeric(9,3) DEFAULT 0.000,
+	value numeric(9,3) DEFAULT 0.000,
+	value_wholesale numeric(9,3) DEFAULT 0.000--, valor para venda em atacado/revendedores
+--	PRIMARY KEY(rufs_group_owner,id)
+);
+
+CREATE TABLE stock_service (
+--	rufs_group_owner integer references rufs_group_owner NOT NULL,
+	id integer references service NOT NULL primary key,
+	estimed_out numeric(9,3) DEFAULT 0.000,
+	estimed_value numeric(9,3) DEFAULT 0.000,
+	margin_sale numeric(9,3) DEFAULT 50.000, -- varejo
+	margin_wholesale numeric(9,3) DEFAULT 25.000, -- atacado
+	reserved_out numeric(9,3) DEFAULT 0.000,
 	value_cost numeric(9,3) DEFAULT 0.000,
 	value numeric(9,3) DEFAULT 0.000,
 	value_wholesale numeric(9,3) DEFAULT 0.000--, valor para venda em atacado/revendedores
