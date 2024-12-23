@@ -14,7 +14,7 @@ Open terminal and clone this repository with `git clone https://github.com/alexs
 
 To download the required dependencies and build, then
 
-`wasm-pack build --target web --dev` 
+`cd rufs-nfe-rust && wasm-pack build --target web --dev` 
 
 ## Run Ecosystem
 
