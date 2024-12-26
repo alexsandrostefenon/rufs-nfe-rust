@@ -14,7 +14,10 @@ Open terminal and clone this repository with `git clone https://github.com/alexs
 
 To download the required dependencies and build, then
 
-`cd rufs-nfe-rust && wasm-pack build --target web --dev` 
+`cd rufs-nfe-rust && 
+wasm-pack build --target web --dev &&
+cargo build -r
+` 
 
 ## Run Ecosystem
 
@@ -45,12 +48,12 @@ Note, database "rufs_nfe_development" is only for testing purposes.
 clear; \
 rm *openapi-rufs_nfe-rust.json; \
 PGHOST=localhost PGPORT=5432 PGUSER=development PGPASSWORD=123456 psql rufs_nfe_development -c "DROP DATABASE IF EXISTS rufs_nfe;" &&
-PGHOST=localhost PGPORT=5432 PGUSER=development PGPASSWORD=123456 psql rufs_nfe_development -c "CREATE DATABASE rufs_nfe;" &&
+PGHOST=localhost PGPORT=5432 PGUSER=development PGPASSWORD=123456 psql rufs_nfe_development -c "CREATE DATABASE rufs_nfe;"
 `
 #Execute rufs-proxy to load and start microservices :
 
 #PGHOST=localhost PGPORT=5432 PGUSER=development PGPASSWORD=123456 PGDATABASE=rufs_nfe nodejs ./rufs-base-es6/proxy.js --add-modules ../rufs-nfe-es6/NfeMicroService.js;
-PGHOST=localhost PGPORT=5432 PGUSER=development PGPASSWORD=123456 PGDATABASE=rufs_nfe nodejs --inspect ./rufs-nfe-es6/NfeMicroService.js;
+PGHOST=localhost PGPORT=5432 PGUSER=development PGPASSWORD=123456 PGDATABASE=rufs_nfe ./target/release/rufs-nfe-rust;
 
 ## Web application
 
