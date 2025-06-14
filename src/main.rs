@@ -11,12 +11,12 @@ struct Args {
     port: u16,
     #[cfg(debug_assertions)]
     #[cfg(feature = "postgres")]
-    //#[arg(long,default_value = "false")]
     #[arg(long,default_value = "true")]
-    reset_db: bool,
+    reset_test_data: bool,
     #[cfg(not(debug_assertions))]
+    #[cfg(feature = "postgres")]
     #[arg(long,default_value = "false")]
-    reset_db: bool,
+    reset_test_data: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -655,33 +655,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 */
 #[cfg(not(target_arch = "wasm32"))]
 async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
-    use std::path::Path;
     use rufs_base_rust::rufs_micro_service::RufsMicroServiceAuthenticator;
     use serde_json::Value;
     use rufs_nfe_rust::RufsNfe;
-
-    if args.reset_db {
-        let path = "openapi-rufs_nfe_rust.json";
-
-        if Path::new(path).exists() {
-            std::fs::remove_file(path)?;
-        }
-
-        let (pg_conn, connection) = tokio_postgres::connect("postgres://development:123456@localhost:5432/rufs_nfe_development", tokio_postgres::NoTls).await?;
-
-        tokio::spawn(async move {
-            if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
-            }
-        });
-
-        println!("DROP DATABASE IF EXISTS rufs_nfe_rust...");
-        pg_conn.execute("DROP DATABASE IF EXISTS rufs_nfe_rust", &[]).await?;        
-        println!("...DROP DATABASE IF EXISTS rufs_nfe_rust.");
-        println!("CREATE DATABASE rufs_nfe_rust...");
-        pg_conn.execute("CREATE DATABASE rufs_nfe_rust", &[]).await?;        
-        println!("...CREATE DATABASE rufs_nfe_rust.");
-    }
 
     #[derive(Clone)]
     pub struct State {
@@ -698,19 +674,57 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         static ref WATCHER: Box<dyn DataViewWatch> = Box::new(RufsNfe{}) as Box<dyn DataViewWatch>;
     }
 
+    let app_name = "rufs_nfe".to_string();
+
     let params = RufsParams {
-        app_name: "rufs_nfe".to_string(), 
+        openapi_file_name: format!("data/openapi-{}.json", app_name),
+        app_name,
         ..Default::default()
     };
 
     #[cfg(debug_assertions)]
-    let fs_prefix = "rufs-nfe-rust/";
-    #[cfg(not(debug_assertions))]
-    let fs_prefix = "";
+    if args.reset_test_data {
+        println!("1 - args.reset_db");
+
+        if std::path::Path::new(&params.openapi_file_name).exists() {
+            std::fs::remove_file(&params.openapi_file_name)?;
+            println!("2.1 - remove_file : {}", params.openapi_file_name);
+        }
+
+        let db_uri = RufsMicroService::build_db_uri(None, None, None, None, Some("rufs_nfe_development"), None);
+        println!("3 - build_db_uri : {}", db_uri);
+        let (pg_conn, connection) = tokio_postgres::connect(&db_uri, tokio_postgres::NoTls).await?;
+        println!("4 - connect : {}", db_uri);
+
+        tokio::spawn(async move {
+            if let Err(e) = connection.await {
+                eprintln!("connection error: {}", e);
+            }
+        });
+
+        println!("DROP DATABASE IF EXISTS {}...", params.app_name);
+        pg_conn.execute(&format!("DROP DATABASE IF EXISTS {}", params.app_name), &[]).await?;
+        println!("...DROP DATABASE IF EXISTS {}.", params.app_name);
+        println!("CREATE DATABASE {}...", params.app_name);
+        pg_conn.execute(&format!("CREATE DATABASE {}", params.app_name), &[]).await?;
+        println!("...CREATE DATABASE {}.", params.app_name);
+    }
+
+    let fs_prefix = {
+        let test_path = "rufs-nfe-rust/";
+        let path = std::env::current_dir()?.join(test_path);
+
+        if path.is_dir() {
+            test_path
+        } else {
+            ""
+        }
+    };
+
     println!("std::env::current_dir() : {:?}", std::env::current_dir()?);
     println!("fs_prefix = {:?}", fs_prefix);
-
-    let db_uri = format!("postgres://development:123456@localhost:5432/{}", params.app_name);
+    let db_uri = RufsMicroService::build_db_uri(None, None, None, None, Some(&params.app_name), None);
+    println!("db_uri = {}", db_uri);
     let mut rufs = RufsMicroService::connect(&db_uri, true, &format!("{}sql", fs_prefix), params, &WATCHER).await?;
 
     if let Some(field) = rufs.openapi.get_property_mut("requestRepair", "request") {
@@ -747,7 +761,8 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
 
     rufs.store_open_api()?;
 
-    if args.reset_db {
+    #[cfg(debug_assertions)]
+    if args.reset_test_data {
         #[cfg(feature = "clipp")]
         import_clipp(&rufs).await?;
     }
@@ -767,7 +782,7 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             .or(warp::path("webapp").and(warp::fs::dir(format!("{}webapp", fs_prefix))))
             .or(warp::path::end().and(warp::fs::file(format!("{}webapp/index.html", fs_prefix))))
             ;
-        warp::serve(routes).run(([127, 0, 0, 1], args.port)).await;
+        warp::serve(routes).run(([0, 0, 0, 0], args.port)).await;
     }
 
     #[cfg(feature = "tide")]
@@ -793,7 +808,7 @@ async fn main() {
         std::process::exit(1);
     }
 }
-        
+
 // wasm-pack build --target web --dev
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(test)]
@@ -801,7 +816,6 @@ mod tests {
     //use async_std::prelude::FutureExt;
     use futures_lite::future::FutureExt;
     use rufs_nfe_rust::RufsNfe;
-    use std::time::Duration;
     use rufs_base_rust::client::DataViewWatch;
     use crate::{server,Args};
 
@@ -809,7 +823,7 @@ mod tests {
     async fn selelium() -> Result<(), Box<dyn std::error::Error>> {
         let listening = async {
             println!("server()...");
-            let args = Args{ port: 8080, reset_db: true };
+            let args = Args { port: 8080, reset_test_data: true };
             server(&args).await
         };
 
@@ -818,9 +832,9 @@ mod tests {
         }
 
         let selelium = async {
-            std::thread::sleep( Duration::from_secs( 5 ) );
-            println!("selelium...");
-            rufs_base_rust::client::tests::selelium(&WATCHER, "/home/alexsandro/Downloads/webapp-rust.side", "http://localhost:8080").await
+            println!("selelium() - sleep 5...");
+            tokio::time::sleep( std::time::Duration::from_secs( 5 ) ).await;
+            rufs_base_rust::client::tests::selelium(&WATCHER, "tests.side", "http://localhost:8080").await
         };
 
         listening.race(selelium).await?;

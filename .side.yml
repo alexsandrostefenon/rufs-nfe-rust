@@ -1,0 +1,26 @@
+server: "http://host.containers.internal:4444"
+baseUrl: "http://host.containers.internal:8081/?mode=wasm&working_timeout=250"
+screenshotFailureDirectory: "./tmp/"
+outputDirectory: "./tmp/"
+timeout: 15000
+debug: true
+debugStartup: true
+filter: ".*"
+maxWorkers: 1
+capabilities:
+  browserName: firefox
+  goog:chromeOptions:
+    args:
+      - lang: pt-BR
+  moz:firefoxOptions:
+    prefs:
+      intl.locale: pt-BR
+      intl.accept_languages: pt-BR
+      browser.language.default: pt-BR
+    env:
+      LANG: pt_BR.UTF-8
+      LANGUAGE: pt_BR
+      LC_ALL: pt_BR.UTF-8
+    args:
+      - "-lang"
+      - "pt-BR"

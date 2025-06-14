@@ -1,0 +1,67 @@
+  volumes:
+    registry:
+    db-data:
+  services:
+    registry:
+      volumes:
+        - registry:/var/lib/registry
+      ports:
+        - "127.0.0.1:5000:5000"
+      env_file:
+        - .env
+      image: docker.io/library/registry:2
+    postgres:
+      image: docker.io/library/postgres:17
+      container_name: postgres
+      volumes:
+        - db-data:/var/lib/postgresql/data
+        - ${HOME}/data:/app/data
+      ports:
+        - "${PGPORT}:5432"
+      environment:
+        - PGDATA=/var/lib/postgresql/data/pgdata
+      env_file:
+        - .env
+      environment:
+        - PGPORT=5432
+        - PGHOST=127.0.0.1
+    rufs-crud-rust:
+      deploy:
+        resources:
+          limits:
+            cpus: '0.50'
+            memory: 500M
+      volumes:
+        - ${HOME}/data:/app/data
+      ports:
+        - "8081:8080"
+      env_file:
+        - .env
+      image: localhost/rufs-nfe-rust:latest
+      working_dir: /app
+    nginx:
+      image: docker.io/library/nginx:latest
+      ports:
+        - 443:443
+      restart: always
+      volumes:
+        - ./nginx/etc/nginx.conf:/etc/nginx/nginx.conf:ro
+        - ./nginx/etc/templates:/etc/nginx/templates:ro
+        - ./www:/usr/share/nginx/html:ro
+        - ./etc/letsencrypt:/etc/letsencrypt:ro
+      environment:
+        - NGINX_HOST=xxx.com
+        - NGINX_PORT=80
+        - PGHOST=172.17.0.1
+    standalone_chrome:
+      image: docker.io/selenium/standalone-chrome
+      container_name: standalone_chrome
+      ports:
+        - 4445:4444
+    standalone_firefox:
+      image: docker.io/selenium/standalone-firefox
+      container_name: standalone_firefox
+      ports:
+        - 4444:4444
+      env_file:
+        - .env

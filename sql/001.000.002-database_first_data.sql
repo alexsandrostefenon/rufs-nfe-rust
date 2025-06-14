@@ -35,7 +35,7 @@ INSERT INTO rufs_group_owner (name) VALUES ('nfe_guest_group');
 --split
 INSERT INTO rufs_group (name) VALUES ('Mercado');
 
-INSERT INTO rufs_user (rufs_group_owner, name, password, path, menu, roles, routes) SELECT name, 'guest', 'e10adc3949ba59abbe56e057f20f883e', 'request/search', 
+INSERT INTO rufs_customer_template.rufs_user (rufs_group_owner, name, password, path, menu, roles, routes) SELECT name, 'guest', 'e10adc3949ba59abbe56e057f20f883e', 'request/search',
 array[
 '{"group":"actions","label":"Importar","path":"request/import?overwrite[type]=1&overwrite[state]=10"}',
 '{"group":"actions","label":"Compra","path":"request/new?overwrite[type]=1&overwrite[state]=10"}',

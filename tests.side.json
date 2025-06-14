@@ -2,7 +2,7 @@
   "id": "5ebf3ab3-7a16-4ca5-bc32-95e2ddbf6e1b",
   "version": "2.0",
   "name": "webapp-rust",
-  "url": "http://localhost:8080/?mode=ws",
+  "url": "http://localhost:8081/",
   "tests": [{
     "id": "a634f1aa-1398-4f5e-8b60-14bc2320cbf0",
     "name": "request_buy_new",
@@ -702,6 +702,20 @@
       "targets": [],
       "value": ""
     }, {
+      "id": "a6b6118a-ba9b-417f-b71e-dfc6fb554af2",
+      "comment": "",
+      "command": "type",
+      "target": "id=login-customer_id",
+      "targets": [
+        ["id=login-user", "id"],
+        ["name=user", "name"],
+        ["css=#login-user", "css:finder"],
+        ["xpath=//input[@id='login-user']", "xpath:attributes"],
+        ["xpath=//form[@id='login']/div/input", "xpath:idRelative"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "123.456.789-01"
+    }, {
       "id": "a76bbd49-4a1c-4a4d-8820-f969abc40580",
       "comment": "",
       "command": "type",
@@ -1213,14 +1227,14 @@
       "id": "54293877-749a-4b07-91d1-d95e181af435",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/request/edit?id=1')]",
+      "target": "id=table_row-edit-search-request--0",
       "targets": [
-        ["id=table_row-edit--request--0", "id"],
+        ["id=table_row-edit-search-request--0", "id"],
         ["linkText=Edit", "linkText"],
-        ["css=#table-row-edit-request-0", "css:finder"],
+        ["css=#table_row-edit-search-request--0", "css:finder"],
         ["xpath=//a[contains(text(),'Edit')]", "xpath:link"],
-        ["xpath=//a[@id='table-row-edit-request-0']", "xpath:attributes"],
-        ["xpath=//table[@id='table-request']/tbody/tr/td/a[2]", "xpath:idRelative"],
+        ["xpath=//a[@id='table_row-edit-search-request--0']", "xpath:attributes"],
+        ["xpath=//table[@id='table-search-request']/tbody/tr/td/a[2]", "xpath:idRelative"],
         ["xpath=//a[contains(@href, '#!/app/request/edit?id=1')]", "xpath:href"],
         ["xpath=//td/a[2]", "xpath:position"],
         ["xpath=//a[contains(.,'Edit')]", "xpath:innerText"]
@@ -1332,6 +1346,20 @@
       "targets": [],
       "value": ""
     }, {
+      "id": "0bd1e1ea-497c-4eab-9738-fc80e0092b76",
+      "comment": "",
+      "command": "type",
+      "target": "id=login-customer_id",
+      "targets": [
+        ["id=login-user", "id"],
+        ["name=user", "name"],
+        ["css=#login-user", "css:finder"],
+        ["xpath=//input[@id='login-user']", "xpath:attributes"],
+        ["xpath=//form[@id='login']/div/input", "xpath:idRelative"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "123.456.789-01"
+    }, {
       "id": "c20fa6d6-3922-40c8-a60e-b572c0ac2a89",
       "comment": "",
       "command": "type",
@@ -1351,7 +1379,7 @@
       "command": "type",
       "target": "id=login-password",
       "targets": [],
-      "value": "admin"
+      "value": "123456"
     }, {
       "id": "f8d2bd73-7f30-45f8-8e65-f7682b739423",
       "comment": "",
@@ -1794,6 +1822,20 @@
         ["xpath=//input", "xpath:position"]
       ],
       "value": "30000"
+    }, {
+      "id": "9a3c25e2-6fcf-43a4-bc2b-01a852c4e629",
+      "comment": "",
+      "command": "type",
+      "target": "id=login-customer_id",
+      "targets": [
+        ["id=login-user", "id"],
+        ["name=user", "name"],
+        ["css=#login-user", "css:finder"],
+        ["xpath=//input[@id='login-user']", "xpath:attributes"],
+        ["xpath=//form[@id='login']/div/input", "xpath:idRelative"],
+        ["xpath=//input", "xpath:position"]
+      ],
+      "value": "123.456.789-01"
     }, {
       "id": "d7cc8424-0d93-48fe-bb2d-cb6f79d66f6d",
       "comment": "",
@@ -2544,8 +2586,8 @@
     "name": "Default Suite",
     "parallel": false,
     "timeout": 3000,
-    "tests": ["bcc3dc1b-75c9-4b9d-af0f-657ccc9dbc56", "459c824d-1825-4183-90db-145872eac86e", "a634f1aa-1398-4f5e-8b60-14bc2320cbf0", "1e9f3675-4bd4-4450-a7a6-c31b52b5e3b8", "eeb9e8f0-7a60-4b9d-9422-86d8f667fe4d", "a4720c93-1155-49f1-940e-1240e2c6adf6", "5cf4355e-0362-4c5a-8dc8-d8be0e765c91"]
+    "tests": ["b27ccfb6-01a9-435c-ac0d-7a49de274b68", "bcc3dc1b-75c9-4b9d-af0f-657ccc9dbc56", "459c824d-1825-4183-90db-145872eac86e", "a634f1aa-1398-4f5e-8b60-14bc2320cbf0", "1e9f3675-4bd4-4450-a7a6-c31b52b5e3b8", "eeb9e8f0-7a60-4b9d-9422-86d8f667fe4d", "a4720c93-1155-49f1-940e-1240e2c6adf6", "5cf4355e-0362-4c5a-8dc8-d8be0e765c91"]
   }],
-  "urls": ["https://192.168.2.139:8443/angular-es6-crud-nodejs-j2ee7", "https://192.168.2.139:8443/", "https://localhost:9443/crud", "https://localhost:8443/angular-es6-crud-nodejs-j2ee7", "https://localhost:7443/", "http://localhost:8080/crud", "http://localhost:8090/crud/", "http://localhost:8080/crud/", "http://localhost:8080/nfe/", "http://localhost:9080/", "http://localhost:9090/", "http://localhost:8080/", "http://localhost:8080/?mode=ws"],
+  "urls": ["http://localhost:8080/nfe/", "http://localhost:8080/", "http://localhost:8080/?mode=ws", "http://192.168.2.113:8080/", "http://localhost:8081/"],
   "plugins": []
 }
