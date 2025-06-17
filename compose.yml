@@ -18,11 +18,10 @@
         - ${HOME}/data:/app/data
       ports:
         - "${PGPORT}:5432"
-      environment:
-        - PGDATA=/var/lib/postgresql/data/pgdata
       env_file:
         - .env
       environment:
+        - PGDATA=/var/lib/postgresql/data/pgdata
         - PGPORT=5432
         - PGHOST=127.0.0.1
     rufs-crud-rust:

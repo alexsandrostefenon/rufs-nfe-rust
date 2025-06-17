@@ -1,6 +1,6 @@
 [package]
 name = "rufs-nfe-rust"
-version = "1.0.8"
+version = "1.0.9"
 authors = ["Alexsandro Stefenon <alexsandrostefenon@gmail.com>"]
 edition = "2021"
 

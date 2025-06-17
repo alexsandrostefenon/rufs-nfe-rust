@@ -388,7 +388,7 @@ let appOnClick = /*async*/ (event) => {
 	}
 }
 
-var login = event => {
+var login = async (event) => {
 	document.querySelector('#http-error').hidden = true;
 	document.querySelector('#http-working').innerHTML = "Aguardando resposta do servidor...";
 	document.querySelector('#http-working').hidden = false;
@@ -405,6 +405,24 @@ var login = event => {
 			customer_user = `${customer_id}.${form.user.value}`;
 		} else {
 			customer_user = form.user.value;
+		}
+
+		{
+			let server_url = window.location.origin + window.location.pathname;
+
+			if (server_url.endsWith("/")) {
+				server_url = server_url.substring(0, server_url.length - 1);
+			}
+
+			console.log(server_url);
+
+			if (mode == "ws") {
+				dataViewManager = new DataViewManagerWs(server_url);
+			} else {
+				const wasm_js = await import("../../pkg/rufs_nfe_rust.js");
+				await wasm_js.default();
+				dataViewManager = new wasm_js.DataViewManager(server_url);
+			}
 		}
 
 		dataViewManager.login({user: customer_user, password: form.password.value}).
@@ -512,26 +530,17 @@ class DataViewManagerWs {
 }
 
 async function run() {
-	let server_url = window.location.origin + window.location.pathname;
-	
-	if (server_url.endsWith("/")) {
-		server_url = server_url.substring(0, server_url.length - 1);
-	}
-
-	console.log(server_url);
-
 	if (trace == "true") {
 		http_log.hidden = false;
 	}
 
-	if (mode == "ws") {
-		dataViewManager = new DataViewManagerWs(server_url);
-	} else {
-		const wasm_js = await import("../../pkg/rufs_nfe_rust.js");
-		await wasm_js.default();
-		dataViewManager = new wasm_js.DataViewManager(server_url);
+	const element = document.getElementById("login-customer_id");
+
+	if (urlParams.get("customer_id") != null) {
+		element.value = urlParams.get("customer_id");
 	}
 
+	element.disabled = false;
 	document.querySelector('#login-send').addEventListener('click', login);
 }
 

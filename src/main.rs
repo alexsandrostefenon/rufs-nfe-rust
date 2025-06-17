@@ -9,14 +9,6 @@ use rufs_base_rust::{rufs_micro_service::{RufsMicroService, RufsParams}, openapi
 struct Args {
     #[arg(long,default_value = "8080")]
     port: u16,
-    #[cfg(debug_assertions)]
-    #[cfg(feature = "postgres")]
-    #[arg(long,default_value = "true")]
-    reset_test_data: bool,
-    #[cfg(not(debug_assertions))]
-    #[cfg(feature = "postgres")]
-    #[arg(long,default_value = "false")]
-    reset_test_data: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -682,34 +674,6 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    #[cfg(debug_assertions)]
-    if args.reset_test_data {
-        println!("1 - args.reset_db");
-
-        if std::path::Path::new(&params.openapi_file_name).exists() {
-            std::fs::remove_file(&params.openapi_file_name)?;
-            println!("2.1 - remove_file : {}", params.openapi_file_name);
-        }
-
-        let db_uri = RufsMicroService::build_db_uri(None, None, None, None, Some("rufs_nfe_development"), None);
-        println!("3 - build_db_uri : {}", db_uri);
-        let (pg_conn, connection) = tokio_postgres::connect(&db_uri, tokio_postgres::NoTls).await?;
-        println!("4 - connect : {}", db_uri);
-
-        tokio::spawn(async move {
-            if let Err(e) = connection.await {
-                eprintln!("connection error: {}", e);
-            }
-        });
-
-        println!("DROP DATABASE IF EXISTS {}...", params.app_name);
-        pg_conn.execute(&format!("DROP DATABASE IF EXISTS {}", params.app_name), &[]).await?;
-        println!("...DROP DATABASE IF EXISTS {}.", params.app_name);
-        println!("CREATE DATABASE {}...", params.app_name);
-        pg_conn.execute(&format!("CREATE DATABASE {}", params.app_name), &[]).await?;
-        println!("...CREATE DATABASE {}.", params.app_name);
-    }
-
     let fs_prefix = {
         let test_path = "rufs-nfe-rust/";
         let path = std::env::current_dir()?.join(test_path);
@@ -762,10 +726,8 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     rufs.store_open_api()?;
 
     #[cfg(debug_assertions)]
-    if args.reset_test_data {
-        #[cfg(feature = "clipp")]
-        import_clipp(&rufs).await?;
-    }
+    #[cfg(feature = "clipp")]
+    import_clipp(&rufs).await?;
 
     #[cfg(feature = "warp")]
     #[cfg(not(feature = "tide"))]
@@ -823,7 +785,7 @@ mod tests {
     async fn selelium() -> Result<(), Box<dyn std::error::Error>> {
         let listening = async {
             println!("server()...");
-            let args = Args { port: 8080, reset_test_data: true };
+            let args = Args { port: 8080 };
             server(&args).await
         };
 
@@ -836,6 +798,21 @@ mod tests {
             tokio::time::sleep( std::time::Duration::from_secs( 5 ) ).await;
             rufs_base_rust::client::tests::selelium(&WATCHER, "tests.side", "http://localhost:8080").await
         };
+
+        {
+            let db_uri = rufs_base_rust::rufs_micro_service::RufsMicroService::build_db_uri(None, None, None, None, Some("rufs_nfe"), None);
+            println!("3 - build_db_uri : {}", db_uri);
+            let (pg_conn, connection) = tokio_postgres::connect(&db_uri, tokio_postgres::NoTls).await?;
+            println!("4 - connect : {}", db_uri);
+
+            tokio::spawn(async move {
+                if let Err(e) = connection.await {
+                    eprintln!("connection error: {}", e);
+                }
+            });
+
+            pg_conn.execute(&format!("DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"), &[]).await?;
+        }
 
         listening.race(selelium).await?;
         println!("...selelium.");

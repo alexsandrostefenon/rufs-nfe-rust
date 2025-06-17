@@ -290,7 +290,44 @@
 {"id": "517a5e8a-efbe-4e3a-8567-f6e6ec823117","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
 {"id": "bcea5f9d-53fa-4309-a71f-d6746a64e838","comment": "","command": "click","target": "id=login-send","targets": [["id=login-send", "id"],  ["name=send", "name"],  ["css=#login-send", "css:finder"],  ["xpath=//button[@id='login-send']", "xpath:attributes"],  ["xpath=//form[@id='login']/button", "xpath:idRelative"],  ["xpath=//form/button", "xpath:position"],  ["xpath=//button[contains(.,'Ok')]", "xpath:innerText"]],"value": ""},
 {"id": "b21041a7-6941-4733-a5cc-64562a315908","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
-{"id": "bcc6e3d1-3eec-4433-ab5f-b4d42b08dc16","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [["id=menu-Cadastros", "id"],  ["linkText=Cadastros", "linkText"],  ["css=#menu-Cadastros", "css:finder"],  ["xpath=//a[contains(text(),'Cadastros')]", "xpath:link"],  ["xpath=//a[@id='menu-Cadastros']", "xpath:attributes"],  ["xpath=//div[@id='menu']/div/ul/li/a", "xpath:idRelative"],  ["xpath=//a[contains(@href, '#')]", "xpath:href"],  ["xpath=//a", "xpath:position"],  ["xpath=//a[contains(.,'Cadastros')]", "xpath:innerText"]],"value": "30000"}]},
+{"id": "bcc6e3d1-3eec-4433-ab5f-b4d42b08dc16","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [["id=menu-Cadastros", "id"],  ["linkText=Cadastros", "linkText"],  ["css=#menu-Cadastros", "css:finder"],  ["xpath=//a[contains(text(),'Cadastros')]", "xpath:link"],  ["xpath=//a[@id='menu-Cadastros']", "xpath:attributes"],  ["xpath=//div[@id='menu']/div/ul/li/a", "xpath:idRelative"],  ["xpath=//a[contains(@href, '#')]", "xpath:href"],  ["xpath=//a", "xpath:position"],  ["xpath=//a[contains(.,'Cadastros')]", "xpath:innerText"]],"value": "30000"}
+]},
+{
+    "id": "b27ccfb6-01a9-4351-ac0d-7a49de274b68",
+    "name": "login_guest_two",
+    "commands": [
+{"id": "da3f3606-b62f-4351-afbe-5a15d126b8f1","comment": "","command": "open","target": "","targets": [],"value": ""},
+{"id": "efda4b56-b552-4351-bca9-098021c6f6d3","comment": "","command": "setWindowSize","target": "1024x1920","targets": [],"value": ""},
+{"id": "f672192f-01ff-4351-abf4-0f1606fa0f70","comment": "","command": "waitForElementEditable","target": "id=login-customer_id","targets": [],"value": "30000"},
+{"id": "a6b6118a-ba9b-4351-b71e-dfc6fb554af0","comment": "","command": "click","target": "id=login-customer_id","targets": [],"value": ""},
+{"id": "a6b6118a-ba9b-4351-b71e-dfc6fb554af2","comment": "","command": "type","target": "id=login-customer_id","targets": [],"value": "987.654.321-09"},
+{"id": "a76bbd49-4a1c-4351-8820-f969abc40589","comment": "","command": "click","target": "id=login-user","targets": [],"value": "guest2"},
+{"id": "a76bbd49-4a1c-4351-8820-f969abc40580","comment": "","command": "type","target": "id=login-user","targets": [],"value": "guest2"},
+{"id": "58614be7-04a2-4351-a8b9-f085ee2b2fa5","comment": "","command": "click","target": "id=login-password","targets": [],"value": "654321"},
+{"id": "58614be7-04a2-4351-a8b9-f085ee2b2fa0","comment": "","command": "type","target": "id=login-password","targets": [],"value": "654321"},
+{"id": "517a5e8a-efbe-4351-8567-f6e6ec823117","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
+{"id": "bcea5f9d-53fa-4351-a71f-d6746a64e838","comment": "","command": "click","target": "id=login-send","targets": [["id=login-send", "id"],  ["name=send", "name"],  ["css=#login-send", "css:finder"],  ["xpath=//button[@id='login-send']", "xpath:attributes"],  ["xpath=//form[@id='login']/button", "xpath:idRelative"],  ["xpath=//form/button", "xpath:position"],  ["xpath=//button[contains(.,'Ok')]", "xpath:innerText"]],"value": ""},
+{"id": "b21041a7-6941-4351-a5cc-64562a315908","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
+{"id": "bcc6e3d1-3eec-4351-ab5f-b4d42b08dc16","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [["id=menu-Cadastros", "id"],  ["linkText=Cadastros", "linkText"],  ["css=#menu-Cadastros", "css:finder"],  ["xpath=//a[contains(text(),'Cadastros')]", "xpath:link"],  ["xpath=//a[@id='menu-Cadastros']", "xpath:attributes"],  ["xpath=//div[@id='menu']/div/ul/li/a", "xpath:idRelative"],  ["xpath=//a[contains(@href, '#')]", "xpath:href"],  ["xpath=//a", "xpath:position"],  ["xpath=//a[contains(.,'Cadastros')]", "xpath:innerText"]],"value": "30000"}
+]},
+{
+    "id": "b27ccfb6-01a9-4352-ac0d-7a49de274b68",
+    "name": "login_guest_two_url_customer_id",
+    "commands": [
+{"id": "da3f3606-b62f-4352-afbe-5a15d126b8f1","comment": "","command": "open","target": "","targets": [],"value": ""},
+{"id": "efda4b56-b552-4352-bca9-098021c6f6d3","comment": "","command": "setWindowSize","target": "1024x1920","targets": [],"value": ""},
+{"id": "f672192f-01ff-4352-abf4-0f1606fa0f70","comment": "","command": "waitForElementEditable","target": "id=login-customer_id","targets": [],"value": "30000"},
+{"id": "a6b6118a-ba9b-4352-b71e-dfc6fb554af0","comment": "","command": "click","target": "id=login-customer_id","targets": [],"value": ""},
+{"id": "a6b6118a-ba9b-4352-b71e-dfc6fb554af2","comment": "","command": "assertValue","target": "id=login-customer_id","targets": [],"value": "987.654.321-09"},
+{"id": "a76bbd49-4a1c-4352-8820-f969abc40589","comment": "","command": "click","target": "id=login-user","targets": [],"value": "guest2"},
+{"id": "a76bbd49-4a1c-4352-8820-f969abc40580","comment": "","command": "type","target": "id=login-user","targets": [],"value": "guest2"},
+{"id": "58614be7-04a2-4352-a8b9-f085ee2b2fa5","comment": "","command": "click","target": "id=login-password","targets": [],"value": "654321"},
+{"id": "58614be7-04a2-4352-a8b9-f085ee2b2fa0","comment": "","command": "type","target": "id=login-password","targets": [],"value": "654321"},
+{"id": "517a5e8a-efbe-4352-8567-f6e6ec823117","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
+{"id": "bcea5f9d-53fa-4352-a71f-d6746a64e838","comment": "","command": "click","target": "id=login-send","targets": [["id=login-send", "id"],  ["name=send", "name"],  ["css=#login-send", "css:finder"],  ["xpath=//button[@id='login-send']", "xpath:attributes"],  ["xpath=//form[@id='login']/button", "xpath:idRelative"],  ["xpath=//form/button", "xpath:position"],  ["xpath=//button[contains(.,'Ok')]", "xpath:innerText"]],"value": ""},
+{"id": "b21041a7-6941-4352-a5cc-64562a315908","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
+{"id": "bcc6e3d1-3eec-4352-ab5f-b4d42b08dc16","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [["id=menu-Cadastros", "id"],  ["linkText=Cadastros", "linkText"],  ["css=#menu-Cadastros", "css:finder"],  ["xpath=//a[contains(text(),'Cadastros')]", "xpath:link"],  ["xpath=//a[@id='menu-Cadastros']", "xpath:attributes"],  ["xpath=//div[@id='menu']/div/ul/li/a", "xpath:idRelative"],  ["xpath=//a[contains(@href, '#')]", "xpath:href"],  ["xpath=//a", "xpath:position"],  ["xpath=//a[contains(.,'Cadastros')]", "xpath:innerText"]],"value": "30000"}
+]},
 {
     "id": "a4720c93-1155-49f1-940e-1240e2c6adf6",
     "name": "remove_first_data",
@@ -520,7 +557,18 @@
     "name": "Default Suite",
     "parallel": false,
     "timeout": 3000,
-    "tests": ["b27ccfb6-01a9-435c-ac0d-7a49de274b68", "bcc3dc1b-75c9-4b9d-af0f-657ccc9dbc56", "459c824d-1825-4183-90db-145872eac86e", "a634f1aa-1398-4f5e-8b60-14bc2320cbf0", "1e9f3675-4bd4-4450-a7a6-c31b52b5e3b8", "eeb9e8f0-7a60-4b9d-9422-86d8f667fe4d", "a4720c93-1155-49f1-940e-1240e2c6adf6", "5cf4355e-0362-4c5a-8dc8-d8be0e765c91"]
+    "tests": [
+"b27ccfb6-01a9-435c-ac0d-7a49de274b68",
+"bcc3dc1b-75c9-4b9d-af0f-657ccc9dbc56",
+"b27ccfb6-01a9-4351-ac0d-7a49de274b68",
+"b27ccfb6-01a9-4352-ac0d-7a49de274b68",
+"459c824d-1825-4183-90db-145872eac86e",
+"a634f1aa-1398-4f5e-8b60-14bc2320cbf0",
+"1e9f3675-4bd4-4450-a7a6-c31b52b5e3b8",
+"eeb9e8f0-7a60-4b9d-9422-86d8f667fe4d",
+"a4720c93-1155-49f1-940e-1240e2c6adf6",
+"5cf4355e-0362-4c5a-8dc8-d8be0e765c91"
+]
   }],
   "urls": ["http://localhost:8080/nfe/", "http://localhost:8080/", "http://localhost:8080/?mode=ws", "http://192.168.2.113:8080/", "http://localhost:8081/"],
   "plugins": []

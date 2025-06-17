@@ -1,5 +1,5 @@
 server: "http://host.containers.internal:4444"
-baseUrl: "http://host.containers.internal:8081/?mode=wasm&working_timeout=250"
+baseUrl: "http://host.containers.internal:8081/?mode=wasm&working_timeout=250&customer_id=987.654.321-09"
 screenshotFailureDirectory: "./tmp/"
 outputDirectory: "./tmp/"
 timeout: 15000

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ "$1" = 'install' ]; then
+    #https://photogabble.co.uk/tutorials/running-amazon-linux-2023-within-virtualbox/
+    wget -c https://cdn.amazonlinux.com/al2023/os-images/2023.6.20241212.0/vmware/al2023-vmware_esx-2023.6.20241212.0-kernel-6.1-x86_64.xfs.gpt.ova
+    tar -xvf al2023-vmware_esx-2023.6.20241212.0-kernel-6.1-x86_64.xfs.gpt.ova
+    nano meta-data
+    nano user-data
+    mkisofs -output seed.iso -volid cidata -joliet -rock user-data meta-data;
+    VBoxManage clonemedium al2023-vmware_esx-2023.6.20241212.0-kernel-6.1-x86_64.xfs.gpt-disk1.vmdk ~/al2023-vmware_esx-2023.6.20241212.0-kernel-6.1-x86_64.xfs.gpt-disk1.vdi --format VDI;
+    VBoxManage ~/al2023-vmware_esx-2023.6.20241212.0-kernel-6.1-x86_64.xfs.gpt-disk1.vdi;
+elif [ "$2" = 'setup' ]; then
+    sudo yum install -y docker postgresql16.x86_64
+    sudo usermod -aG docker ec2-user
+    sudo systemctl enable docker
+    sudo systemctl start docker
+    sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/bin/docker-compose
+    sudo chmod 755 /usr/bin/docker-compose
+elif [ "$2" = 'deploy' ]; then
+    docker-compose down rufs-crud-rust
+    docker pull localhost:5000/rufs-nfe-rust:latest
+    docker-compose up rufs-crud-rust
+    #./letsencrypt.sh
+fi
