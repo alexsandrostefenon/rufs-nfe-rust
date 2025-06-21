@@ -1,4 +1,7 @@
 #!/bin/bash
+set -x
+PS4=' $LINENO: '
+set -e
 
 if [ "$1" = 'install' ]; then
     #https://photogabble.co.uk/tutorials/running-amazon-linux-2023-within-virtualbox/
@@ -9,16 +12,18 @@ if [ "$1" = 'install' ]; then
     mkisofs -output seed.iso -volid cidata -joliet -rock user-data meta-data;
     VBoxManage clonemedium al2023-vmware_esx-2023.6.20241212.0-kernel-6.1-x86_64.xfs.gpt-disk1.vmdk ~/al2023-vmware_esx-2023.6.20241212.0-kernel-6.1-x86_64.xfs.gpt-disk1.vdi --format VDI;
     VBoxManage ~/al2023-vmware_esx-2023.6.20241212.0-kernel-6.1-x86_64.xfs.gpt-disk1.vdi;
-elif [ "$2" = 'setup' ]; then
+elif [ "$1" = 'setup' ]; then
     sudo yum install -y docker postgresql16.x86_64
     sudo usermod -aG docker ec2-user
     sudo systemctl enable docker
     sudo systemctl start docker
     sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/bin/docker-compose
     sudo chmod 755 /usr/bin/docker-compose
-elif [ "$2" = 'deploy' ]; then
-    docker-compose down rufs-crud-rust
-    docker pull localhost:5000/rufs-nfe-rust:latest
-    docker-compose up rufs-crud-rust
+elif [ "$1" = 'deploy' ]; then
+    exec="ssh $ssh_connection_args ec2-user@$aws_ip"
+    exec docker-compose down rufs-crud-rust
+    exec docker pull localhost:5000/rufs-nfe-rust:latest
+    exec docker-compose up -d rufs-crud-rust
     #./letsencrypt.sh
+    exec docker-compose logs -f rufs-crud-rust
 fi

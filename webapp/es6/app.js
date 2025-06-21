@@ -2,10 +2,7 @@ let dataViewManager;
 let aggregateChartOptions = {};
 let aggregateChart = {};
 const http_log = document.querySelector('#http-log');
-const urlParams = new URLSearchParams(document.location.search);
-const mode = urlParams.get("mode");
-const trace = urlParams.get("trace");
-const workingTimeout = urlParams.get("working_timeout") ? parseInt(urlParams.get("working_timeout")) : 100;
+const workingTimeout = 100;
 
 function data_view_show(form_id) {
 	const div_id = `div-${form_id}`;
@@ -173,7 +170,7 @@ let appOnChange = /*async*/ (event) => {
 
 	const form = element.form;
 
-	if (form != null && mode != "ws") {
+	if (form != null) {
 		//form.inert = true;
 	}
 
@@ -388,160 +385,48 @@ let appOnClick = /*async*/ (event) => {
 	}
 }
 
-var login = async (event) => {
-	document.querySelector('#http-error').hidden = true;
-	document.querySelector('#http-working').innerHTML = "Aguardando resposta do servidor...";
-	document.querySelector('#http-working').hidden = false;
-    let element = event.target; let rowIndex = 0;
-	const form = element.form;
+function processLoginResponse(login_response, data_view_manager) {
+	// {menu, path, jwt_header}
+	dataViewManager = data_view_manager;
+	const regExMenuSearch = /\.(new|view|edit|search)(\?)?/;
+	const regExMenuReplace = "/$1$2";
 
-	if (form.reportValidity()) {
-		//event.stopPropagation();
-		event.preventDefault();
-		let customer_user;
-		const customer_id = form.customer_id.value.replaceAll(/\D/g, "");
-
-		if (customer_id.length > 0) {
-			customer_user = `${customer_id}.${form.user.value}`;
-		} else {
-			customer_user = form.user.value;
+	const addToParent = (menu, list) => {
+		if (menu instanceof Map) {
+			menu = Object.fromEntries(menu);
 		}
 
-		{
-			let server_url = window.location.origin + window.location.pathname;
-
-			if (server_url.endsWith("/")) {
-				server_url = server_url.substring(0, server_url.length - 1);
-			}
-
-			console.log(server_url);
-
-			if (mode == "ws") {
-				dataViewManager = new DataViewManagerWs(server_url);
+		for (let [name, field] of Object.entries(menu)) {
+			if (typeof field === 'object') {
+				list.push(
+				`<li class='nav-item dropdown'><a class='nav-link dropdown-toggle' href='#' role='button' data-bs-toggle="dropdown" aria-expanded='false' id="menu-${name}">${name}</a><ul class='dropdown-menu'>`);
+				addToParent(field, list);
+				list.push(`</ul>\n</li>`);
 			} else {
-				const wasm_js = await import("../../pkg/rufs_nfe_rust.js");
-				await wasm_js.default();
-				dataViewManager = new wasm_js.DataViewManager(server_url);
+				let schema = field.replaceAll("/", ".").replace(regExMenuSearch, regExMenuReplace);
+				list.push(`<li><a class='dropdown-item' href='#!/app/${schema}'>${name}</a></li>\n`);
 			}
 		}
+	};
 
-		dataViewManager.login({user: customer_user, password: form.password.value}).
-		then(loginResponse => {
-			const regExMenuSearch = /\.(new|view|edit|search)(\?)?/;
-			const regExMenuReplace = "/$1$2";
-			
-			const addToParent = (menu, list) => {
-				if (menu instanceof Map) {
-					menu = Object.fromEntries(menu);
-				}
+	if (login_response instanceof Map) {
+		login_response = Object.fromEntries(login_response);
+	}
 
-				for (let [name, field] of Object.entries(menu)) {
-					if (typeof field === 'object') {
-						list.push(
-						`<li class='nav-item dropdown'><a class='nav-link dropdown-toggle' href='#' role='button' data-bs-toggle="dropdown" aria-expanded='false' id="menu-${name}">${name}</a><ul class='dropdown-menu'>`);
-						addToParent(field, list);
-						list.push(`</ul>\n</li>`);
-					} else {
-						let schema = field.replaceAll("/", ".").replace(regExMenuSearch, regExMenuReplace);
-						list.push(`<li><a class='dropdown-item' href='#!/app/${schema}'>${name}</a></li>\n`);
-					}
-				}
-			};
+	let list = [];
+	list.push(`<ul class='nav nav-pills'>`);
+	addToParent(login_response.menu, list);
+	list.push(`</ul>`);
+	const str = list.join("\n");
+	let div = document.createElement("div");
+	div.innerHTML = str;
+	div.addEventListener('click', appOnClick);
+	document.querySelector('#menu').appendChild(div);
+	let schema = login_response.path.replaceAll("/", ".").replace(regExMenuSearch, regExMenuReplace);
 
-			if (loginResponse instanceof Map) {
-				loginResponse = Object.fromEntries(loginResponse);
-			}
-
-			let list = [];
-			list.push(`<ul class='nav nav-pills'>`);
-			addToParent(loginResponse.menu, list);
-			list.push(`</ul>`);
-			const str = list.join("\n");
-			let div = document.createElement("div");
-			div.innerHTML = str;
-			div.addEventListener('click', appOnClick);
-			document.querySelector('#menu').appendChild(div);
-			form.hidden = true;
-			let schema = loginResponse.path.replaceAll("/", ".").replace(regExMenuSearch, regExMenuReplace);
-
-			for (let element of document.querySelectorAll(`a[href='#!/app/${schema}']`)) {
-				element.click();
-			}
-
-			setTimeout(() => document.querySelector('#http-working').hidden = true, workingTimeout);
-		}).catch(err => {
-			console.error(err);
-			setTimeout(() => document.querySelector('#http-working').hidden = true, workingTimeout);
-			document.querySelector('#http-error').innerHTML = err;
-			document.querySelector('#http-error').hidden = false;
-		});
+	for (let element of document.querySelectorAll(`a[href='#!/app/${schema}']`)) {
+		element.click();
 	}
 }
 
-class DataViewManagerWs {
-
-	constructor(server_url) {
-		this.server_url = server_url;
-    }
-
-	login(obj_in) {
-		let url = `${this.server_url}/wasm_ws/login`;
-		let options = {method: "POST", body: JSON.stringify(obj_in), headers: {}};
-		options.headers["Content-Type"] = "application/json";
-		return fetch(url, options).
-		then(response => {
-			if (response.status != 200) {
-				return response.text().
-				then(text => {
-					throw text
-				});
-			}
-			
-			return response.json();
-		}).
-		then(loginResponse => {
-			this.token = loginResponse.jwt_header;
-			return loginResponse;
-		});
-    }
-
-    process(obj_in) {
-		let options = {method: "POST", body: JSON.stringify(obj_in), headers: {}};
-		options.headers["Content-Type"] = "application/json";
-
-		if (this.token != undefined) {
-			options.headers["Authorization"] = "Bearer " + this.token;
-		}
-
-		let url = `${this.server_url}/wasm_ws/process`;
-		return fetch(url, options).
-		then(response => {
-			if (response.status != 200) {
-				return response.text().
-				then(text => {
-					throw text
-				});
-			}
-			
-			return response.json();
-		});
-    }
-
-}
-
-async function run() {
-	if (trace == "true") {
-		http_log.hidden = false;
-	}
-
-	const element = document.getElementById("login-customer_id");
-
-	if (urlParams.get("customer_id") != null) {
-		element.value = urlParams.get("customer_id");
-	}
-
-	element.disabled = false;
-	document.querySelector('#login-send').addEventListener('click', login);
-}
-
-await run();
+export {processLoginResponse};

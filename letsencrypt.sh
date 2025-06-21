@@ -1,4 +1,7 @@
 #!/bin/bash
+set -x
+PS4=' $LINENO: '
+set -e
 
 #docker rm -f ec2-user-rufs-crud-rust-1 ec2-user-nginx-1
 docker down rufs-crud-rust

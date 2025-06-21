@@ -1,4 +1,7 @@
 #!/bin/sh
+set -x
+PS4=' $LINENO: '
+set -e
 
 export $(cat .env | xargs)
 
@@ -18,5 +21,5 @@ fi
 
 PGHOST=localhost psql rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
 echo "Reseted testing data !"
-mkdir tmp
+mkdir -p ./tmp
 podman run --rm -v $PWD:$PWD -w $PWD selenium-side-runner:latest selenium-side-runner -j '"--detectOpenHandles"' tests.side
