@@ -4,7 +4,6 @@ PS4=' $LINENO: '
 set -e
 
 #ssh_connection_args="-i <remote_server_name>.pem";
-#scp $ssh_connection_args al2023.sh .env compose.yml scp://ec2-user@$aws_ip;
 tunel_port='6000'
 tls_no_verify='--tls-verify=false'
 version=$(cargo pkgid 2>/dev/null | cut -d "#" -f2)
