@@ -254,8 +254,8 @@ impl DataViewManagerWrapperApp {
         Self {data_view_manager_wrapper}
     }
 
-	pub async fn login(&mut self, params :JsValue) -> Result<JsValue, JsValue> {
-        self.data_view_manager_wrapper.login("/login", params, true).await
+	pub async fn login_from_response(&mut self, params :JsValue) -> Result<JsValue, JsValue> {
+        self.data_view_manager_wrapper.login_from_response(params).await
     }
 
     pub async fn process(&mut self, params :JsValue) -> Result<JsValue, JsValue> {

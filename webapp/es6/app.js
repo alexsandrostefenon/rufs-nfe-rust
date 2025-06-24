@@ -2,7 +2,8 @@ let dataViewManager;
 let aggregateChartOptions = {};
 let aggregateChart = {};
 const http_log = document.querySelector('#http-log');
-const workingTimeout = 100;
+const urlParams = new URLSearchParams(document.location.search);
+const workingTimeout = urlParams.get("working_timeout") ? parseInt(urlParams.get("working_timeout")) : 100;
 
 function data_view_show(form_id) {
 	const div_id = `div-${form_id}`;
@@ -380,7 +381,7 @@ let appOnClick = /*async*/ (event) => {
 			document.querySelector('#http-error').innerHTML = err;
 			document.querySelector('#http-error').hidden = false;
 		}).then(() => {
-			setTimeout(() => document.querySelector('#http-working').hidden = true, workingTimeout);
+			setTimeout(() => document.getElementById('http-working').hidden = true, workingTimeout);
 		});
 	}
 }

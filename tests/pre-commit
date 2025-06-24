@@ -45,21 +45,16 @@ EOF
 	exit 1
 fi
 
-# If there are whitespace errors, print the offending file names and fail.
-exec git diff-index --check --cached $against --
-echo "6"
-#sed -i 's/path = "\.\.\/rufs-base-rust"/git = "https:\/\/github.com\/alexsandrostefenon\/rufs-base-rust.git"/' Cargo.toml
-echo "7"
+sed -i 's/path = "\.\.\/rufs-base-rust"/git = "https:\/\/github.com\/alexsandrostefenon\/rufs-base-rust.git"/' Cargo.toml
 podman-compose down rufs-crud-rust
-echo "8"
 ./build.sh
-echo "9"
 podman-compose up -d rufs-crud-rust
-echo "10"
 ./tests/tests.sh
 #retVal=$?
-echo "11"
 
 #if [ $retVal -ne 0 ]; then
 #	exit $retVal
 #fi
+
+# If there are whitespace errors, print the offending file names and fail.
+exec git diff-index --check --cached $against --

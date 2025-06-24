@@ -188,6 +188,7 @@
 {"id": "76cd4051-f056-47c0-9f05-f4c4b8932b70","comment": "","command": "type","target": "id=edit-request--new-request_product--valueDesc","targets": [],"value": "26.40"},
 {"id": "0b18bb0a-6580-4ea0-ba31-a10b70bd88c0","comment": "","command": "click","target": "id=edit-request--new-request_product--cfop","targets": [],"value": ""},
 {"id": "0b18bb0a-6580-4ea0-ba31-a10b70bd88c4","comment": "","command": "type","target": "id=edit-request--new-request_product--cfop","targets": [],"value": "5102 - Venda de mercadoria adquirida ou recebida de terceiros"},
+{"id": "0b18bb0a-6580-4ea0-ba31-a10b70bd88c5","comment": "","command": "assertValue","target": "id=edit-request--new-request_product--cfop","targets": [],"value": "5102 - Venda de mercadoria adquirida ou recebida de terceiros"},
 {"id": "7ab51e26-b83c-478c-86b0-64853aef4cba","comment": "","command": "assertValue","target": "id=edit-request--new-request_product--value","targets": [],"value": "5.29"},
 {"id": "d7462c65-9dbc-4537-8f55-71fc53b27bdf","comment": "","command": "assertValue","target": "id=edit-request--new-request_product--valueItem","targets": [],"value": "15.92"},
 {"id": "389980a4-f0e1-4b61-850a-ee214890fe04","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
@@ -224,7 +225,7 @@
     "name": "change_user_permission",
     "commands": [
 {"id": "643e53a3-8dac-4229-b22a-f95c48becb95","comment": "","command": "run","target": "login_admin","targets": [],"value": ""},
-{"id": "a1e80a65-d4ac-4bff-b603-d0855964967a","comment": "","command": "click","target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?name=guest&rufsGroupOwner=nfe_guest_group')]","targets": [],"value": ""},
+{"id": "a1e80a65-d4ac-4bff-b603-d0855964967a","comment": "","command": "click","target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?rufsGroupOwner=nfe_guest_group&name=guest')]","targets": [],"value": ""},
 {"id": "aa27b5c8-48c6-4e04-a2ab-a218317e2920","comment": "","command": "waitForElementVisible","target": "id=table_row-edit-edit-rufs_user--edit-roles--20","targets": [],"value": "10000"},
 {"id": "aa27b5c8-48c6-4e04-a2ab-a218317e2923","comment": "","command": "click","target": "id=table_row-edit-edit-rufs_user--edit-roles--20","targets": [],"value": ""},
 {"id": "aa27b5c8-48c6-4e04-a2ab-a218317e2910","comment": "","command": "verifyValue","target": "id=edit-rufs_user--edit-roles--path","targets": [],"value": "/request"},
@@ -290,7 +291,7 @@
 {"id": "517a5e8a-efbe-4e3a-8567-f6e6ec823117","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
 {"id": "bcea5f9d-53fa-4309-a71f-d6746a64e838","comment": "","command": "click","target": "id=login-send","targets": [["id=login-send", "id"],  ["name=send", "name"],  ["css=#login-send", "css:finder"],  ["xpath=//button[@id='login-send']", "xpath:attributes"],  ["xpath=//form[@id='login']/button", "xpath:idRelative"],  ["xpath=//form/button", "xpath:position"],  ["xpath=//button[contains(.,'Ok')]", "xpath:innerText"]],"value": ""},
 {"id": "b21041a7-6941-4733-a5cc-64562a315908","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
-{"id": "bcc6e3d1-3eec-4433-ab5f-b4d42b08dc16","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [["id=menu-Cadastros", "id"],  ["linkText=Cadastros", "linkText"],  ["css=#menu-Cadastros", "css:finder"],  ["xpath=//a[contains(text(),'Cadastros')]", "xpath:link"],  ["xpath=//a[@id='menu-Cadastros']", "xpath:attributes"],  ["xpath=//div[@id='menu']/div/ul/li/a", "xpath:idRelative"],  ["xpath=//a[contains(@href, '#')]", "xpath:href"],  ["xpath=//a", "xpath:position"],  ["xpath=//a[contains(.,'Cadastros')]", "xpath:innerText"]],"value": "30000"}
+{"id": "bcc6e3d1-3eec-4433-ab5f-b4d42b08dc16","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [],"value": "30000"}
 ]},
 {
     "id": "b27ccfb6-01a9-4351-ac0d-7a49de274b68",
@@ -308,7 +309,7 @@
 {"id": "517a5e8a-efbe-4351-8567-f6e6ec823117","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
 {"id": "bcea5f9d-53fa-4351-a71f-d6746a64e838","comment": "","command": "click","target": "id=login-send","targets": [["id=login-send", "id"],  ["name=send", "name"],  ["css=#login-send", "css:finder"],  ["xpath=//button[@id='login-send']", "xpath:attributes"],  ["xpath=//form[@id='login']/button", "xpath:idRelative"],  ["xpath=//form/button", "xpath:position"],  ["xpath=//button[contains(.,'Ok')]", "xpath:innerText"]],"value": ""},
 {"id": "b21041a7-6941-4351-a5cc-64562a315908","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
-{"id": "bcc6e3d1-3eec-4351-ab5f-b4d42b08dc16","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [["id=menu-Cadastros", "id"],  ["linkText=Cadastros", "linkText"],  ["css=#menu-Cadastros", "css:finder"],  ["xpath=//a[contains(text(),'Cadastros')]", "xpath:link"],  ["xpath=//a[@id='menu-Cadastros']", "xpath:attributes"],  ["xpath=//div[@id='menu']/div/ul/li/a", "xpath:idRelative"],  ["xpath=//a[contains(@href, '#')]", "xpath:href"],  ["xpath=//a", "xpath:position"],  ["xpath=//a[contains(.,'Cadastros')]", "xpath:innerText"]],"value": "30000"}
+{"id": "bcc6e3d1-3eec-4351-ab5f-b4d42b08dc16","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [],"value": "30000"}
 ]},
 {
     "id": "b27ccfb6-01a9-4352-ac0d-7a49de274b68",
@@ -326,7 +327,52 @@
 {"id": "517a5e8a-efbe-4352-8567-f6e6ec823117","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
 {"id": "bcea5f9d-53fa-4352-a71f-d6746a64e838","comment": "","command": "click","target": "id=login-send","targets": [["id=login-send", "id"],  ["name=send", "name"],  ["css=#login-send", "css:finder"],  ["xpath=//button[@id='login-send']", "xpath:attributes"],  ["xpath=//form[@id='login']/button", "xpath:idRelative"],  ["xpath=//form/button", "xpath:position"],  ["xpath=//button[contains(.,'Ok')]", "xpath:innerText"]],"value": ""},
 {"id": "b21041a7-6941-4352-a5cc-64562a315908","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
-{"id": "bcc6e3d1-3eec-4352-ab5f-b4d42b08dc16","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [["id=menu-Cadastros", "id"],  ["linkText=Cadastros", "linkText"],  ["css=#menu-Cadastros", "css:finder"],  ["xpath=//a[contains(text(),'Cadastros')]", "xpath:link"],  ["xpath=//a[@id='menu-Cadastros']", "xpath:attributes"],  ["xpath=//div[@id='menu']/div/ul/li/a", "xpath:idRelative"],  ["xpath=//a[contains(@href, '#')]", "xpath:href"],  ["xpath=//a", "xpath:position"],  ["xpath=//a[contains(.,'Cadastros')]", "xpath:innerText"]],"value": "30000"}
+{"id": "bcc6e3d1-3eec-4352-ab5f-b4d42b08dc17","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [],"value": "30000"}
+]},
+{
+    "id": "88ca5807-7d2d-4a44-8d9c-9b595cb5bebf",
+    "name": "login_admin",
+    "commands": [
+{"id": "bd3658ca-f69b-46bd-b68b-1499ada49d40","comment": "","command": "open","target": "","targets": [],"value": ""},
+{"id": "efda4b56-b552-44bd-bca9-1499ada49d41","comment": "","command": "setWindowSize","target": "1024x1920","targets": [],"value": ""},
+{"id": "fd445a72-d7c5-4cd7-9c02-bf530ef060c5","comment": "","command": "waitForElementEditable","target": "id=login-customer_id","targets": [],"value": "30000"},
+{"id": "0bd1e1ea-497c-4eab-9738-fc80e0092b70","comment": "","command": "click","target": "id=login-customer_id","targets": [],"value": "123.456.789-01"},
+{"id": "0bd1e1ea-497c-4eab-9738-fc80e0092b76","comment": "","command": "type","target": "id=login-customer_id","targets": [],"value": "123.456.789-01"},
+{"id": "c20fa6d6-3922-40c8-a60e-b572c0ac2a80","comment": "","command": "click","target": "id=login-user","targets": [],"value": "admin"},
+{"id": "c20fa6d6-3922-40c8-a60e-b572c0ac2a89","comment": "","command": "type","target": "id=login-user","targets": [],"value": "admin"},
+{"id": "67d16918-8c73-4bd2-9898-e093ccdc08c0","comment": "","command": "click","target": "id=login-password","targets": [],"value": "123456"},
+{"id": "67d16918-8c73-4bd2-9898-e093ccdc08c5","comment": "","command": "type","target": "id=login-password","targets": [],"value": "123456"},
+{"id": "f8d2bd73-7f30-45f8-8e65-f7682b739423","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
+{"id": "6731c3f3-df21-4dc7-b65b-b18e46200f18","comment": "","command": "click","target": "id=login-send","targets": [["id=login-send", "id"],  ["css=#login", "css"],  ["xpath=//button[@id='login']", "xpath:attributes"],  ["xpath=//div[@id='main']/form/button", "xpath:idRelative"],  ["xpath=//form/button", "xpath:position"]],"value": ""},
+{"id": "bf96e4a4-3530-449e-81f9-4cd2521c60ff","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
+{"id": "bcc6e3d1-3eec-4352-ab5f-b4d42b08dc18","comment": "","command": "waitForElementVisible","target": "id=menu-Cadastros","targets": [],"value": "30000"}
+]},
+{
+    "id": "bcc3dc1b-75c9-4b9d-af0f-657ccc9dbc56",
+    "name": "login_wrong",
+    "commands": [
+{"id": "53eebdd1-8983-4c47-8b41-ba9295b35aad","comment": "","command": "open","target": "","targets": [],"value": ""},
+{"id": "fbe337b8-3480-432d-b3d4-ce303534a582","comment": "","command": "waitForElementEditable","target": "id=login-customer_id","targets": [],"value": "30000"},
+{"id": "c361205a-30b1-498e-841e-defb087ca17a","comment": "","command": "waitForElementVisible","target": "id=login-user","targets": [["id=login-user", "id"],  ["name=user", "name"],  ["css=#login-user", "css:finder"],  ["xpath=//input[@id='login-user']", "xpath:attributes"],  ["xpath=//form[@id='login']/div/input", "xpath:idRelative"],  ["xpath=//input", "xpath:position"]],"value": "30000"},
+{"id": "9a3c25e2-6fcf-43a4-bc2b-01a852c4e620","comment": "","command": "click","target": "id=login-customer_id","targets": [],"value": "123.456.789-01"},
+{"id": "9a3c25e2-6fcf-43a4-bc2b-01a852c4e629","comment": "","command": "type","target": "id=login-customer_id","targets": [],"value": "123.456.789-01"},
+{"id": "d7cc8424-0d93-48fe-bb2d-cb6f79d66f60","comment": "","command": "click","target": "id=login-user","targets": [],"value": "guest"},
+{"id": "d7cc8424-0d93-48fe-bb2d-cb6f79d66f6d","comment": "","command": "type","target": "id=login-user","targets": [],"value": "guest"},
+{"id": "9e7f1d12-bb7d-4c1e-a2b6-5d41da660710","comment": "","command": "sendKeys","target": "id=login-password","targets": [],"value": "123 + ${KEY_ENTER}"},
+{"id": "733a0f0b-6cb7-421e-a672-49af814128bd","comment": "","command": "click","target": "id=login-send","targets": [["id=login-send", "id"],  ["name=send", "name"],  ["css=#login-send", "css:finder"],  ["xpath=//button[@id='login-send']", "xpath:attributes"],  ["xpath=//form[@id='login']/button", "xpath:idRelative"],  ["xpath=//form/button", "xpath:position"],  ["xpath=//button[contains(.,'Ok')]", "xpath:innerText"]],"value": ""},
+{"id": "0b82a961-ab5e-4484-8735-7a48f2d99ca0","comment": "","command": "waitForElementVisible","target": "id=http-error","targets": [],"value": "30000"},
+{"id": "0b82a961-ab5e-4484-8735-7a48f2d99ca5","comment": "","command": "assertText","target": "id=http-error","targets": [],"value": "Don't match user and password."}
+]},
+{
+    "id": "abf68466-c657-48ac-96de-5400f8a9090f",
+    "name": "login_wrong_password_empty",
+    "commands": [
+{"id": "8c358155-c6b2-418e-9e87-b3b3a9b7d3e5","comment": "","command": "open","target": "","targets": [],"value": ""},
+{"id": "dddd155b-f019-4c30-bfe8-c9b538845eeb","comment": "","command": "waitForElementEditable","target": "id=login-customer_id","targets": [],"value": "30000"},
+{"id": "9d0901dd-3ab0-469a-979e-76aec5557140","comment": "","command": "click","target": "id=login-user","targets": [],"value": "guest"},
+{"id": "9d0901dd-3ab0-469a-979e-76aec5557144","comment": "","command": "type","target": "id=login-user","targets": [],"value": "guest"},
+{"id": "f089200d-dbc3-41d2-af18-435f43017d73","comment": "","command": "sendKeys","target": "id=login-password","targets": [],"value": "${KEY_ENTER}"},
+{"id": "94ca9233-c12c-4aed-822c-601369b1d232","comment": "","command": "assertText","target": "id=http-error","targets": [["css=strong.ng-binding", "css"],  ["css=.ng-binding", "css:finder"],  ["xpath=//div[@id='http-error']/strong", "xpath:idRelative"],  ["xpath=//strong", "xpath:position"]],"value": "Don't match user and password."}
 ]},
 {
     "id": "a4720c93-1155-49f1-940e-1240e2c6adf6",
@@ -422,22 +468,6 @@
 {"id": "54fda413-e40f-4617-a8c9-c41359178c70","comment": "","command": "waitForElementNotVisible","target": "id=delete-edit-request","targets": [],"value": "30000"}
 ]},
 {
-    "id": "88ca5807-7d2d-4a44-8d9c-9b595cb5bebf",
-    "name": "login_admin",
-    "commands": [
-{"id": "bd3658ca-f69b-46bd-b68b-1499ada49d40","comment": "","command": "open","target": "","targets": [],"value": ""},
-{"id": "efda4b56-b552-44bd-bca9-1499ada49d41","comment": "","command": "setWindowSize","target": "1024x1920","targets": [],"value": ""},
-{"id": "fd445a72-d7c5-4cd7-9c02-bf530ef060c5","comment": "","command": "waitForElementEditable","target": "id=login-customer_id","targets": [],"value": "30000"},
-{"id": "0bd1e1ea-497c-4eab-9738-fc80e0092b70","comment": "","command": "click","target": "id=login-customer_id","targets": [],"value": "123.456.789-01"},
-{"id": "0bd1e1ea-497c-4eab-9738-fc80e0092b76","comment": "","command": "type","target": "id=login-customer_id","targets": [],"value": "123.456.789-01"},
-{"id": "c20fa6d6-3922-40c8-a60e-b572c0ac2a80","comment": "","command": "click","target": "id=login-user","targets": [],"value": "admin"},
-{"id": "c20fa6d6-3922-40c8-a60e-b572c0ac2a89","comment": "","command": "type","target": "id=login-user","targets": [],"value": "admin"},
-{"id": "67d16918-8c73-4bd2-9898-e093ccdc08c0","comment": "","command": "click","target": "id=login-password","targets": [],"value": "123456"},
-{"id": "67d16918-8c73-4bd2-9898-e093ccdc08c5","comment": "","command": "type","target": "id=login-password","targets": [],"value": "123456"},
-{"id": "f8d2bd73-7f30-45f8-8e65-f7682b739423","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"},
-{"id": "6731c3f3-df21-4dc7-b65b-b18e46200f18","comment": "","command": "click","target": "id=login-send","targets": [["id=login-send", "id"],  ["css=#login", "css"],  ["xpath=//button[@id='login']", "xpath:attributes"],  ["xpath=//div[@id='main']/form/button", "xpath:idRelative"],  ["xpath=//form/button", "xpath:position"]],"value": ""},
-{"id": "bf96e4a4-3530-449e-81f9-4cd2521c60ff","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"}]},
-{
     "id": "feea2d66-d488-49a4-a388-819ae6fda686",
     "name": "create_product",
     "commands": [{"id": "ac35a977-3cc8-41f5-a01b-c2b2b9a190f0","comment": "","command": "click","target": "id=menu-Cadastros","targets": [],"value": ""},
@@ -457,31 +487,6 @@
 {"id": "1645637a-4584-4d5b-96d3-e1d14082f0eb","comment": "","command": "click","target": "id=apply-new-product","targets": [],"value": ""},
 {"id": "f2fc7dae-cd39-419d-9aad-8503d4f0f013","comment": "","command": "waitForElementNotVisible","target": "id=http-working","targets": [],"value": "30000"},
 {"id": "2eba2840-7850-4906-94ce-316d58afdc59","comment": "","command": "waitForElementNotVisible","target": "id=http-error","targets": [],"value": "1000"}]
-  }, {
-    "id": "bcc3dc1b-75c9-4b9d-af0f-657ccc9dbc56",
-    "name": "login_wrong",
-    "commands": [
-{"id": "53eebdd1-8983-4c47-8b41-ba9295b35aad","comment": "","command": "open","target": "","targets": [],"value": ""},
-{"id": "fbe337b8-3480-432d-b3d4-ce303534a582","comment": "","command": "waitForElementEditable","target": "id=login-customer_id","targets": [],"value": "30000"},
-{"id": "c361205a-30b1-498e-841e-defb087ca17a","comment": "","command": "waitForElementVisible","target": "id=login-user","targets": [["id=login-user", "id"],  ["name=user", "name"],  ["css=#login-user", "css:finder"],  ["xpath=//input[@id='login-user']", "xpath:attributes"],  ["xpath=//form[@id='login']/div/input", "xpath:idRelative"],  ["xpath=//input", "xpath:position"]],"value": "30000"},
-{"id": "9a3c25e2-6fcf-43a4-bc2b-01a852c4e620","comment": "","command": "click","target": "id=login-customer_id","targets": [],"value": "123.456.789-01"},
-{"id": "9a3c25e2-6fcf-43a4-bc2b-01a852c4e629","comment": "","command": "type","target": "id=login-customer_id","targets": [],"value": "123.456.789-01"},
-{"id": "d7cc8424-0d93-48fe-bb2d-cb6f79d66f60","comment": "","command": "click","target": "id=login-user","targets": [],"value": "guest"},
-{"id": "d7cc8424-0d93-48fe-bb2d-cb6f79d66f6d","comment": "","command": "type","target": "id=login-user","targets": [],"value": "guest"},
-{"id": "9e7f1d12-bb7d-4c1e-a2b6-5d41da660710","comment": "","command": "sendKeys","target": "id=login-password","targets": [],"value": "123 + ${KEY_ENTER}"},
-{"id": "733a0f0b-6cb7-421e-a672-49af814128bd","comment": "","command": "click","target": "id=login-send","targets": [["id=login-send", "id"],  ["name=send", "name"],  ["css=#login-send", "css:finder"],  ["xpath=//button[@id='login-send']", "xpath:attributes"],  ["xpath=//form[@id='login']/button", "xpath:idRelative"],  ["xpath=//form/button", "xpath:position"],  ["xpath=//button[contains(.,'Ok')]", "xpath:innerText"]],"value": ""},
-{"id": "0b82a961-ab5e-4484-8735-7a48f2d99ca0","comment": "","command": "waitForElementVisible","target": "id=http-error","targets": [],"value": "30000"},
-{"id": "0b82a961-ab5e-4484-8735-7a48f2d99ca5","comment": "","command": "assertText","target": "id=http-error","targets": [],"value": "Don't match user and password."}]
-}, {
-    "id": "abf68466-c657-48ac-96de-5400f8a9090f",
-    "name": "login_wrong_password_empty",
-    "commands": [
-{"id": "8c358155-c6b2-418e-9e87-b3b3a9b7d3e5","comment": "","command": "open","target": "","targets": [],"value": ""},
-{"id": "dddd155b-f019-4c30-bfe8-c9b538845eeb","comment": "","command": "waitForElementEditable","target": "id=login-customer_id","targets": [],"value": "30000"},
-{"id": "9d0901dd-3ab0-469a-979e-76aec5557140","comment": "","command": "click","target": "id=login-user","targets": [],"value": "guest"},
-{"id": "9d0901dd-3ab0-469a-979e-76aec5557144","comment": "","command": "type","target": "id=login-user","targets": [],"value": "guest"},
-{"id": "f089200d-dbc3-41d2-af18-435f43017d73","comment": "","command": "sendKeys","target": "id=login-password","targets": [],"value": "${KEY_ENTER}"},
-{"id": "94ca9233-c12c-4aed-822c-601369b1d232","comment": "","command": "assertText","target": "id=http-error","targets": [["css=strong.ng-binding", "css"],  ["css=.ng-binding", "css:finder"],  ["xpath=//div[@id='http-error']/strong", "xpath:idRelative"],  ["xpath=//strong", "xpath:position"]],"value": "Don't match user and password."}]
 },
 {
     "id": "eea20f70-91bb-44c6-a247-b90fbda3ce5c",
@@ -528,7 +533,7 @@
     "name": "user_permission_restore",
     "commands": [
 {"id": "75a5b2ec-70e5-4ba6-bb72-9285b4eec61c","comment": "","command": "run","target": "login_admin","targets": [],"value": ""},
-{"id": "f27f1d1e-982f-4836-abd1-591ddfe7ea5d","comment": "","command": "click","target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?name=guest&rufsGroupOwner=nfe_guest_group')]","targets": [],"value": ""},
+{"id": "f27f1d1e-982f-4836-abd1-591ddfe7ea5d","comment": "","command": "click","target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?rufsGroupOwner=nfe_guest_group&name=guest')]","targets": [],"value": ""},
 {"id": "ad539c6c-dfe0-4344-b3eb-c4f01a61b4bd","comment": "","command": "click","target": "id=table_row-edit-edit-rufs_user--edit-roles--20","targets": [["id=table_row-edit-edit-rufs_user--edit-roles--20", "id"],  ["css=#rufsUser-roles-Form-edit-20", "css:finder"],  ["xpath=(//a[contains(text(),'Edit')])[21]", "xpath:link"],  ["xpath=//a[@id='rufsUser-roles-Form-edit-20']", "xpath:attributes"],  ["xpath=//tbody[@id='rufsUser-roles-Form-crud-table-body']/tr[21]/td/a[2]", "xpath:idRelative"],  ["xpath=(//a[contains(@href, '')])[124]", "xpath:href"],  ["xpath=//tr[21]/td/a[2]", "xpath:position"]],"value": ""},
 {"id": "cab46697-aa21-4050-99bc-bcf1181128e1","comment": "","command": "click","target": "id=edit-rufs_user--edit-roles--mask-3","targets": [["id=edit-rufs_user--edit-roles--mask-3", "id"],  ["css=#rufsUser-roles-Form-edit-mask-3", "css:finder"],  ["xpath=//input[@id='rufsUser-roles-Form-edit-mask-3']", "xpath:attributes"],  ["xpath=//form[@id='rufsUser-roles-Form']/div/div[2]/div[5]/div/label/input", "xpath:idRelative"],  ["xpath=//div[5]/div/label/input", "xpath:position"]],"value": ""},
 {"id": "f2fc7dae-cd39-419d-9aad-8503d4f17005","comment": "","command": "waitForElementNotVisible","target": "id=http-working","targets": [],"value": "30000"},
