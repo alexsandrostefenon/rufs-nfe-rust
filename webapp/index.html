@@ -155,7 +155,7 @@
 
 							return response.json().
 							then(async (login_response) => {
-								const wasm_js = await import("/pkg/rufs_nfe_rust.js");
+								const wasm_js = await import("./pkg/rufs_nfe_rust.js");
 								await wasm_js.default();
 								dataViewManager = new wasm_js.DataViewManager(server_url);
 								return dataViewManager.login_from_response(login_response);
