@@ -24,7 +24,7 @@
         - PGDATA=/var/lib/postgresql/data/pgdata
         - PGPORT=5432
         - PGHOST=127.0.0.1
-    rufs-crud-rust:
+    rufs-nfe:
       deploy:
         resources:
           limits:

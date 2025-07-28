@@ -689,7 +689,7 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     println!("fs_prefix = {:?}", fs_prefix);
     let db_uri = RufsMicroService::build_db_uri(None, None, None, None, Some(&params.app_name), None);
     println!("db_uri = {}", db_uri);
-    let mut rufs = RufsMicroService::connect(&db_uri, true, &format!("{}sql", fs_prefix), params, &WATCHER).await?;
+    let mut rufs = RufsMicroService::connect(&db_uri, &format!("{}sql", fs_prefix), params, &WATCHER).await?;
 
     if let Some(field) = rufs.openapi.get_property_mut("requestRepair", "request") {
         field.schema_data.extensions.insert("x-title".to_string(), Value::String("Equipamento para conserto/revisão".to_string()));
@@ -738,11 +738,17 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         let listener = format!("127.0.0.1:{}", args.port);
         println!("Staring rufs-nfe server at {}", listener);
         let dedicated = warp::path("nfe_dedicated").and(warp::get()).map(|| {"Hello from rufs-nfe!".to_string()});
+        //let cors = warp::cors().allow_any_origin().allow_methods(vec!["GET", "PUT", "OPTIONS", "POST", "DELETE"]).allow_headers(vec!["access-control-allow-origin","content-type"]);
         let routes = dedicated
+            /*.or(warp::options().map(|| {
+                "teste".to_string()
+            }).with(cors.clone()))*/
             .or(rufs_routes)
             .or(warp::path("pkg").and(warp::fs::dir(format!("{}pkg", fs_prefix))))
             .or(warp::path("webapp").and(warp::fs::dir(format!("{}webapp", fs_prefix))))
-            .or(warp::path::end().and(warp::fs::file(format!("{}webapp/index.html", fs_prefix))))
+            .or(warp::path::end().and(warp::fs::file(format!("{}webapp/index.html", fs_prefix)))
+            //.with(cors)
+            )
             ;
         warp::serve(routes).run(([0, 0, 0, 0], args.port)).await;
     }

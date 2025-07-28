@@ -12,7 +12,6 @@ pub struct RufsNfe {}
 #[derive(Deserialize,Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Request {
-     //rufs_group_owner: usize,
      id              : usize,
      #[serde(rename = "type")]
      typ            : usize,
@@ -33,7 +32,6 @@ struct Request {
 #[serde(rename_all = "camelCase")]
 struct RequestProduct {
     id :Option<usize>,
-    //rufs_group_owner :usize,
     request :usize,
     product :usize,
     quantity :f64,
@@ -217,7 +215,7 @@ impl DataViewWatch for RufsNfe {
                 "Compra": "request/new?instance.type=1&instance.state=10",
                 "Venda": "request/new?instance.type=2&instance.state=10",
                 "Conserto": "request/new?instance.type=2&instance.state=10",
-                "Importar": "request/import?instance.type=1&instance.state=10",
+                "Importar": "nfe_import.js/?instance.type=1&instance.state=10",
             },
             "Tabelas": {
                 "Pessoas": "person/search",

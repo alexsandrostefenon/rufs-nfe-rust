@@ -6,7 +6,7 @@ set -e
 export $(cat .env | xargs)
 
 if [ "$1" = 'reset-container' ] || [ "$2" = 'reset-container' ]; then
-    podman-compose down rufs-crud-rust
+    podman-compose down rufs-nfe
 fi
 
 if [ "$1" = 'drop-db' ] || [ "$2" = 'drop-db' ]; then
@@ -16,7 +16,7 @@ if [ "$1" = 'drop-db' ] || [ "$2" = 'drop-db' ]; then
 fi
 
 if [ "$1" = 'reset-container' ] || [ "$2" = 'reset-container' ]; then
-    podman-compose up -d rufs-crud-rust
+    podman-compose up -d rufs-nfe
 fi
 
 PGHOST=localhost psql rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"

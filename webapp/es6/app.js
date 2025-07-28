@@ -145,7 +145,7 @@ function updateTables(event, tables) {
 	}
 }
 
-let appOnChange = /*async*/ (event) => {
+let appOnChange = async (event) => {
     let element = event.target;
 	const target = element.id;
 	http_log.innerHTML = `t:${target}, ${http_log.innerHTML}`;
@@ -175,10 +175,20 @@ let appOnChange = /*async*/ (event) => {
 		//form.inert = true;
 	}
 
+	let module;
+
+	if (element.dataset.rufsModule != null) {
+		module = await import(element.dataset.rufsModule);
+	} else if (element.form != null && element.form.dataset.rufsModule != null) {
+		module = await import(element.form.dataset.rufsModule);
+	} else {
+		module = dataViewManager;
+	}
+
 	console.log(`appOnChange : ${target} =`, value);
 	let data = {};
 	data[target] = value;
-	dataViewManager.process({form_id: target, event: "OnChange", data}).
+	module.process({form_id: target, event: "OnChange", data}).
 	then(viewResponse => {
 		if (viewResponse instanceof Map) {
 			viewResponse = Object.fromEntries(viewResponse);
@@ -197,7 +207,9 @@ let appOnChange = /*async*/ (event) => {
 	});
 }
 
-let appOnClick = /*async*/ (event) => {
+let appOnClick = async (event) => {
+	//href="#!/app/request/
+	//href="#!/app/request.import
     let element = event.target;
 	//element.focus();
 	// TODO : remover após resolver o problemar do webdriver retornar o "fieldset" ao invés do "button".
@@ -237,9 +249,26 @@ let appOnClick = /*async*/ (event) => {
 	
 	//event.stopPropagation();
 	event.preventDefault();
+	let module;
+
+	if (element.dataset.rufsModule != null) {
+		module = await import(element.dataset.rufsModule);
+	} else if (element.form != null && element.form.dataset.rufsModule != null) {
+		module = await import(element.form.dataset.rufsModule);
+	} else {
+		module = dataViewManager;
+	}
+
 	let target = element.id;
 
-	if (target == "" && element.href != null && element.href.includes("#!")) {
+	if (target == "" && element.href != null && element.href.includes("#!/app/")) {
+		const regEx = /#!\/app\/(<es6>\w+\.js)/;
+		const regExResult = regEx.exec(element.href);
+
+		if (regExResult != null && regExResult.es6 != null) {
+			module = await import(regExResult.es6);
+		}
+
 		target = element.href;
 	}
 
@@ -250,7 +279,7 @@ let appOnClick = /*async*/ (event) => {
 		document.querySelector('#http-error').hidden = true;
 		document.querySelector('#http-working').innerHTML = "Processando...";
 		document.querySelector('#http-working').hidden = false;
-		dataViewManager.process({form_id: target, event: "OnClick", data: {}}).
+		module.process({form_id: target, event: "OnClick", data: {}}).
 		then(viewResponse => {
 			if (viewResponse instanceof Map) {
 				viewResponse = Object.fromEntries(viewResponse);

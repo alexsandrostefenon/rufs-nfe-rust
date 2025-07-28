@@ -29,9 +29,9 @@ elif [ "$1" = 'setup' ]; then
     #scp $ssh_connection_args al2023.sh .env compose.yml scp://ec2-user@$aws_ip;
 elif [ "$1" = 'deploy' ]; then
     exec="ssh $ssh_connection_args ec2-user@$aws_ip"
-    $exec docker-compose down rufs-crud-rust
+    $exec docker-compose down rufs-nfe
     $exec docker pull localhost:5000/rufs-nfe-rust:latest
-    $exec docker-compose up -d rufs-crud-rust
+    $exec docker-compose up -d rufs-nfe
     #$exec ~/letsencrypt.sh
-    $exec docker-compose logs -f rufs-crud-rust
+    $exec docker-compose logs -f rufs-nfe
 fi

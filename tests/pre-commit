@@ -46,9 +46,9 @@ EOF
 fi
 
 sed -i 's/path = "\.\.\/rufs-base-rust"/git = "https:\/\/github.com\/alexsandrostefenon\/rufs-base-rust.git"/' Cargo.toml
-podman-compose down rufs-crud-rust
+podman-compose down rufs-nfe
 ./build.sh
-podman-compose up -d rufs-crud-rust
+podman-compose up -d rufs-nfe
 ./tests/tests.sh
 #retVal=$?
 

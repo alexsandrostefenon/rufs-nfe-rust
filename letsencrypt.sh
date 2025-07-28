@@ -3,9 +3,9 @@ set -x
 PS4=' $LINENO: '
 set -e
 
-#docker rm -f ec2-user-rufs-crud-rust-1 ec2-user-nginx-1
-docker down rufs-crud-rust
-docker down nginx
+#docker rm -f ec2-user-rufs-nfe-1 ec2-user-nginx-1
+docker-compose down rufs-nfe
+docker-compose down nginx
 
 if [ "$1" = 'install' ]; then
     docker run -it --rm --name certbot -p 80:80 -v "./etc/letsencrypt:/etc/letsencrypt" -v "./var/lib/letsencrypt:/var/lib/letsencrypt" certbot/certbot certonly
@@ -16,4 +16,4 @@ else
     docker run -it --rm --name certbot -p 80:80 -v "./etc/letsencrypt:/etc/letsencrypt" -v "./var/lib/letsencrypt:/var/lib/letsencrypt" certbot/certbot renew
 fi
 
-docker-compose up -d nginx rufs-crud-rust
+docker-compose up -d nginx rufs-nfe
