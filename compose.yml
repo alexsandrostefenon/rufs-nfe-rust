@@ -1,66 +1,116 @@
-  volumes:
-    registry:
-    db-data:
-  services:
-    registry:
-      volumes:
-        - registry:/var/lib/registry
-      ports:
-        - "127.0.0.1:5000:5000"
-      env_file:
-        - .env
-      image: docker.io/library/registry:2
-    postgres:
-      image: docker.io/library/postgres:17
-      container_name: postgres
-      volumes:
-        - db-data:/var/lib/postgresql/data
-        - ${HOME}/data:/app/data
-      ports:
-        - "${PGPORT}:5432"
-      env_file:
-        - .env
-      environment:
-        - PGDATA=/var/lib/postgresql/data/pgdata
-        - PGPORT=5432
-        - PGHOST=127.0.0.1
-    rufs-nfe:
-      deploy:
-        resources:
-          limits:
-            cpus: '0.50'
-            memory: 500M
-      volumes:
-        - ${HOME}/data:/app/data
-      ports:
-        - "8081:8080"
-      env_file:
-        - .env
-      image: localhost/rufs-nfe-rust:latest
-      working_dir: /app
-    nginx:
-      image: docker.io/library/nginx:latest
-      ports:
-        - 443:443
-      restart: always
-      volumes:
-        - ./nginx/etc/nginx.conf:/etc/nginx/nginx.conf:ro
-        - ./nginx/etc/templates:/etc/nginx/templates:ro
-        - ./www:/usr/share/nginx/html:ro
-        - ./etc/letsencrypt:/etc/letsencrypt:ro
-      environment:
-        - NGINX_HOST=xxx.com
-        - NGINX_PORT=80
-        - PGHOST=172.17.0.1
-    standalone_chrome:
-      image: docker.io/selenium/standalone-chrome
-      container_name: standalone_chrome
-      ports:
-        - 4445:4444
-    standalone_firefox:
-      image: docker.io/selenium/standalone-firefox
-      container_name: standalone_firefox
-      ports:
-        - 4444:4444
-      env_file:
-        - .env
+volumes:
+  registry:
+  db-data:
+  redis_data:
+services:
+  registry:
+    container_name: registry
+    image: docker.io/library/registry:2
+    volumes:
+      - registry:/var/lib/registry
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:5000:5000"
+  nginx:
+    container_name: nginx
+    image: docker.io/library/nginx:latest
+    restart: always
+    volumes:
+      - ./nginx/etc/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/etc/templates:/etc/nginx/templates:ro
+      - ./www:/usr/share/nginx/html:ro
+      - ./etc/letsencrypt:/etc/letsencrypt:ro
+    env_file:
+      - .env
+    ports:
+      - 8443:443
+      - 8080:80
+  redis:
+    container_name: redis
+    image: docker.io/library/redis:latest
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+  broker:
+    container_name: broker
+    image: docker.io/apache/kafka:3.9.1
+    #image: docker.redpanda.com/redpandadata/redpanda
+    #command: redpanda start --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092 --advertise-kafka-addr internal://broker:9092,external://localhost:19092
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: 'PLAINTEXT://:9092,PLAINTEXT_HOST://:19092,CONTROLLER://localhost:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:19092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 1
+    ports:
+      - 9092:9092
+      - 19092:19092
+  postgres:
+    container_name: postgres
+    image: docker.io/library/postgres:17-alpine
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ${HOME}/data:/app/data
+    env_file:
+      - .env
+    ports:
+      - "${PGPORT}:5432"
+  rufs-nfe:
+    container_name: rufs-nfe
+    image: localhost/rufs-nfe-rust:latest
+    volumes:
+      - ${HOME}/data:/app/data
+    env_file:
+      - .env
+    working_dir: /app
+    #depends_on:
+      #- postgres
+      #- broker
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 500M
+  nfe-import:
+    container_name: nfe-import
+    image: localhost/rufs-nfe-rust:latest
+    entrypoint: ["/app/nfe_import"]
+    working_dir: /app
+    volumes:
+      - ${HOME}/data:/app/data
+    env_file:
+      - .env
+    #depends_on:
+      #- broker
+      #- rufs-nfe
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 500M
+  selenium-standalone-chrome:
+    container_name: selenium-standalone-chrome
+    image: docker.io/selenium/standalone-chrome
+  selenium-standalone-firefox:
+    container_name: selenium-standalone-firefox
+    image: docker.io/selenium/standalone-firefox
+    env_file:
+      - .env
+  selenium-side-runner:
+    container_name: selenium-side-runner
+    image: localhost/selenium-side-runner:latest
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: /usr/bin/sh
+    tty: true

@@ -154,12 +154,12 @@
     "commands": [
 {"id": "115dafec-d819-4f18-bf34-b20a6ee20cae","comment": "","command": "run","target": "login_guest","targets": [],"value": ""},
 {"id": "2fd6b40d-4289-44d5-a615-bef8261af525","comment": "","command": "click","target": "id=menu-Rotinas","targets": [],"value": ""},
-{"id": "a16d854f-1f61-4602-bf31-c42ad5431fd3","comment": "","command": "click","target": "xpath=//a[contains(@href, '#!/app/request/new?instance.type=1&instance.state=10')]","targets": [],"value": ""},
-{"id": "0f2d161b-e43b-4d80-bf94-fd76235a2aea","comment": "","command": "waitForElementVisible","target": "id=new-request--type","targets": [["id=new-request--type", "id"],  ["name=type", "name"],  ["css=#instance-request-type", "css:finder"],  ["xpath=//select[@id='instance-request-type']", "xpath:attributes"],  ["xpath=//form[@id='instance-request']/div/div/div/select", "xpath:idRelative"],  ["xpath=//select", "xpath:position"],  ["xpath=//select[contains(.,'Venda\nCompra')]", "xpath:innerText"]],"value": "30000"},
-{"id": "26ee6801-633b-4566-8c11-c032f09b1bec","comment": "","command": "assertValue","target": "id=new-request--type","targets": [["id=new-request--type", "id"],  ["name=type", "name"],  ["css=#edit-request-type", "css"],  ["css=#edit-request-type", "css:finder"],  ["xpath=//input[@id='edit-request-type']", "xpath:attributes"],  ["xpath=//div[@id='edit-request-type_controls']/input", "xpath:idRelative"],  ["xpath=//input", "xpath:position"]],"value": "Compra"},
+{"id": "a16d854f-1f61-4602-bf31-c42ad5431fd3","comment": "","command": "click","target": "xpath=//a[contains(@href, '#!/app/request/new?instance.type=0&instance.state=10')]","targets": [],"value": ""},
+{"id": "0f2d161b-e43b-4d80-bf94-fd76235a2aea","comment": "","command": "waitForElementVisible","target": "id=new-request--type","targets": [["id=new-request--type", "id"],  ["name=type", "name"],  ["css=#instance-request-type", "css:finder"],  ["xpath=//select[@id='instance-request-type']", "xpath:attributes"],  ["xpath=//form[@id='instance-request']/div/div/div/select", "xpath:idRelative"],  ["xpath=//select", "xpath:position"]],"value": "30000"},
+{"id": "26ee6801-633b-4566-8c11-c032f09b1bec","comment": "","command": "assertValue","target": "id=new-request--type","targets": [["id=new-request--type", "id"],  ["name=type", "name"],  ["css=#edit-request-type", "css"],  ["css=#edit-request-type", "css:finder"],  ["xpath=//input[@id='edit-request-type']", "xpath:attributes"],  ["xpath=//div[@id='edit-request-type_controls']/input", "xpath:idRelative"],  ["xpath=//input", "xpath:position"]],"value": "Compra/Entrada"},
 {"id": "34b5faf0-16c4-476d-83b8-9b57e543c961","comment": "","command": "select","target": "id=new-request--person","targets": [],"value": "label=93.209.765/0161-10 - WMS SUPERMERCADOS DO BRASIL LTDA"},
 {"id": "4a2ecc87-7554-402e-b231-3900e105b616","comment": "","command": "select","target": "id=new-request--personDest","targets": [],"value": "label=808.037.920-34 - ALEXSANDRO STEFENON"},
-{"id": "99308d4f-0796-4390-b461-4d5a0d55d76c","comment": "","command": "assertValue","target": "id=new-request--state","targets": [],"value": "Compra - Solicitar Orçamento"},
+{"id": "99308d4f-0796-4390-b461-4d5a0d55d76c","comment": "","command": "assertValue","target": "id=new-request--state","targets": [],"value": "Compra/Entrada - Solicitar Orçamento"},
 {"id": "e97162a7-edce-4ad1-a64b-72c1b58c4053","comment": "","command": "click","target": "id=new-request--date","targets": [],"value": ""},
 {"id": "e97162a7-edce-4ad1-a64b-72c1b58c4050","comment": "","command": "waitForElementEditable","target": "id=new-request--date","targets": [],"value": "1000"},
 {"id": "e97162a7-edce-4ad1-a64b-72c1b58c4054","comment": "","command": "//sendKeys","target": "id=new-request--date","targets": [],"value": "31122018${KEY_TAB}2008"},
@@ -476,8 +476,8 @@
 {"id": "3f03e46c-f5b1-478e-8d5e-fcf0d63004af","comment": "","command": "click","target": "xpath=//a[contains(@href, '#!/app/product/new')]","targets": [],"value": ""},
 {"id": "5b3946c8-746f-4f80-8885-772d0a6389b0","comment": "","command": "click","target": "id=new-product--name","targets": [],"value": "REFRIGERANTE COCA COLA ZERO 2 LITROS"},
 {"id": "5b3946c8-746f-4f80-8885-772d0a6389b6","comment": "","command": "type","target": "id=new-product--name","targets": [],"value": "REFRIGERANTE COCA COLA ZERO 2 LITROS"},
-{"id": "e615cbc6-47c3-4e64-8aa3-8e9312206f60","comment": "","command": "click","target": "id=new-product--ncm","targets": [],"value": "22021000 - AGUA INCLMINERAL/GASEIFADICIONACUCAR,AROMATIZADA,E"},
-{"id": "e615cbc6-47c3-4e64-8aa3-8e9312206f65","comment": "","command": "type","target": "id=new-product--ncm","targets": [],"value": "22021000 - AGUA INCLMINERAL/GASEIFADICIONACUCAR,AROMATIZADA,E"},
+{"id": "e615cbc6-47c3-4e64-8aa3-8e9312206f60","comment": "","command": "click","target": "id=new-product--ncm","targets": [],"value": "22021000 - - Águas, incluindo as águas minerais e as águas gaseificadas, adicionadas de açúcar ou de outros edulcorantes ou aromatizadas"},
+{"id": "e615cbc6-47c3-4e64-8aa3-8e9312206f65","comment": "","command": "type","target": "id=new-product--ncm","targets": [],"value": "22021000 - - Águas, incluindo as águas minerais e as águas gaseificadas, adicionadas de açúcar ou de outros edulcorantes ou aromatizadas"},
 {"id": "7cbe1525-b4ff-4f5a-8b06-3bbb1ce55951","comment": "","command": "select","target": "id=new-product--orig","targets": [],"value": "label=0000 - Nacional, exceto as indicadas nos códigos de 3 a 5"},
 {"id": "874f15cd-bb3c-4017-aa73-e1598e34b270","comment": "","command": "click","target": "id=new-product--description","targets": [],"value": "refrigerante de cola sem açucar"},
 {"id": "874f15cd-bb3c-4017-aa73-e1598e34b272","comment": "","command": "type","target": "id=new-product--description","targets": [],"value": "refrigerante de cola sem açucar"},
@@ -524,7 +524,7 @@
     "commands": [
 {"id": "c2543608-834e-401f-be44-28a370c96f5c","comment": "","command": "run","target": "login_guest","targets": [],"value": ""},
 {"id": "e486141d-a78a-47d8-8d0c-0d7c00d872bc","comment": "","command": "click","target": "id=menu-Rotinas","targets": [],"value": ""},
-{"id": "4d2e0471-8f9b-4df8-82e9-ac1cdc670572","comment": "","command": "click","target": "xpath=//a[contains(@href, '#!/app/request/import?instance.type=1&instance.state=10')]","targets": [],"value": ""},
+{"id": "4d2e0471-8f9b-4df8-82e9-ac1cdc670572","comment": "","command": "click","target": "xpath=//a[contains(@href, '#!/app/request/import?instance.type=0&instance.state=10')]","targets": [],"value": ""},
 {"id": "d8da5429-9c5e-456d-b5d4-0ea7fb0aac24","comment": "","command": "select","target": "id=videoInput","targets": [],"value": "label=File"},
 {"id": "a9bfcbaa-a5af-4597-aec0-bd7f7400fb30","comment": "","command": "click","target": "id=input-file","targets": [],"value": "/home/alexsandro/workspace/micro_services/nfe_qrcode_43191104300484000145650010003152981390898653.jpg"},
 {"id": "a9bfcbaa-a5af-4597-aec0-bd7f7400fb3d","comment": "","command": "type","target": "id=input-file","targets": [],"value": "/home/alexsandro/workspace/micro_services/nfe_qrcode_43191104300484000145650010003152981390898653.jpg"}]
@@ -575,6 +575,6 @@
 "5cf4355e-0362-4c5a-8dc8-d8be0e765c91"
 ]
   }],
-  "urls": ["http://localhost:8080/nfe/", "http://localhost:8080/", "http://localhost:8080/?mode=ws", "http://192.168.2.113:8080/", "http://localhost:8081/"],
+  "urls": ["http://localhost:8081/", "http://localhost:8081/nfe/", "http://localhost:8081/?mode=wasm"],
   "plugins": []
 }

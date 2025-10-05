@@ -21,12 +21,14 @@ cd rufs-nfe-rust
 ```
 Edit ".env" with your personal data and execute:
 ```
-podman-compose up -d standalone_firefox &&
+podman-compose up -d registry &&
+podman-compose up -d nginx &&
 podman-compose up -d postgres &&
-export $(cat .env | xargs) &&
-PGHOST=localhost &&
-psql postgresql://postgres:$POSTGRES_PASSWORD@$PGHOST:$PGPORT/template1 -c "CREATE USER $PGUSER WITH CREATEDB LOGIN PASSWORD '$PGPASSWORD'" &&
-psql postgresql://postgres:$POSTGRES_PASSWORD@$PGHOST:$PGPORT/template1 -c "CREATE DATABASE rufs_nfe WITH OWNER $PGUSER" &&
+podman-compose up -d redis &&
+sleep 15 &&
+export $(cat .env | grep -v 'POSTGRES_INITDB_ARGS' | xargs) &&
+podman exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "CREATE USER $PGUSER WITH CREATEDB LOGIN PASSWORD '$PGPASSWORD'" &&
+podman exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "CREATE DATABASE rufs_nfe WITH OWNER $PGUSER" &&
 podman build -t selenium-side-runner -f selenium-side-runner.Dockerfile &&
 podman build -t rust-runtime -f runtime.Dockerfile &&
 podman build -v $PWD/../rufs-base-rust:$PWD/../rufs-base-rust -v $PWD:$PWD -t rust-build --build-arg working_dir=$PWD -f build.Dockerfile &&
@@ -37,9 +39,7 @@ echo "Setup of containerized environment is done !";
 
 To build container image and run service:
 ```
-podman-compose down rufs-nfe;
-./build.sh &&
-podman-compose up -d rufs-nfe;
+./build.sh
 ```
 
 ### Tests :
@@ -51,6 +51,6 @@ podman-compose up -d rufs-nfe;
 
 In EcmaScript2017 compliance browser open url
 
-`http://localhost:8081`
+`http://localhost:8080/nfe/`
 
 For custom service configuration or user edition, use user 'admin' with password of first login.

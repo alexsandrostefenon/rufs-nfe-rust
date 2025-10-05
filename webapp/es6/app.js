@@ -1,4 +1,5 @@
 let dataViewManager;
+let loginResponse;
 let aggregateChartOptions = {};
 let aggregateChart = {};
 const http_log = document.querySelector('#http-log');
@@ -23,7 +24,7 @@ function updateChanges(event, changes) {
 	if (changes == null) {
 		return;
 	}
-	
+
 	if (changes instanceof Map) {
 		changes = Object.fromEntries(changes);
 	}
@@ -51,7 +52,7 @@ function updateChanges(event, changes) {
 		}
 
 		//data_view_show(formId);
-		
+
 		for (let [fieldName, value] of Object.entries(fields)) {
 			/*
 			if (form.hidden == true) {
@@ -71,7 +72,7 @@ function updateChanges(event, changes) {
 				console.error(`Unexpected array fild (${fieldName})`);
 			} else {
 				const element = form.elements[fieldName];
-				
+
 				if (element == null) {
 					console.log(`Missing element ${fieldName} in form ${form.name} !`);
 					continue;
@@ -85,7 +86,7 @@ function updateChanges(event, changes) {
 
 				for (let flagIndex = 0; flagIndex < 64; flagIndex++) {
 					const elementFlag = form[`${fieldName}-${flagIndex}`];
-					
+
 					if (elementFlag == null) {
 						break;
 					}
@@ -110,7 +111,7 @@ function updateTables(event, tables) {
 	if (tables == null) {
 		return;
 	}
-	
+
 	if (tables instanceof Map) {
 		tables = Object.fromEntries(tables);
 	}
@@ -125,7 +126,7 @@ function updateTables(event, tables) {
 		}
 
 		div.innerHTML = html;
-		
+
 		if (div.hidden == true) {
 			console.log(`${div.id}.hidden = false`);
 			div.hidden = false;
@@ -133,7 +134,7 @@ function updateTables(event, tables) {
 
 		const div_form_id = `div-${table_id}`;
 		const divForm = document.getElementById(div_form_id);
-		
+
 		if (divForm != null) {
 			if (divForm.hidden == true) {
 				console.log(`${divForm.id}.hidden = false`);
@@ -169,6 +170,10 @@ let appOnChange = async (event) => {
 		value = element.checked.toString();
 	}
 
+	if (element.type == "file") {
+		value = element.files;
+	}
+
 	const form = element.form;
 
 	if (form != null) {
@@ -178,9 +183,9 @@ let appOnChange = async (event) => {
 	let module;
 
 	if (element.dataset.rufsModule != null) {
-		module = await import(element.dataset.rufsModule);
+		module = await import("./" + element.dataset.rufsModule);
 	} else if (element.form != null && element.form.dataset.rufsModule != null) {
-		module = await import(element.form.dataset.rufsModule);
+		module = await import("./" + element.form.dataset.rufsModule);
 	} else {
 		module = dataViewManager;
 	}
@@ -188,7 +193,13 @@ let appOnChange = async (event) => {
 	console.log(`appOnChange : ${target} =`, value);
 	let data = {};
 	data[target] = value;
-	module.process({form_id: target, event: "OnChange", data}).
+	const params = {form_id: target, event: "OnChange", data};
+
+	if (module.login == null) {
+		params.loginResponse = loginResponse;
+	}
+
+	module.process(params).
 	then(viewResponse => {
 		if (viewResponse instanceof Map) {
 			viewResponse = Object.fromEntries(viewResponse);
@@ -208,6 +219,7 @@ let appOnChange = async (event) => {
 }
 
 let appOnClick = async (event) => {
+	//debugger;
 	//href="#!/app/request/
 	//href="#!/app/request.import
     let element = event.target;
@@ -246,15 +258,15 @@ let appOnClick = async (event) => {
 	if (element.type == "text") {
 		return;
 	}
-	
+
 	//event.stopPropagation();
 	event.preventDefault();
 	let module;
 
 	if (element.dataset.rufsModule != null) {
-		module = await import(element.dataset.rufsModule);
+		module = await import("./" + element.dataset.rufsModule);
 	} else if (element.form != null && element.form.dataset.rufsModule != null) {
-		module = await import(element.form.dataset.rufsModule);
+		module = await import("./" + element.form.dataset.rufsModule);
 	} else {
 		module = dataViewManager;
 	}
@@ -262,11 +274,11 @@ let appOnClick = async (event) => {
 	let target = element.id;
 
 	if (target == "" && element.href != null && element.href.includes("#!/app/")) {
-		const regEx = /#!\/app\/(<es6>\w+\.js)/;
+		const regEx = /#!\/app\/(?<es6>\w+\.js)/;
 		const regExResult = regEx.exec(element.href);
 
-		if (regExResult != null && regExResult.es6 != null) {
-			module = await import(regExResult.es6);
+		if (regExResult != null && regExResult.groups.es6 != null) {
+			module = await import("./" + regExResult.groups.es6);
 		}
 
 		target = element.href;
@@ -279,7 +291,13 @@ let appOnClick = async (event) => {
 		document.querySelector('#http-error').hidden = true;
 		document.querySelector('#http-working').innerHTML = "Processando...";
 		document.querySelector('#http-working').hidden = false;
-		module.process({form_id: target, event: "OnClick", data: {}}).
+		const params = {form_id: target, event: "OnClick", data: {}};
+
+		if (module.login == null) {
+			params.loginResponse = loginResponse;
+		}
+
+		module.process(params).
 		then(viewResponse => {
 			if (viewResponse instanceof Map) {
 				viewResponse = Object.fromEntries(viewResponse);
@@ -329,10 +347,10 @@ let appOnClick = async (event) => {
 					if (aggregateResults instanceof Map) {
 						aggregateResults = Object.fromEntries(aggregateResults);
 					}
-			
+
 					const id = `chart-aggregate--${formId}`;
 					const chart = document.getElementById(id);
-			
+
 					if (chart == null) {
 						console.error(`Missing chart ${id}`);
 						continue;
@@ -341,12 +359,12 @@ let appOnClick = async (event) => {
 					const ctx = chart.getContext('2d');
 					const xData = Array.from(Object.keys(aggregateResults));
 					const yData = Array.from(Object.values(aggregateResults));
-					
+
 					if (aggregateChartOptions[formId] == null) {
 						aggregateChartOptions[formId] = {type: 'bar', data: {labels: [], datasets: [{label: "", data: []}]}};
 						aggregateChart[formId] = new Chart(ctx, aggregateChartOptions[formId]);
 					}
-					
+
 					aggregateChartOptions[formId].data.labels = xData;
 					aggregateChartOptions[formId].data.datasets[0].data = yData;
 					aggregateChart[formId].update();
@@ -396,7 +414,7 @@ let appOnClick = async (event) => {
 						if (form_state.disabled == false && fieldset.disabled != false) {
 							fieldset.disabled = false;
 						}
-	
+
 						if (form_state.disabled == true && fieldset.disabled != true) {
 							fieldset.disabled = true;
 						}
@@ -417,6 +435,7 @@ let appOnClick = async (event) => {
 
 function processLoginResponse(login_response, data_view_manager) {
 	// {menu, path, jwt_header}
+	loginResponse = login_response;
 	dataViewManager = data_view_manager;
 	const regExMenuSearch = /\.(new|view|edit|search)(\?)?/;
 	const regExMenuReplace = "/$1$2";
@@ -433,7 +452,7 @@ function processLoginResponse(login_response, data_view_manager) {
 				addToParent(field, list);
 				list.push(`</ul>\n</li>`);
 			} else {
-				let schema = field.replaceAll("/", ".").replace(regExMenuSearch, regExMenuReplace);
+				let schema = field./*replaceAll("/", ".").*/replace(regExMenuSearch, regExMenuReplace);
 				list.push(`<li><a class='dropdown-item' href='#!/app/${schema}'>${name}</a></li>\n`);
 			}
 		}
@@ -452,7 +471,7 @@ function processLoginResponse(login_response, data_view_manager) {
 	div.innerHTML = str;
 	div.addEventListener('click', appOnClick);
 	document.querySelector('#menu').appendChild(div);
-	let schema = login_response.path.replaceAll("/", ".").replace(regExMenuSearch, regExMenuReplace);
+	let schema = login_response.path./*replaceAll("/", ".").*/replace(regExMenuSearch, regExMenuReplace);
 
 	for (let element of document.querySelectorAll(`a[href='#!/app/${schema}']`)) {
 		element.click();

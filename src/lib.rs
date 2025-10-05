@@ -42,11 +42,11 @@ struct RequestProduct {
     value_freight :Option<f64>,
     cfop :Option<usize>,
     value_all_tax :Option<f64>,
-    serials :Option<String>,   
+    serials :Option<String>,
  }
 
 impl RufsNfe {
-    
+
     fn request_payment_adjusts(data_view_payment : &mut DataView, watcher : &dyn DataViewWatch, server_connection: &ServerConnection, request: &Request, typ :Option<u64>) -> Result<(), Box<dyn std::error::Error>> {
         let remaining_payment = request.sum_value.unwrap_or(0.0) - request.payments_value.unwrap_or(0.0);
 
@@ -67,7 +67,7 @@ impl RufsNfe {
             } else {
                 data_view_payment.params.instance.get("type").unwrap_or(&json!(1)).as_u64().unwrap_or(1)
             };
-    
+
             if typ == 1 {
                 if accounts.len() > 0 {
                     let account = accounts[accounts.len()-1].get("id").ok_or("missing field id in account")?.clone();//accounts[0].id;//
@@ -183,7 +183,7 @@ impl DataViewWatch for RufsNfe {
 
         Ok(true)
     }
-     
+
     fn check_save(&self, _data_view :&mut DataView, element_id: &HtmlElementId, _server_connection: &ServerConnection) -> Result<(bool, DataViewProcessAction), Box<dyn std::error::Error>> {
         let action = if ["new-rufs_user", "new-request"].contains(&element_id.data_view_id.id.as_str()) {
             DataViewProcessAction::Edit
@@ -193,15 +193,17 @@ impl DataViewWatch for RufsNfe {
 
         Ok((true, action))
     }
-     
+
     fn menu(&self) -> Value {
         json!({
             "Cadastros": {
                 "Clientes e Fornecedores": "person/search",
+                "Código de barras": "barcode/search",
                 "Produtos": "product/search",
                 "Serviços": "service/search",
                 "Contas": "account/search",
                 "Requisições": "request/search",
+                "Notas fiscais eletrônicas": "request_nfe/search",
                 "Usuários": "rufs_user/search",
             },
             "Movimento": {
@@ -212,10 +214,10 @@ impl DataViewWatch for RufsNfe {
                 "Consertos": "request_repair/search",
             },
             "Rotinas": {
-                "Compra": "request/new?instance.type=1&instance.state=10",
-                "Venda": "request/new?instance.type=2&instance.state=10",
-                "Conserto": "request/new?instance.type=2&instance.state=10",
-                "Importar": "nfe_import.js/?instance.type=1&instance.state=10",
+                "Compra": "request/new?instance.type=0&instance.state=10",
+                "Venda": "request/new?instance.type=1&instance.state=10",
+                "Conserto": "request/new?instance.type=1&instance.state=10",
+                "Importar": "nfe_import.js/?instance.type=0&instance.state=10",
             },
             "Tabelas": {
                 "Pessoas": "person/search",
