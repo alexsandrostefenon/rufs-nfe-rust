@@ -210,7 +210,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    subWeeks: __webpack_require__(157),
 	    subYears: __webpack_require__(158)
 	};
-	
+
 
 
 /***/ },
@@ -225,7 +225,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = addDays;
-	
+
 
 
 /***/ },
@@ -444,7 +444,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = parse;
-	
+
 
 
 /***/ },
@@ -455,7 +455,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return argument instanceof Date;
 	}
 	module.exports = isDate;
-	
+
 
 
 /***/ },
@@ -469,7 +469,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_HOUR);
 	}
 	module.exports = addHours;
-	
+
 
 
 /***/ },
@@ -483,7 +483,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return new Date(timestamp + amount);
 	}
 	module.exports = addMilliseconds;
-	
+
 
 
 /***/ },
@@ -497,7 +497,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return setISOYear(dirtyDate, getISOYear(dirtyDate) + amount);
 	}
 	module.exports = addISOYears;
-	
+
 
 
 /***/ },
@@ -526,7 +526,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 	module.exports = getISOYear;
-	
+
 
 
 /***/ },
@@ -538,7 +538,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return startOfWeek(dirtyDate, { weekStartsOn: 1 });
 	}
 	module.exports = startOfISOWeek;
-	
+
 
 
 /***/ },
@@ -556,7 +556,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfWeek;
-	
+
 
 
 /***/ },
@@ -578,7 +578,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = setISOYear;
-	
+
 
 
 /***/ },
@@ -596,7 +596,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfISOYear;
-	
+
 
 
 /***/ },
@@ -614,7 +614,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return Math.round((timestampLeft - timestampRight) / MILLISECONDS_IN_DAY);
 	}
 	module.exports = differenceInCalendarDays;
-	
+
 
 
 /***/ },
@@ -628,7 +628,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfDay;
-	
+
 
 
 /***/ },
@@ -642,7 +642,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addMilliseconds(dirtyDate, amount * MILLISECONDS_IN_MINUTE);
 	}
 	module.exports = addMinutes;
-	
+
 
 
 /***/ },
@@ -663,7 +663,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = addMonths;
-	
+
 
 
 /***/ },
@@ -681,7 +681,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return lastDayOfMonth.getDate();
 	}
 	module.exports = getDaysInMonth;
-	
+
 
 
 /***/ },
@@ -695,7 +695,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addMonths(dirtyDate, months);
 	}
 	module.exports = addQuarters;
-	
+
 
 
 /***/ },
@@ -708,7 +708,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addMilliseconds(dirtyDate, amount * 1000);
 	}
 	module.exports = addSeconds;
-	
+
 
 
 /***/ },
@@ -722,7 +722,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addDays(dirtyDate, days);
 	}
 	module.exports = addWeeks;
-	
+
 
 
 /***/ },
@@ -735,7 +735,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addMonths(dirtyDate, amount * 12);
 	}
 	module.exports = addYears;
-	
+
 
 
 /***/ },
@@ -754,7 +754,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return initialStartTime < comparedEndTime && comparedStartTime < initialEndTime;
 	}
 	module.exports = areRangesOverlapping;
-	
+
 
 
 /***/ },
@@ -781,7 +781,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return result;
 	}
 	module.exports = closestIndexTo;
-	
+
 
 
 /***/ },
@@ -808,7 +808,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return result;
 	}
 	module.exports = closestTo;
-	
+
 
 
 /***/ },
@@ -830,7 +830,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 	module.exports = compareAsc;
-	
+
 
 
 /***/ },
@@ -852,7 +852,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 	module.exports = compareDesc;
-	
+
 
 
 /***/ },
@@ -870,7 +870,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return Math.round((timestampLeft - timestampRight) / MILLISECONDS_IN_WEEK);
 	}
 	module.exports = differenceInCalendarISOWeeks;
-	
+
 
 
 /***/ },
@@ -882,7 +882,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return getISOYear(dirtyDateLeft) - getISOYear(dirtyDateRight);
 	}
 	module.exports = differenceInCalendarISOYears;
-	
+
 
 
 /***/ },
@@ -898,7 +898,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return yearDiff * 12 + monthDiff;
 	}
 	module.exports = differenceInCalendarMonths;
-	
+
 
 
 /***/ },
@@ -915,7 +915,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return yearDiff * 4 + quarterDiff;
 	}
 	module.exports = differenceInCalendarQuarters;
-	
+
 
 
 /***/ },
@@ -929,7 +929,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return quarter;
 	}
 	module.exports = getQuarter;
-	
+
 
 
 /***/ },
@@ -947,7 +947,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return Math.round((timestampLeft - timestampRight) / MILLISECONDS_IN_WEEK);
 	}
 	module.exports = differenceInCalendarWeeks;
-	
+
 
 
 /***/ },
@@ -961,7 +961,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeft.getFullYear() - dateRight.getFullYear();
 	}
 	module.exports = differenceInCalendarYears;
-	
+
 
 
 /***/ },
@@ -981,7 +981,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return sign * (difference - isLastDayNotFull);
 	}
 	module.exports = differenceInDays;
-	
+
 
 
 /***/ },
@@ -995,7 +995,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return diff > 0 ? Math.floor(diff) : Math.ceil(diff);
 	}
 	module.exports = differenceInHours;
-	
+
 
 
 /***/ },
@@ -1009,7 +1009,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeft.getTime() - dateRight.getTime();
 	}
 	module.exports = differenceInMilliseconds;
-	
+
 
 
 /***/ },
@@ -1030,7 +1030,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return sign * (difference - isLastISOYearNotFull);
 	}
 	module.exports = differenceInISOYears;
-	
+
 
 
 /***/ },
@@ -1043,7 +1043,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addISOYears(dirtyDate, -amount);
 	}
 	module.exports = subISOYears;
-	
+
 
 
 /***/ },
@@ -1057,7 +1057,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return diff > 0 ? Math.floor(diff) : Math.ceil(diff);
 	}
 	module.exports = differenceInMinutes;
-	
+
 
 
 /***/ },
@@ -1077,7 +1077,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return sign * (difference - isLastMonthNotFull);
 	}
 	module.exports = differenceInMonths;
-	
+
 
 
 /***/ },
@@ -1090,7 +1090,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return diff > 0 ? Math.floor(diff) : Math.ceil(diff);
 	}
 	module.exports = differenceInQuarters;
-	
+
 
 
 /***/ },
@@ -1103,7 +1103,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return diff > 0 ? Math.floor(diff) : Math.ceil(diff);
 	}
 	module.exports = differenceInSeconds;
-	
+
 
 
 /***/ },
@@ -1116,7 +1116,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return diff > 0 ? Math.floor(diff) : Math.ceil(diff);
 	}
 	module.exports = differenceInWeeks;
-	
+
 
 
 /***/ },
@@ -1136,7 +1136,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return sign * (difference - isLastYearNotFull);
 	}
 	module.exports = differenceInYears;
-	
+
 
 
 /***/ },
@@ -1231,7 +1231,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 	module.exports = distanceInWords;
-	
+
 
 
 /***/ },
@@ -1244,7 +1244,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    distanceInWords: buildDistanceInWordsLocale(),
 	    format: buildFormatLocale()
 	};
-	
+
 
 
 /***/ },
@@ -1329,7 +1329,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return { localize: localize };
 	}
 	module.exports = buildDistanceInWordsLocale;
-	
+
 
 
 /***/ },
@@ -1464,7 +1464,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return number + 'th';
 	}
 	module.exports = buildFormatLocale;
-	
+
 
 
 /***/ },
@@ -1515,7 +1515,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return formattingTokensRegExp;
 	}
 	module.exports = buildFormattingTokensRegExp;
-	
+
 
 
 /***/ },
@@ -1592,7 +1592,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    throw new Error('Unknown unit: ' + unit);
 	}
 	module.exports = distanceInWordsStrict;
-	
+
 
 
 /***/ },
@@ -1604,7 +1604,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return distanceInWords(Date.now(), dirtyDate, dirtyOptions);
 	}
 	module.exports = distanceInWordsToNow;
-	
+
 
 
 /***/ },
@@ -1629,7 +1629,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dates;
 	}
 	module.exports = eachDay;
-	
+
 
 
 /***/ },
@@ -1643,7 +1643,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfDay;
-	
+
 
 
 /***/ },
@@ -1657,7 +1657,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfHour;
-	
+
 
 
 /***/ },
@@ -1669,7 +1669,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return endOfWeek(dirtyDate, { weekStartsOn: 1 });
 	}
 	module.exports = endOfISOWeek;
-	
+
 
 
 /***/ },
@@ -1687,7 +1687,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfWeek;
-	
+
 
 
 /***/ },
@@ -1706,7 +1706,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfISOYear;
-	
+
 
 
 /***/ },
@@ -1720,7 +1720,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfMinute;
-	
+
 
 
 /***/ },
@@ -1736,7 +1736,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfMonth;
-	
+
 
 
 /***/ },
@@ -1753,7 +1753,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfQuarter;
-	
+
 
 
 /***/ },
@@ -1767,7 +1767,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfSecond;
-	
+
 
 
 /***/ },
@@ -1779,7 +1779,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return endOfDay(new Date());
 	}
 	module.exports = endOfToday;
-	
+
 
 
 /***/ },
@@ -1797,7 +1797,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfTomorrow;
-	
+
 
 
 /***/ },
@@ -1813,7 +1813,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfYear;
-	
+
 
 
 /***/ },
@@ -1831,7 +1831,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = endOfYesterday;
-	
+
 
 
 /***/ },
@@ -2009,7 +2009,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return output;
 	}
 	module.exports = format;
-	
+
 
 
 /***/ },
@@ -2026,7 +2026,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dayOfYear;
 	}
 	module.exports = getDayOfYear;
-	
+
 
 
 /***/ },
@@ -2042,7 +2042,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfYear;
-	
+
 
 
 /***/ },
@@ -2059,7 +2059,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return Math.round(diff / MILLISECONDS_IN_WEEK) + 1;
 	}
 	module.exports = getISOWeek;
-	
+
 
 
 /***/ },
@@ -2075,7 +2075,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 	module.exports = isValid;
-	
+
 
 
 /***/ },
@@ -2089,7 +2089,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dayOfMonth;
 	}
 	module.exports = getDate;
-	
+
 
 
 /***/ },
@@ -2103,7 +2103,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return day;
 	}
 	module.exports = getDay;
-	
+
 
 
 /***/ },
@@ -2115,7 +2115,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isLeapYear(dirtyDate) ? 366 : 365;
 	}
 	module.exports = getDaysInYear;
-	
+
 
 
 /***/ },
@@ -2129,7 +2129,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return year % 400 === 0 || year % 4 === 0 && year % 100 !== 0;
 	}
 	module.exports = isLeapYear;
-	
+
 
 
 /***/ },
@@ -2143,7 +2143,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return hours;
 	}
 	module.exports = getHours;
-	
+
 
 
 /***/ },
@@ -2160,7 +2160,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return day;
 	}
 	module.exports = getISODay;
-	
+
 
 
 /***/ },
@@ -2177,7 +2177,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return Math.round(diff / MILLISECONDS_IN_WEEK);
 	}
 	module.exports = getISOWeeksInYear;
-	
+
 
 
 /***/ },
@@ -2191,7 +2191,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return milliseconds;
 	}
 	module.exports = getMilliseconds;
-	
+
 
 
 /***/ },
@@ -2205,7 +2205,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return minutes;
 	}
 	module.exports = getMinutes;
-	
+
 
 
 /***/ },
@@ -2219,7 +2219,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return month;
 	}
 	module.exports = getMonth;
-	
+
 
 
 /***/ },
@@ -2246,7 +2246,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return Math.ceil(differenceInMs / MILLISECONDS_IN_DAY);
 	}
 	module.exports = getOverlappingDaysInRanges;
-	
+
 
 
 /***/ },
@@ -2260,7 +2260,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return seconds;
 	}
 	module.exports = getSeconds;
-	
+
 
 
 /***/ },
@@ -2274,7 +2274,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return timestamp;
 	}
 	module.exports = getTime;
-	
+
 
 
 /***/ },
@@ -2288,7 +2288,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return year;
 	}
 	module.exports = getYear;
-	
+
 
 
 /***/ },
@@ -2302,7 +2302,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date.getTime() > dateToCompare.getTime();
 	}
 	module.exports = isAfter;
-	
+
 
 
 /***/ },
@@ -2316,7 +2316,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date.getTime() < dateToCompare.getTime();
 	}
 	module.exports = isBefore;
-	
+
 
 
 /***/ },
@@ -2330,7 +2330,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeft.getTime() === dateRight.getTime();
 	}
 	module.exports = isEqual;
-	
+
 
 
 /***/ },
@@ -2342,7 +2342,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return parse(dirtyDate).getDate() === 1;
 	}
 	module.exports = isFirstDayOfMonth;
-	
+
 
 
 /***/ },
@@ -2354,7 +2354,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return parse(dirtyDate).getDay() === 5;
 	}
 	module.exports = isFriday;
-	
+
 
 
 /***/ },
@@ -2366,7 +2366,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return parse(dirtyDate).getTime() > new Date().getTime();
 	}
 	module.exports = isFuture;
-	
+
 
 
 /***/ },
@@ -2381,7 +2381,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return endOfDay(date).getTime() === endOfMonth(date).getTime();
 	}
 	module.exports = isLastDayOfMonth;
-	
+
 
 
 /***/ },
@@ -2393,7 +2393,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return parse(dirtyDate).getDay() === 1;
 	}
 	module.exports = isMonday;
-	
+
 
 
 /***/ },
@@ -2405,7 +2405,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return parse(dirtyDate).getTime() < new Date().getTime();
 	}
 	module.exports = isPast;
-	
+
 
 
 /***/ },
@@ -2419,7 +2419,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeftStartOfDay.getTime() === dateRightStartOfDay.getTime();
 	}
 	module.exports = isSameDay;
-	
+
 
 
 /***/ },
@@ -2433,7 +2433,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeftStartOfHour.getTime() === dateRightStartOfHour.getTime();
 	}
 	module.exports = isSameHour;
-	
+
 
 
 /***/ },
@@ -2447,7 +2447,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfHour;
-	
+
 
 
 /***/ },
@@ -2459,7 +2459,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isSameWeek(dirtyDateLeft, dirtyDateRight, { weekStartsOn: 1 });
 	}
 	module.exports = isSameISOWeek;
-	
+
 
 
 /***/ },
@@ -2473,7 +2473,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeftStartOfWeek.getTime() === dateRightStartOfWeek.getTime();
 	}
 	module.exports = isSameWeek;
-	
+
 
 
 /***/ },
@@ -2487,7 +2487,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeftStartOfYear.getTime() === dateRightStartOfYear.getTime();
 	}
 	module.exports = isSameISOYear;
-	
+
 
 
 /***/ },
@@ -2501,7 +2501,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeftStartOfMinute.getTime() === dateRightStartOfMinute.getTime();
 	}
 	module.exports = isSameMinute;
-	
+
 
 
 /***/ },
@@ -2515,7 +2515,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfMinute;
-	
+
 
 
 /***/ },
@@ -2529,7 +2529,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeft.getFullYear() === dateRight.getFullYear() && dateLeft.getMonth() === dateRight.getMonth();
 	}
 	module.exports = isSameMonth;
-	
+
 
 
 /***/ },
@@ -2543,7 +2543,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeftStartOfQuarter.getTime() === dateRightStartOfQuarter.getTime();
 	}
 	module.exports = isSameQuarter;
-	
+
 
 
 /***/ },
@@ -2560,7 +2560,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfQuarter;
-	
+
 
 
 /***/ },
@@ -2574,7 +2574,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeftStartOfSecond.getTime() === dateRightStartOfSecond.getTime();
 	}
 	module.exports = isSameSecond;
-	
+
 
 
 /***/ },
@@ -2588,7 +2588,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfSecond;
-	
+
 
 
 /***/ },
@@ -2602,7 +2602,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return dateLeft.getFullYear() === dateRight.getFullYear();
 	}
 	module.exports = isSameYear;
-	
+
 
 
 /***/ },
@@ -2614,7 +2614,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return parse(dirtyDate).getDay() === 6;
 	}
 	module.exports = isSaturday;
-	
+
 
 
 /***/ },
@@ -2626,7 +2626,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return parse(dirtyDate).getDay() === 0;
 	}
 	module.exports = isSunday;
-	
+
 
 
 /***/ },
@@ -2638,7 +2638,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isSameHour(new Date(), dirtyDate);
 	}
 	module.exports = isThisHour;
-	
+
 
 
 /***/ },
@@ -2650,7 +2650,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isSameISOWeek(new Date(), dirtyDate);
 	}
 	module.exports = isThisISOWeek;
-	
+
 
 
 /***/ },
@@ -2662,7 +2662,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isSameISOYear(new Date(), dirtyDate);
 	}
 	module.exports = isThisISOYear;
-	
+
 
 
 /***/ },
@@ -2674,7 +2674,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isSameMinute(new Date(), dirtyDate);
 	}
 	module.exports = isThisMinute;
-	
+
 
 
 /***/ },
@@ -2686,7 +2686,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isSameMonth(new Date(), dirtyDate);
 	}
 	module.exports = isThisMonth;
-	
+
 
 
 /***/ },
@@ -2698,7 +2698,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isSameQuarter(new Date(), dirtyDate);
 	}
 	module.exports = isThisQuarter;
-	
+
 
 
 /***/ },
@@ -2710,7 +2710,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isSameSecond(new Date(), dirtyDate);
 	}
 	module.exports = isThisSecond;
-	
+
 
 
 /***/ },
@@ -2722,7 +2722,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isSameWeek(new Date(), dirtyDate, dirtyOptions);
 	}
 	module.exports = isThisWeek;
-	
+
 
 
 /***/ },
@@ -2734,7 +2734,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return isSameYear(new Date(), dirtyDate);
 	}
 	module.exports = isThisYear;
-	
+
 
 
 /***/ },
@@ -2746,7 +2746,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return parse(dirtyDate).getDay() === 4;
 	}
 	module.exports = isThursday;
-	
+
 
 
 /***/ },
@@ -2758,7 +2758,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return startOfDay(dirtyDate).getTime() === startOfDay(new Date()).getTime();
 	}
 	module.exports = isToday;
-	
+
 
 
 /***/ },
@@ -2772,7 +2772,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return startOfDay(dirtyDate).getTime() === startOfDay(tomorrow).getTime();
 	}
 	module.exports = isTomorrow;
-	
+
 
 
 /***/ },
@@ -2784,7 +2784,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return parse(dirtyDate).getDay() === 2;
 	}
 	module.exports = isTuesday;
-	
+
 
 
 /***/ },
@@ -2796,7 +2796,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return parse(dirtyDate).getDay() === 3;
 	}
 	module.exports = isWednesday;
-	
+
 
 
 /***/ },
@@ -2810,7 +2810,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return day === 0 || day === 6;
 	}
 	module.exports = isWeekend;
-	
+
 
 
 /***/ },
@@ -2828,7 +2828,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return time >= startTime && time <= endTime;
 	}
 	module.exports = isWithinRange;
-	
+
 
 
 /***/ },
@@ -2842,7 +2842,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return startOfDay(dirtyDate).getTime() === startOfDay(yesterday).getTime();
 	}
 	module.exports = isYesterday;
-	
+
 
 
 /***/ },
@@ -2854,7 +2854,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return lastDayOfWeek(dirtyDate, { weekStartsOn: 1 });
 	}
 	module.exports = lastDayOfISOWeek;
-	
+
 
 
 /***/ },
@@ -2872,7 +2872,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = lastDayOfWeek;
-	
+
 
 
 /***/ },
@@ -2891,7 +2891,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = lastDayOfISOYear;
-	
+
 
 
 /***/ },
@@ -2907,7 +2907,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = lastDayOfMonth;
-	
+
 
 
 /***/ },
@@ -2924,7 +2924,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = lastDayOfQuarter;
-	
+
 
 
 /***/ },
@@ -2940,7 +2940,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = lastDayOfYear;
-	
+
 
 
 /***/ },
@@ -2957,7 +2957,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return new Date(latestTimestamp);
 	}
 	module.exports = max;
-	
+
 
 
 /***/ },
@@ -2974,7 +2974,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return new Date(earliestTimestamp);
 	}
 	module.exports = min;
-	
+
 
 
 /***/ },
@@ -2989,7 +2989,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = setDate;
-	
+
 
 
 /***/ },
@@ -3009,7 +3009,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addDays(date, diff);
 	}
 	module.exports = setDay;
-	
+
 
 
 /***/ },
@@ -3025,7 +3025,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = setDayOfYear;
-	
+
 
 
 /***/ },
@@ -3040,7 +3040,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = setHours;
-	
+
 
 
 /***/ },
@@ -3058,7 +3058,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addDays(date, diff);
 	}
 	module.exports = setISODay;
-	
+
 
 
 /***/ },
@@ -3075,7 +3075,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = setISOWeek;
-	
+
 
 
 /***/ },
@@ -3090,7 +3090,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = setMilliseconds;
-	
+
 
 
 /***/ },
@@ -3105,7 +3105,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = setMinutes;
-	
+
 
 
 /***/ },
@@ -3127,7 +3127,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = setMonth;
-	
+
 
 
 /***/ },
@@ -3144,7 +3144,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return setMonth(date, date.getMonth() + diff * 3);
 	}
 	module.exports = setQuarter;
-	
+
 
 
 /***/ },
@@ -3159,7 +3159,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = setSeconds;
-	
+
 
 
 /***/ },
@@ -3174,7 +3174,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = setYear;
-	
+
 
 
 /***/ },
@@ -3189,7 +3189,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfMonth;
-	
+
 
 
 /***/ },
@@ -3201,7 +3201,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return startOfDay(new Date());
 	}
 	module.exports = startOfToday;
-	
+
 
 
 /***/ },
@@ -3219,7 +3219,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfTomorrow;
-	
+
 
 
 /***/ },
@@ -3237,7 +3237,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return date;
 	}
 	module.exports = startOfYesterday;
-	
+
 
 
 /***/ },
@@ -3250,7 +3250,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addDays(dirtyDate, -amount);
 	}
 	module.exports = subDays;
-	
+
 
 
 /***/ },
@@ -3263,7 +3263,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addHours(dirtyDate, -amount);
 	}
 	module.exports = subHours;
-	
+
 
 
 /***/ },
@@ -3276,7 +3276,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addMilliseconds(dirtyDate, -amount);
 	}
 	module.exports = subMilliseconds;
-	
+
 
 
 /***/ },
@@ -3289,7 +3289,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addMinutes(dirtyDate, -amount);
 	}
 	module.exports = subMinutes;
-	
+
 
 
 /***/ },
@@ -3302,7 +3302,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addMonths(dirtyDate, -amount);
 	}
 	module.exports = subMonths;
-	
+
 
 
 /***/ },
@@ -3315,7 +3315,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addQuarters(dirtyDate, -amount);
 	}
 	module.exports = subQuarters;
-	
+
 
 
 /***/ },
@@ -3328,7 +3328,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addSeconds(dirtyDate, -amount);
 	}
 	module.exports = subSeconds;
-	
+
 
 
 /***/ },
@@ -3341,7 +3341,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addWeeks(dirtyDate, -amount);
 	}
 	module.exports = subWeeks;
-	
+
 
 
 /***/ },
@@ -3354,7 +3354,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return addYears(dirtyDate, -amount);
 	}
 	module.exports = subYears;
-	
+
 
 
 /***/ }
