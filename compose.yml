@@ -70,6 +70,7 @@ services:
     image: localhost/rufs-nfe-rust:latest
     volumes:
       - ${HOME}/data:/app/data
+      #- ./webapp/es6:/app/webapp/es6
     env_file:
       - .env
     working_dir: /app

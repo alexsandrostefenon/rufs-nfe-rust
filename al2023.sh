@@ -21,12 +21,16 @@ elif [ "$1" = 'setup' ]; then
     $exec sudo systemctl start docker
     $exec sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/bin/docker-compose
     $exec sudo chmod 755 /usr/bin/docker-compose
-elif [ "$1" = 'deploy' ]; then
+elif [ "$1" = 'update' ]; then
     $exec docker-compose down nfe-import
     $exec docker-compose down rufs-nfe
+    $exec docker exec postgres mkdir -p /app/data/backup
+    backup=$(date '+%y%m%d-%H%M')
+    $exec docker exec postgres pg_dump -Z6 --inserts postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -f /app/data/backup/$backup.sql.gz
+    scp $ssh_connection_args ec2-user@$aws_ip:data/backup/$backup.sql.gz ./
     $exec docker pull localhost:5000/rufs-nfe-rust:latest
     $exec docker-compose up -d rufs-nfe
     $exec docker-compose up -d nfe-import
-    #$exec ~/letsencrypt.sh
-    $exec docker-compose logs -f rufs-nfe
+    $exec ./letsencrypt.sh
+    $exec docker-compose logs -f rufs-nfe nfe-import
 fi

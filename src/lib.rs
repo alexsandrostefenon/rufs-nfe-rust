@@ -60,25 +60,25 @@ impl RufsNfe {
         println!("[request_payment_adjusts] : old account  = {}", account);
 
         if account.is_null() {
-            let accounts = data_view_payment.field_results.get("account").ok_or("expected list of accounts")?;
-
             let typ = if let Some(typ) = typ {
                 typ
             } else {
                 data_view_payment.params.instance.get("type").unwrap_or(&json!(1)).as_u64().unwrap_or(1)
             };
 
+            let accounts = data_view_payment.field_results_str.get("account").ok_or("expected list of accounts")?;
+
             if typ == 1 {
                 if accounts.len() > 0 {
-                    let account = accounts[accounts.len()-1].get("id").ok_or("missing field id in account")?.clone();//accounts[0].id;//
-                    //println!("[request_payment_adjusts] 1 : new account  = {}", account);
-                    data_view_payment.set_value(server_connection, watcher, "account", &account, None)?;
+                    let account = server_connection.get_item_from_description("account", &accounts[accounts.len()-1])?.ok_or("Broken xxx")?;
+                    let account_id = account.get("id").ok_or("missing field id in account")?;
+                    data_view_payment.set_value(server_connection, watcher, "account", account_id, None)?;
                 }
             } else {
                 if accounts.len() > 1 {
-                    let account = accounts[accounts.len()-2].get("id").ok_or("missing field id in account")?.clone();//accounts.len()-2
-                    //println!("[request_payment_adjusts] 2 : new account  = {}", account);
-                    data_view_payment.set_value(server_connection, watcher, "account", &account, None)?;
+                    let account = server_connection.get_item_from_description("account", &accounts[accounts.len()-2])?.ok_or("Broken xxx")?;
+                    let account_id = account.get("id").ok_or("missing field id in account")?;
+                    data_view_payment.set_value(server_connection, watcher, "account", account_id, None)?;
                 }
             }
         }
@@ -202,9 +202,13 @@ impl DataViewWatch for RufsNfe {
                 "Produtos": "product/search",
                 "Serviços": "service/search",
                 "Contas": "account/search",
-                "Requisições": "request/search",
+                "Requisições": "request.js/search",
                 "Notas fiscais eletrônicas": "request_nfe/search",
                 "Usuários": "rufs_user/search",
+            },
+            "Tabelas": {
+                "Pessoas": "person/search",
+                "Confaz Cest": "confaz_cest/search"
             },
             "Movimento": {
                 "Financeiro": "request_payment/search",
@@ -219,10 +223,10 @@ impl DataViewWatch for RufsNfe {
                 "Conserto": "request/new?instance.type=1&instance.state=10",
                 "Importar": "nfe_import.js/?instance.type=0&instance.state=10",
             },
-            "Tabelas": {
-                "Pessoas": "person/search",
-                "Confaz Cest": "confaz_cest/search"
-            }
+            "Ferramentas": {
+                "Scanner EAN_13/EAN_8": "scanner.js/?instance.type=EAN",
+                "Scanner QR_CODE": "scanner.js/?instance.type=QR_CODE",
+            },
         })
     }
 

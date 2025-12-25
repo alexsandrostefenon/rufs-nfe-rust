@@ -118,9 +118,157 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 */
 #[cfg(not(target_arch = "wasm32"))]
 async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
+    use std::collections::HashMap;
+
+    use rufs_base_rust::rufs_micro_service::Claims;
     use rufs_base_rust::rufs_micro_service::RufsMicroServiceAuthenticator;
+    use serde_json::json;
     use serde_json::Value;
     use rufs_nfe_rust::RufsNfe;
+
+    async fn save_file(text :&str, token_payload: &Claims, headers: &std::collections::HashMap<String, String>) -> Result<String, Box<dyn std::error::Error>> {
+        let mut text = text.replace("\n", "")
+            .replace("&nbsp;", " ")
+            .replace("/script>", "/script>\n")
+            ;
+
+        let replaces = [
+            (regex::Regex::new(r#"<script.*\/script>"#).unwrap(), ""),
+            (regex::Regex::new(r#"\s{2,}"#).unwrap(), " "),
+            ];
+
+        for (regex, replacement) in replaces {
+            text = regex.replace_all(&text, replacement).to_string();
+        }
+
+        text = text
+            .replace("> <", "><")
+            .replace("; display: none", "")
+            .replace(" style=\"display:none\"", "")
+            .replace(" type=\"hidden\"", "")
+            .replace("\" /", "\"/")
+            .replace("</td>", "</td>\n")
+            .replace("<fieldset", "\n<fieldset")
+            .replace("<label", "\n<label")
+            .replace("<input", "\n<input")
+            ;
+
+        let re = regex::Regex::new(r"\b(?P<id>\d{22}\s?\d{22})\b").unwrap();
+
+        let Some(cap) = re.captures(&text) else {
+            return Err("[save_file] Broken query regex.")?;
+        };
+
+        let Some(id) = cap.name("id") else {
+            return Err("[save_file] Missing 'id' in query regex.")?;
+        };
+
+        let Some(customer) = token_payload.extra.get("customer") else {
+            return Err("[save_file] Missing 'customer' in token_payload.")?;
+        };
+
+        let Some(customer) = customer.as_str() else {
+            return Err("[save_file] Broken 'customer' in token_payload.")?;
+        };
+
+        let file_path = format!("data/{}-{}-{}.html", customer, token_payload.name, id.as_str());
+
+        {
+            #[cfg(debug_assertions)]
+            println!("[server.save_file()] : {file_path}");
+            let mut file = tokio::fs::File::create(&file_path).await?;
+            use tokio::io::AsyncWriteExt;
+            file.write_all(text.as_bytes()).await?;
+        }
+
+        let authorization = headers.get(&"Authorization".to_lowercase()).ok_or("Missing header Authorization")?;
+
+        let authorization = if authorization.starts_with("Bearer ") && authorization.len() > 7 {
+            &authorization[7..]
+        } else {
+            authorization
+        };
+
+        let message = serde_json::json!({"authorization": authorization, "file": file_path});
+        #[cfg(feature = "kafka")]
+        {
+            let message = samsa::prelude::ProduceMessage {
+                partition_id: 0,
+                topic: "nfe".to_string(),
+                key: None,
+                value: Some(samsa::prelude::bytes::Bytes::from(message.to_string())),
+                headers: vec![],
+            };
+
+            MESSAGE_BROKER_PRODUCER.get().ok_or("broken broker")?.produce(message).await;
+        }
+        #[cfg(not(feature = "kafka"))]
+        {
+            let mut con = REDIS_CLIENT.get().ok_or("broken redis")?.get_connection()?;
+            let id: String = redis::Commands::xadd(&mut con, "nfe", "*", &[("data", message.to_string())]).unwrap();
+            println!("[rufs_nfe.upload] Redis Stream added entry with ID: {}", id);
+        }
+
+        Ok(format!(r#"pushed event : {file_path}"#))
+    }
+
+    async fn import_nfce(token_payload: &Claims, line_with_nfe_id :&str, headers :&HashMap<String, String>) -> Result<String, Box<dyn std::error::Error>> {
+        let re = regex::Regex::new(r"\b(?P<id>\d{22}\s?\d{22})\b").unwrap();
+
+        let Some(cap) = re.captures(&line_with_nfe_id) else {
+            return Err("[import_nfce] Broken query regex.")?;
+        };
+
+        let Some(id) = cap.name("id") else {
+            return Err("[save_file] Missing 'id' in query regex.")?;
+        };
+
+        let id = id.as_str().replace(" ", "");
+        let client = reqwest::Client::new();
+        let mut params = std::collections::HashMap::new();
+        params.insert("sistema", "Dfe");
+        params.insert("EhConsultaPublicaSiteSefaz", "True");
+        params.insert("Ambiente", "1");
+        params.insert("ChaveAcessoDfe", &id);
+        let url = "https://dfe-portal.svrs.rs.gov.br/Dfe/ConsultaPublicaDfe";
+        // accept-encoding: gzip, deflate, br, zstd
+        #[cfg(debug_assertions)]
+        println!("[server.import_nfce({id})] : {url}");
+        let res = client.post(url).form(&params).send().await?;
+        let status = res.status();
+
+        if status == reqwest::StatusCode::OK {
+            let text = res.text().await?;
+            let message = save_file(&text, &token_payload, &headers).await?;
+            return Ok(message)
+        } else {
+            let text = res.text().await?;
+            return Err(text)?;
+        }
+    }
+
+    async fn import_nfce_csv(token_payload: &Claims, query :&str, headers :&HashMap<String, String>) -> Result<String, Box<dyn std::error::Error>> {
+        let mut messages = vec![];
+        let query = query.replace("\r", "");
+        let list = query.split("\n");
+        let mut count = 0;
+
+        for line in list {
+            count = count + 1;
+
+            if line.contains(r#","Chave de Acesso","#) {
+                continue;
+            }
+
+            #[cfg(debug_assertions)]
+            println!("[server.import_nfce_csv()] : {line}");
+            let message = import_nfce(&token_payload, line, &headers).await?;
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            messages.push(message);
+        }
+
+        Ok(format!("Processing {} of {} documents :\n{}", messages.len(), count, messages.join("\n")))
+    }
 
     #[derive(Clone)]
     pub struct State {
@@ -201,6 +349,8 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             "components": {
                 "schemas": {
                     "upload": {
+                    },
+                    "import": {
                     }
                 }
             }
@@ -284,87 +434,55 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             };
         }
 
-        async fn handle_upload(rufs: Arc<Mutex<RufsMicroService<'static>>>, method: warp::http::Method, path: FullPath, headers: warp::http::HeaderMap, query: String, form: warp::multipart::FormData) -> Result<impl warp::Reply, Infallible> {
+        fn cast_warp_params(method: warp::http::Method, path: FullPath, headers: warp::http::HeaderMap) -> Result<(String, String, std::collections::HashMap<String, String>), Box<dyn std::error::Error>> {
             let path = path.as_str();
             let method = method.to_string().to_lowercase();
-            let mut headers_out: HashMap<String, String> = HashMap::new();
+            let mut headers_out: std::collections::HashMap<String, String> = std::collections::HashMap::new();
 
             for (name, value) in &headers {
                 let key = name.to_string().to_lowercase();
-                let value = warp_try!(value.to_str());
+                let value = value.to_str()?;
                 headers_out.insert(key, value.to_string());
             }
 
-            let rms = rufs.lock().await.to_owned();
-            let token_payload = warp_try!(rufs_base_rust::request_filter::check_authorization::<RufsMicroService>(&rms, &headers_out, &path, &method).await);
+            return Ok((method, path.to_string(), headers_out))
+        }
 
-            use std::collections::HashMap;
+        async fn handle_upload(rufs: Arc<Mutex<RufsMicroService<'static>>>, method: warp::http::Method, path: FullPath, headers: warp::http::HeaderMap, query: String, form: warp::multipart::FormData) -> Result<impl warp::Reply, Infallible> {
+            let (method, path, headers) = warp_try!(cast_warp_params(method, path, headers));
+
+            let token_payload = {
+                let rms = rufs.lock().await;
+                warp_try!(rufs_base_rust::request_filter::check_authorization::<RufsMicroService>(&rms, &headers, &path, &method).await)
+            };
+
+            let mut messages = vec![];
             use futures::{StreamExt, TryStreamExt};
             let mut parts = form.into_stream();
-            let mut messages = vec![];
 
             while let Some(Ok(part)) = parts.next().await {
                 if part.name() == "file" {
-                    let re = regex::Regex::new(r"\bid=(?P<id>\d{44})").unwrap();
+                    //let buffer = warp_try!(warp_try!(part.data().await.ok_or("[handle_upload.part.data] : Empty")));
+                    let mut data = vec![];
+                    let mut stream = part.stream();
 
-                    let Some(cap) = re.captures(&query) else {
-                        continue;
-                    };
-
-                    let Some(id) = cap.name("id") else {
-                        continue;
-                    };
-
-                    let Some(customer) = token_payload.extra.get("customer") else {
-                        continue;
-                    };
-
-                    let Some(customer) = customer.as_str() else {
-                        continue;
-                    };
-
-                    let file_path = format!("data/{}-{}-{}.html", customer, token_payload.name, id.as_str());
-
-                    {
-                        let mut file = warp_try!(tokio::fs::File::create(&file_path).await);
-                        let mut stream = part.stream();
-
-                        while let Some(chunk) = stream.next().await {
-                            use tokio::io::AsyncWriteExt;
-                            let mut chunk = warp_try!(chunk);
-                            warp_try!(file.write_all_buf(&mut chunk).await);
-                        }
+                    while let Some(chunk) = stream.next().await {
+                        let buffer = warp_try!(chunk);
+                        use warp::Buf;
+                        let aux = buffer.chunk();
+                        data.extend_from_slice(aux);
                     }
 
-                    let authorization = warp_try!(headers.get(&"Authorization".to_lowercase()).ok_or("Missing header Authorization")).to_str().unwrap();
-
-                    let authorization = if authorization.starts_with("Bearer ") && authorization.len() > 7 {
-                        &authorization[7..]
+                    let text = warp_try!(String::from_utf8(data));
+                    #[cfg(debug_assertions)]
+                    println!("[server.handle_upload()] : text({})", text.len());
+                    let message = if query.contains("type=csv") {
+                        warp_try!(import_nfce_csv(&token_payload, &text, &headers).await)
                     } else {
-                        authorization
+                        warp_try!(save_file(&text, &token_payload, &headers).await)
                     };
 
-                    let message = json!({"authorization": authorization, "file": file_path});
-                    #[cfg(feature = "kafka")]
-                    {
-                        let message = samsa::prelude::ProduceMessage {
-                            partition_id: 0,
-                            topic: "nfe".to_string(),
-                            key: None,
-                            value: Some(samsa::prelude::bytes::Bytes::from(message.to_string())),
-                            headers: vec![],
-                        };
-
-                        warp_try!(MESSAGE_BROKER_PRODUCER.get().ok_or("broken broker")).produce(message).await;
-                    }
-                    #[cfg(not(feature = "kafka"))]
-                    {
-                        let mut con = warp_try!(warp_try!(REDIS_CLIENT.get().ok_or("broken redis")).get_connection());
-                        let id: String = redis::Commands::xadd(&mut con, "nfe", "*", &[("data", message.to_string())]).unwrap();
-                        println!("[rufs_nfe.upload] Redis Stream added entry with ID: {}", id);
-                    }
-
-                    messages.push(format!(r#"pushed event : {file_path}"#));
+                    messages.push(message);
                 }
             }
 
@@ -373,12 +491,27 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             return Ok(Box::new(ret));
         }
 
+        async fn handle_import(rufs: Arc<Mutex<RufsMicroService<'static>>>, method: warp::http::Method, path: FullPath, headers: warp::http::HeaderMap, query: String, _obj: Value) -> Result<impl warp::Reply, Infallible> {
+            let (method, path, headers) = warp_try!(cast_warp_params(method, path, headers));
+
+            let token_payload = {
+                let rms = rufs.lock().await;
+                // TODO : adicionar "/import" nas permissões do usuário default
+                let path = "/upload";
+                warp_try!(rufs_base_rust::request_filter::check_authorization::<RufsMicroService>(&rms, &headers, &path, &method).await)
+            };
+
+            let res = warp_try!(import_nfce(&token_payload, &query, &headers).await);
+            let ret = warp::reply::json(&res);
+            return Ok(Box::new(ret));
+        }
+
         let rufs = Arc::new(Mutex::new(rufs));
         let rufs_routes = rufs_base_rust::rufs_micro_service::rufs_warp(&rufs, &RUFS_STATE.authenticator).await;
         let listener = format!("127.0.0.1:{}", args.port);
         println!("[rufs_nfe.main] Staring server at {}", listener);
         let dedicated = warp::path("nfe_dedicated").and(warp::get()).map(|| {"Hello from rufs-nfe!".to_string()});
-        //let cors = warp::cors().allow_any_origin().allow_methods(vec!["GET", "PUT", "OPTIONS", "POST", "DELETE"]).allow_headers(vec!["access-control-allow-origin","content-type"]);
+        //let cors = warp::cors().allow_any_origin().allow_methods(vec!["GET", "PUT", "OPTIONS", "POST", "DELETE"]).allow_headers(vec!["access-control-allow-origin","content-type", "Authorization", "accept", "accept-language"]);
         let routes = dedicated
             /*.or(warp::options().map(|| {
                 "teste".to_string()
@@ -387,7 +520,9 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             .or(warp::path("pkg").and(warp::fs::dir(format!("{}pkg", fs_prefix))))
             .or(warp::path("webapp").and(warp::fs::dir(format!("{}webapp", fs_prefix))))
             .or(warp::path::end().and(warp::fs::file(format!("{}webapp/index.html", fs_prefix)))
-            .or(warp::path("upload").and(rufs_base_rust::rufs_micro_service::rufs_warp_with_rufs(rufs.clone())).and(warp::method()).and(warp::path::full()).and(warp::header::headers_cloned()).and(warp::query::raw()).and(multipart::form().max_length(1_000_000)).and_then(handle_upload))
+            .or(warp::path("manisfest.json").and(warp::fs::dir(format!("{}webapp/manisfest.json", fs_prefix))))
+            .or(warp::path("upload").and(rufs_base_rust::rufs_micro_service::rufs_warp_with_rufs(rufs.clone())).and(warp::method()).and(warp::path::full()).and(warp::header::headers_cloned()).and(warp::query::raw()).and(multipart::form().max_length(500_000)).and_then(handle_upload))
+            .or(warp::path("import").and(rufs_base_rust::rufs_micro_service::rufs_warp_with_rufs(rufs.clone())).and(warp::method()).and(warp::path::full()).and(warp::header::headers_cloned()).and(warp::query::raw()).and(warp::body::json()).and_then(handle_import))
             //.with(cors)
             );
         warp::serve(routes).run(([0, 0, 0, 0], args.port)).await;

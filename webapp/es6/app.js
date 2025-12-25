@@ -1,5 +1,6 @@
 let dataViewManager;
 let loginResponse;
+const listeners = [];
 let aggregateChartOptions = {};
 let aggregateChart = {};
 const http_log = document.querySelector('#http-log');
@@ -146,6 +147,70 @@ function updateTables(event, tables) {
 	}
 }
 
+function addEventListener(callback) {
+	listeners.push(callback);
+}
+
+async function process(event, targetId, data, processViewResponse) {
+	let element = null;
+	let form = null;
+	let module = dataViewManager;
+
+	if (targetId.includes("#!/app/")) {
+		const regEx = /#!\/app\/(?<es6>\w+\.js)/;
+		const regExResult = regEx.exec(targetId);
+
+		if (regExResult != null && regExResult.groups.es6 != null) {
+			module = await import("./" + regExResult.groups.es6);
+		}
+	} else {
+		element = document.getElementById(targetId);
+		form = element.form;
+
+		if (element.dataset.rufsModule != null) {
+			module = await import("./" + element.dataset.rufsModule);
+		} else if (form != null && form.dataset.rufsModule != null) {
+			module = await import("./" + form.dataset.rufsModule);
+		}
+	}
+
+	if (form != null) {
+		//form.inert = true;
+	}
+
+	if (event.type != "keyup" && event.preventDefault != null) {
+		//event.stopPropagation();
+		//event.stopImmediatePropagation();
+		event.preventDefault();
+	}
+
+	const params = {form_id: targetId, event: event.type, data};
+
+	if (module.login == null) {
+		params.loginResponse = loginResponse;
+		params.dataViewManager = dataViewManager;
+	}
+
+	if (module.__wbg_ptr == null) {
+		params.addEventListener = addEventListener;
+	}
+
+	return module.process(params)
+	.then(processViewResponse)
+	.catch(err => {
+		console.error(err);
+		document.querySelector('#http-error').innerHTML = err;
+		document.querySelector('#http-error').hidden = false;
+	})
+	.then(() => {
+		if (form != null) {
+			//form.inert = false;
+		}
+
+		setTimeout(() => document.getElementById('http-working').hidden = true, workingTimeout);
+	});
+}
+
 let appOnChange = async (event) => {
     let element = event.target;
 	const target = element.id;
@@ -174,54 +239,23 @@ let appOnChange = async (event) => {
 		value = element.files;
 	}
 
-	const form = element.form;
-
-	if (form != null) {
-		//form.inert = true;
-	}
-
-	let module;
-
-	if (element.dataset.rufsModule != null) {
-		module = await import("./" + element.dataset.rufsModule);
-	} else if (element.form != null && element.form.dataset.rufsModule != null) {
-		module = await import("./" + element.form.dataset.rufsModule);
-	} else {
-		module = dataViewManager;
-	}
-
 	console.log(`appOnChange : ${target} =`, value);
 	let data = {};
 	data[target] = value;
-	const params = {form_id: target, event: "OnChange", data};
 
-	if (module.login == null) {
-		params.loginResponse = loginResponse;
-	}
-
-	module.process(params).
-	then(viewResponse => {
+	const processViewResponse = viewResponse => {
 		if (viewResponse instanceof Map) {
 			viewResponse = Object.fromEntries(viewResponse);
 		}
 
 		updateChanges(event, viewResponse.changes);
 		updateTables(event, viewResponse.tables);
-	}).catch(err => {
-		console.error(err);
-		document.querySelector('#http-error').innerHTML = err;
-		document.querySelector('#http-error').hidden = false;
-	}).then(() => {
-		if (form != null) {
-			//form.inert = false;
-		}
-	});
+	}
+
+	await process(event, target, data, processViewResponse);
 }
 
 let appOnClick = async (event) => {
-	//debugger;
-	//href="#!/app/request/
-	//href="#!/app/request.import
     let element = event.target;
 	//element.focus();
 	// TODO : remover após resolver o problemar do webdriver retornar o "fieldset" ao invés do "button".
@@ -259,178 +293,152 @@ let appOnClick = async (event) => {
 		return;
 	}
 
-	//event.stopPropagation();
-	event.preventDefault();
-	let module;
+	const processViewResponse = viewResponse => {
+		if (viewResponse instanceof Map) {
+			viewResponse = Object.fromEntries(viewResponse);
+		}
 
-	if (element.dataset.rufsModule != null) {
-		module = await import("./" + element.dataset.rufsModule);
-	} else if (element.form != null && element.form.dataset.rufsModule != null) {
-		module = await import("./" + element.form.dataset.rufsModule);
-	} else {
-		module = dataViewManager;
+		console.log(viewResponse);
+		let html_map = viewResponse.html;
+
+		if (html_map instanceof Map) {
+			html_map = Object.fromEntries(html_map);
+		}
+
+		for (let [form_id, html] of Object.entries(html_map)) {
+			const div_id = `data_view_root-${form_id}`;
+			let dataView = document.getElementById(div_id);
+
+			if (dataView != null) {
+				dataView.remove();
+				dataView = null;
+			}
+
+			dataView = document.createElement("div");
+			dataView.id = div_id;
+			dataView.innerHTML = html;
+			document.querySelector('#main').prepend(dataView);
+			document.querySelector('#' + div_id).addEventListener('change', appOnChange, {passive: false});
+			document.querySelector('#' + div_id).addEventListener('click', appOnClick, {passive: false});
+			document.querySelector('#' + div_id).addEventListener('keyup', appOnChange, {passive: false});
+
+			{
+				const element = document.querySelector('#apply-' + form_id);
+
+				if (element != null) {
+					//element.addEventListener('click', appOnClick);
+				}
+			}
+		}
+
+		updateChanges(event, viewResponse.changes);
+		updateTables(event, viewResponse.tables);
+
+		if (viewResponse.aggregates != null) {
+			if (viewResponse.aggregates instanceof Map) {
+				viewResponse.aggregates = Object.fromEntries(viewResponse.aggregates);
+			}
+
+			for (let [formId, aggregateResults] of Object.entries(viewResponse.aggregates)) {
+				if (aggregateResults instanceof Map) {
+					aggregateResults = Object.fromEntries(aggregateResults);
+				}
+
+				const id = `chart-aggregate--${formId}`;
+				const chart = document.getElementById(id);
+
+				if (chart == null) {
+					console.error(`Missing chart ${id}`);
+					continue;
+				}
+
+				const ctx = chart.getContext('2d');
+				const xData = Array.from(Object.keys(aggregateResults));
+				const yData = Array.from(Object.values(aggregateResults));
+
+				if (aggregateChartOptions[formId] == null) {
+					aggregateChartOptions[formId] = {type: 'bar', data: {labels: [], datasets: [{label: "", data: []}]}};
+					aggregateChart[formId] = new Chart(ctx, aggregateChartOptions[formId]);
+				}
+
+				aggregateChartOptions[formId].data.labels = xData;
+				aggregateChartOptions[formId].data.datasets[0].data = yData;
+				aggregateChart[formId].update();
+			}
+		}
+
+		if (viewResponse.forms != null) {
+			if (viewResponse.forms instanceof Map) {
+				viewResponse.forms = Object.fromEntries(viewResponse.forms);
+			}
+
+			for (let [form_id, form_state] of Object.entries(viewResponse.forms)) {
+				if (form_state instanceof Map) {
+					form_state = Object.fromEntries(form_state);
+				}
+
+				const data_view_root_id = `data_view_root-${form_id}`;
+				const data_view_root = document.getElementById(data_view_root_id);
+				const form = document.getElementById(form_id);
+				const fieldset_id = `fieldset-${form_id}`;
+				const fieldset = document.getElementById(fieldset_id);
+
+				if (form_state.hidden != null) {
+					if (data_view_root != null) {
+						data_view_root.hidden = form_state.hidden;
+					} else {
+						console.error(`Missing data_view_root ${form_id}`);
+					}
+
+					let data_view_id = `div-${form_id}`;
+					let data_view = document.getElementById(data_view_id);
+
+					if (data_view != null) {
+						data_view.hidden = form_state.hidden;
+					} else {
+						console.error(`Missing data_view ${data_view_id}`);
+					}
+
+					if (form != null) {
+						form.hidden = form_state.hidden;
+					} else {
+						console.error(`Missing form ${form_id}`);
+					}
+				}
+
+				if (fieldset != null) {
+					if (form_state.disabled == false && fieldset.disabled != false) {
+						fieldset.disabled = false;
+					}
+
+					if (form_state.disabled == true && fieldset.disabled != true) {
+						fieldset.disabled = true;
+					}
+				} else {
+					console.error(`Missing fieldset ${fieldset_id}`);
+				}
+			}
+		}
 	}
 
 	let target = element.id;
 
 	if (target == "" && element.href != null && element.href.includes("#!/app/")) {
-		const regEx = /#!\/app\/(?<es6>\w+\.js)/;
-		const regExResult = regEx.exec(element.href);
-
-		if (regExResult != null && regExResult.groups.es6 != null) {
-			module = await import("./" + regExResult.groups.es6);
-		}
-
 		target = element.href;
 	}
 
-	if (target != null && target.length > 0 && target.startsWith("menu-") == false) {
-		//event.stopImmediatePropagation();
-		http_log.innerHTML = `..., ${http_log.innerHTML}`;
-		console.log("appOnClick : ", target);
-		document.querySelector('#http-error').hidden = true;
-		document.querySelector('#http-working').innerHTML = "Processando...";
-		document.querySelector('#http-working').hidden = false;
-		const params = {form_id: target, event: "OnClick", data: {}};
-
-		if (module.login == null) {
-			params.loginResponse = loginResponse;
-		}
-
-		module.process(params).
-		then(viewResponse => {
-			if (viewResponse instanceof Map) {
-				viewResponse = Object.fromEntries(viewResponse);
-			}
-
-			console.log(viewResponse);
-			let html_map = viewResponse.html;
-
-			if (html_map instanceof Map) {
-				html_map = Object.fromEntries(html_map);
-			}
-
-			for (let [form_id, html] of Object.entries(html_map)) {
-				const div_id = `data_view_root-${form_id}`;
-				let dataView = document.getElementById(div_id);
-
-				if (dataView != null) {
-					dataView.remove();
-					dataView = null;
-				}
-
-				dataView = document.createElement("div");
-				dataView.id = div_id;
-				dataView.innerHTML = html;
-				document.querySelector('#main').prepend(dataView);
-				document.querySelector('#' + div_id).addEventListener('change', appOnChange, {passive: false});
-				document.querySelector('#' + div_id).addEventListener('click', appOnClick, {passive: false});
-
-				{
-					const element = document.querySelector('#apply-' + form_id);
-
-					if (element != null) {
-						//element.addEventListener('click', appOnClick);
-					}
-				}
-			}
-
-			updateChanges(event, viewResponse.changes);
-			updateTables(event, viewResponse.tables);
-
-			if (viewResponse.aggregates != null) {
-				if (viewResponse.aggregates instanceof Map) {
-					viewResponse.aggregates = Object.fromEntries(viewResponse.aggregates);
-				}
-
-				for (let [formId, aggregateResults] of Object.entries(viewResponse.aggregates)) {
-					if (aggregateResults instanceof Map) {
-						aggregateResults = Object.fromEntries(aggregateResults);
-					}
-
-					const id = `chart-aggregate--${formId}`;
-					const chart = document.getElementById(id);
-
-					if (chart == null) {
-						console.error(`Missing chart ${id}`);
-						continue;
-					}
-
-					const ctx = chart.getContext('2d');
-					const xData = Array.from(Object.keys(aggregateResults));
-					const yData = Array.from(Object.values(aggregateResults));
-
-					if (aggregateChartOptions[formId] == null) {
-						aggregateChartOptions[formId] = {type: 'bar', data: {labels: [], datasets: [{label: "", data: []}]}};
-						aggregateChart[formId] = new Chart(ctx, aggregateChartOptions[formId]);
-					}
-
-					aggregateChartOptions[formId].data.labels = xData;
-					aggregateChartOptions[formId].data.datasets[0].data = yData;
-					aggregateChart[formId].update();
-				}
-			}
-
-			if (viewResponse.forms != null) {
-				if (viewResponse.forms instanceof Map) {
-					viewResponse.forms = Object.fromEntries(viewResponse.forms);
-				}
-
-				for (let [form_id, form_state] of Object.entries(viewResponse.forms)) {
-					if (form_state instanceof Map) {
-						form_state = Object.fromEntries(form_state);
-					}
-
-					const data_view_root_id = `data_view_root-${form_id}`;
-					const data_view_root = document.getElementById(data_view_root_id);
-					const form = document.getElementById(form_id);
-					const fieldset_id = `fieldset-${form_id}`;
-					const fieldset = document.getElementById(fieldset_id);
-
-					if (form_state.hidden != null) {
-						if (data_view_root != null) {
-							data_view_root.hidden = form_state.hidden;
-						} else {
-							console.error(`Missing data_view_root ${form_id}`);
-						}
-
-						let data_view_id = `div-${form_id}`;
-						let data_view = document.getElementById(data_view_id);
-
-						if (data_view != null) {
-							data_view.hidden = form_state.hidden;
-						} else {
-							console.error(`Missing data_view ${data_view_id}`);
-						}
-
-						if (form != null) {
-							form.hidden = form_state.hidden;
-						} else {
-							console.error(`Missing form ${form_id}`);
-						}
-					}
-
-					if (fieldset != null) {
-						if (form_state.disabled == false && fieldset.disabled != false) {
-							fieldset.disabled = false;
-						}
-
-						if (form_state.disabled == true && fieldset.disabled != true) {
-							fieldset.disabled = true;
-						}
-					} else {
-						console.error(`Missing fieldset ${fieldset_id}`);
-					}
-				}
-			}
-		}).catch(err => {
-			console.error(err);
-			document.querySelector('#http-error').innerHTML = err;
-			document.querySelector('#http-error').hidden = false;
-		}).then(() => {
-			setTimeout(() => document.getElementById('http-working').hidden = true, workingTimeout);
-		});
+	if (target == null || target.startsWith("menu-")) {
+		return;
 	}
+
+	http_log.innerHTML = `..., ${http_log.innerHTML}`;
+	console.log("appOnClick : ", target);
+	document.querySelector('#http-error').innerHTML = "";
+	document.querySelector('#http-error').hidden = true;
+	document.querySelector('#http-working').innerHTML = "Processando...";
+	document.querySelector('#http-working').hidden = false;
+
+	await process(event, target, {}, processViewResponse);
 }
 
 function processLoginResponse(login_response, data_view_manager) {
@@ -476,6 +484,19 @@ function processLoginResponse(login_response, data_view_manager) {
 	for (let element of document.querySelectorAll(`a[href='#!/app/${schema}']`)) {
 		element.click();
 	}
+
+	// History API.
+	window.addEventListener('hashchange', function() {
+		console.log('URL hash changed to:', window.location.hash);
+		let event = {target: {href: window.location.hash, id: ""}, type: "click"};
+		appOnClick(event);
+	});
+
+	window.rufs_js_callback = function(str) {
+		for (let callback of listeners) {
+			setTimeout(() => callback(str), 1000);
+		}
+	}
 }
 
-export {processLoginResponse};
+export {processLoginResponse, appOnClick};

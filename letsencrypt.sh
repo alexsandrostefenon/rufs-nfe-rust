@@ -3,8 +3,6 @@ set -x
 PS4=' $LINENO: '
 set -e
 
-#docker rm -f ec2-user-rufs-nfe-1 ec2-user-nginx-1
-docker-compose down rufs-nfe
 docker-compose down nginx
 
 if [ "$1" = 'install' ]; then
@@ -13,7 +11,7 @@ if [ "$1" = 'install' ]; then
     #Key is saved at:         /etc/letsencrypt/live/xxx.com/privkey.pem
     docker run --rm --entrypoint=cat nginx /etc/nginx/nginx.conf > ./nginx/etc/nginx.conf
 else
-    docker run -it --rm --name certbot -p 80:80 -v "./etc/letsencrypt:/etc/letsencrypt" -v "./var/lib/letsencrypt:/var/lib/letsencrypt" certbot/certbot renew
+    docker run --rm --name certbot -p 80:80 -v "./etc/letsencrypt:/etc/letsencrypt" -v "./var/lib/letsencrypt:/var/lib/letsencrypt" certbot/certbot renew
 fi
 
-docker-compose up -d nginx rufs-nfe
+docker-compose up -d nginx
