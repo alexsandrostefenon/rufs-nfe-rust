@@ -21,37 +21,19 @@ cd rufs-nfe-rust
 ```
 Edit ".env" with your personal data and execute:
 ```
-podman-compose up -d registry &&
-sleep 5 &&
-podman-compose up -d postgres &&
-sleep 5 &&
-podman-compose up -d redis &&
-sleep 5 &&
-podman-compose up -d nginx &&
-sleep 15 &&
-export $(cat .env | grep -v 'POSTGRES_INITDB_ARGS' | xargs) &&
-podman exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "CREATE USER $PGUSER WITH CREATEDB LOGIN PASSWORD '$PGPASSWORD'" &&
-podman exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "CREATE DATABASE rufs_nfe WITH OWNER $PGUSER" &&
-podman build -t selenium-side-runner -f selenium-side-runner.Dockerfile &&
-podman build -t rust-runtime -f runtime.Dockerfile &&
-podman build -v $PWD/../rufs-base-rust:$PWD/../rufs-base-rust -v $PWD:$PWD -t rust-build --build-arg working_dir=$PWD -f build.Dockerfile &&
-echo "Setup of containerized environment is done !";
+./cloud.sh --setup
 ```
 
 ### Run
 
 To build container image and run service:
 ```
-podman-compose down rufs-nfe &&
-podman-compose down nfe-import &&
-./build.sh &&
-podman-compose up -d rufs-nfe &&
-podman-compose up -d nfe-import
+./cloud.sh --build --update
 ```
 
 ### Tests :
 ```
-./tests/tests.sh;
+./cloud.sh --test;
 ```
 
 ## Web application

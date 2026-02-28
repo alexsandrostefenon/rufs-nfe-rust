@@ -21,10 +21,13 @@ services:
       - ./nginx/etc/templates:/etc/nginx/templates:ro
       - ./www:/usr/share/nginx/html:ro
       - ./etc/letsencrypt:/etc/letsencrypt:ro
+      #- ./srvDsv/dist_none:/imobiliar:ro
     env_file:
       - .env
+    environment:
+      POSTGRES_INITDB_ARGS: '--locale-provider=icu --icu-locale=pt-BR'
     ports:
-      - 8443:443
+      #- 443:443
       - 8080:80
   redis:
     container_name: redis
@@ -55,6 +58,16 @@ services:
     ports:
       - 9092:9092
       - 19092:19092
+  firebirdsql-v2_5:
+    container_name: firebirdsql-v2_5
+    #image: docker.io/firebirdsql/firebird:3
+    image: docker.io/jacobalberty/firebird:2.5.9-sc
+    volumes:
+      - ${HOME}/data:/var/lib/firebird/data
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:3050:3050"
   postgres:
     container_name: postgres
     image: docker.io/library/postgres:17-alpine
@@ -68,6 +81,7 @@ services:
   rufs-nfe:
     container_name: rufs-nfe
     image: localhost/rufs-nfe-rust:latest
+    restart: unless-stopped
     volumes:
       - ${HOME}/data:/app/data
       #- ./webapp/es6:/app/webapp/es6
@@ -82,6 +96,11 @@ services:
         limits:
           cpus: '0.50'
           memory: 500M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/nfe/"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
   nfe-import:
     container_name: nfe-import
     image: localhost/rufs-nfe-rust:latest
@@ -97,8 +116,26 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 500M
+          cpus: '0.25'
+          memory: 100M
+  clipp-import:
+    container_name: clipp-import
+    image: localhost/rufs-nfe-rust:latest
+    entrypoint: ["/app/clipp_import"]
+    working_dir: /app
+    volumes:
+      - ${HOME}/data:/app/data
+    env_file:
+      - .env
+    depends_on:
+      - firebirdsql-v2_5
+      - broker
+      - rufs-nfe
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 100M
   selenium-standalone-chrome:
     container_name: selenium-standalone-chrome
     image: docker.io/selenium/standalone-chrome
