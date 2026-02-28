@@ -15,7 +15,8 @@ function onRufsEvent(params) {
     const event = JSON.parse(params);
     console.log(event);
     const href = `#!/app/request/search`;
-    appOnClick({target: {href, id: ""}, type: "click"});
+    // TODO : exibir notificação
+    //appOnClick({target: {href, id: ""}, type: "click"});
 }
 
 async function process(params) {

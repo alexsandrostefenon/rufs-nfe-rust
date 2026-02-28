@@ -10,7 +10,11 @@ use rufs_base_rust::{rufs_micro_service::{RufsMicroService, RufsParams}, openapi
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Parser, Debug)]
 struct Args {
+    #[cfg(not(debug_assertions))]
     #[arg(long,default_value = "8080")]
+    port: u16,
+    #[cfg(debug_assertions)]
+    #[arg(long,default_value = "8081")]
     port: u16,
 }
 
@@ -121,7 +125,6 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     use std::collections::HashMap;
 
     use rufs_base_rust::rufs_micro_service::Claims;
-    use rufs_base_rust::rufs_micro_service::RufsMicroServiceAuthenticator;
     use serde_json::json;
     use serde_json::Value;
     use rufs_nfe_rust::RufsNfe;
@@ -163,15 +166,7 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             return Err("[save_file] Missing 'id' in query regex.")?;
         };
 
-        let Some(customer) = token_payload.extra.get("customer") else {
-            return Err("[save_file] Missing 'customer' in token_payload.")?;
-        };
-
-        let Some(customer) = customer.as_str() else {
-            return Err("[save_file] Broken 'customer' in token_payload.")?;
-        };
-
-        let file_path = format!("data/{}-{}-{}.html", customer, token_payload.name, id.as_str());
+        let file_path = format!("data/{}-{}-{}.html", token_payload.customer, token_payload.name, id.as_str());
 
         {
             #[cfg(debug_assertions)]
@@ -268,17 +263,6 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         }
 
         Ok(format!("Processing {} of {} documents :\n{}", messages.len(), count, messages.join("\n")))
-    }
-
-    #[derive(Clone)]
-    pub struct State {
-        authenticator: RufsMicroServiceAuthenticator
-    }
-
-    lazy_static::lazy_static! {
-        static ref RUFS_STATE : State = State {
-            authenticator: RufsMicroServiceAuthenticator()
-        };
     }
 
     lazy_static::lazy_static! {
@@ -507,7 +491,10 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         }
 
         let rufs = Arc::new(Mutex::new(rufs));
-        let rufs_routes = rufs_base_rust::rufs_micro_service::rufs_warp(&rufs, &RUFS_STATE.authenticator).await;
+        let rufs_routes = rufs_base_rust::rufs_micro_service::rufs_warp(&rufs).await;
+        #[cfg(debug_assertions)]
+        let listener = format!("0.0.0.0:{}", args.port);
+        #[cfg(not(debug_assertions))]
         let listener = format!("127.0.0.1:{}", args.port);
         println!("[rufs_nfe.main] Staring server at {}", listener);
         let dedicated = warp::path("nfe_dedicated").and(warp::get()).map(|| {"Hello from rufs-nfe!".to_string()});
@@ -601,3 +588,13 @@ mod tests {
         Ok(())
     }
 }
+
+/*
+[DbAdapterSql.delete_one(requestProduct, {"request":1,"product":1,"serials":""})]
+[RequestFilter.notify] broadcasting "{\"service\":\"requestProduct\",\"action\":\"delete\",\"primaryKey\":{\"request\":1,\"product\":1,\"serials\":\"\"}}" ...
+[DbAdapterSql.delete_one(requestPayment, {"id":1})]
+[RequestFilter.notify] broadcasting "{\"service\":\"requestPayment\",\"action\":\"delete\",\"primaryKey\":{\"id\":1}}" ...
+[DbAdapterSql.delete_one(request, {"id":1})]
+[RequestFilter.notify] broadcasting "{\"service\":\"request\",\"action\":\"delete\",\"primaryKey\":{\"id\":1}}" ...
+check_schema(db_schema -> rufs_customer_12345678901, user_id -> guest)
+*/

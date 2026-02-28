@@ -1,8 +1,8 @@
-const regExpNfeChaveAcesso = /(?<chaveNfe>\b\d{22}\s?\d{22,27}\b)/;
+const regExpNfeChaveAcesso = /(?<nfeId>\b\d{22}\s?\d{22,27}\b)/;
 let stoped = true;
 let loginResponse = null;
 let dataViewManager = null;
-let chaveNfeOld = null;
+let nfeIdOld = null;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -74,15 +74,38 @@ async function upload(text) {
 		{
 			let count = 0;
 			let list = text.split("\n");
+			let nfeIdCalcel = "";
 
 			for (let line of list) {
 				if (line.includes(`,"Chave de Acesso",`)) {
 					continue;
 				}
 
-				await loadFrame(line.replaceAll(" ", ""));
-				count++;
-				await sleep(1000);
+				const regExpNfeChaveAcessoResult = regExpNfeChaveAcesso.exec(line);
+
+				if (regExpNfeChaveAcessoResult == null) {
+					log(`Broken nfeId in CSV file :`, line);
+					continue;
+				}
+
+				const nfeId = regExpNfeChaveAcessoResult.groups.nfeId.replaceAll(" ", "");
+
+				if (nfeId == nfeIdCancel) {
+					log(`nfeId ${nfeId} is canceled !`);
+					continue;
+				}
+
+				if (line.includes(`,"Cancelamento",`)) {
+					nfeIdCalcel = nfeId;
+					continue;
+				}
+
+				const data = await loadFrame(nfeId);
+
+				if (data == null || data.nfeId == null) {
+					count++;
+					await sleep(2000);
+				}
 			}
 
 			log(`Processed ${count} of ${list.length}.`);
@@ -92,7 +115,7 @@ async function upload(text) {
 
 	const match = regExpNfeChaveAcesso.exec(text);
 
-	if (match != null && match.groups.chaveNfe != null) {
+	if (match != null && match.groups.nfeId != null) {
 		const formData = new FormData();
 		formData.append('file', text); // 'file' is the name the server expects
 		const headers = {"Authorization": "Bearer " + loginResponse.jwt_header};
@@ -113,36 +136,48 @@ async function loadFrame(url) {
 	const regExpNfeChaveAcessoResult = regExpNfeChaveAcesso.exec(url);
 
 	if (regExpNfeChaveAcessoResult == null) {
-		log(`Broken chaveNfe :`, url);
+		log(`Broken nfeId :`, url);
 		return;
 	}
 
-	const chaveNfe = regExpNfeChaveAcessoResult.groups.chaveNfe.replaceAll(" ", "");
+	const nfeId = regExpNfeChaveAcessoResult.groups.nfeId.replaceAll(" ", "");
 
-	if (chaveNfe == chaveNfeOld) {
+	if (nfeId == nfeIdOld) {
 		return;
 	}
 
-	chaveNfeOld = chaveNfe;
+	nfeIdOld = nfeId;
 
 	const headers = {
-		"Authorization": "Bearer " + loginResponse.jwt_header,
-		"Content-Type": "application/json"
+		"Authorization": "Bearer " + loginResponse.jwt_header
 	};
 
-	return fetch(`import?id=${chaveNfe}`, {method: "POST", headers, body: `{}`})
+	const response = await fetch(`rest/request_nfe?filter[nfeId]=${nfeId}`, {method: "GET", headers});
+	const list = await response.json();
+
+	if (Array.isArray(list) && list.length > 0) {
+		log('Alread imported: ', nfeId);
+		document.getElementById("nfe_import-qr_code").value = "";
+		return list[0];
+	}
+
+	headers["Content-Type"] = "application/json";
+	return fetch(`import?id=${nfeId}`, {method: "POST", headers, body: `{}`})
 	.then(response => response.json())
 	.then(data => {
 		log('Upload successful: ', data);
+		return data;
 	})
 	.catch(() => {
 		const input_file = document.getElementById("nfe_import-input_file");
 		input_file.hidden = false;
-		url = `https://www.sefaz.rs.gov.br/dfe/Consultas/ConsultaPublicaDfe?chaveNFe=${chaveNfe}`;
+		url = `https://www.sefaz.rs.gov.br/dfe/Consultas/ConsultaPublicaDfe?nfeId=${nfeId}`;
 		window.open(url, "_blank");
+		return null;
 	})
-	.finally(() => {
+	.finally(data => {
 		document.getElementById("nfe_import-qr_code").value = "";
+		return data;
 	});
 }
 
@@ -399,7 +434,7 @@ async function process(params) {
 	} else if (event == "keyup") {
 		const oldValue = data[form_id];
 
-		if (form_id == "nfe_import-qr_code" && oldValue != null && oldValue.length >= 47 || (oldValue.length >= 44 && oldValue.startsWith("55") == false)) {
+		if (form_id == "nfe_import-qr_code" && oldValue != null && (oldValue.length >= 47 || (oldValue.length >= 44 && oldValue.startsWith("55") == false))) {
 			await loadFrame(oldValue);
 		}
 	}

@@ -6,6 +6,7 @@ let aggregateChart = {};
 const http_log = document.querySelector('#http-log');
 const urlParams = new URLSearchParams(document.location.search);
 const workingTimeout = urlParams.get("working_timeout") ? parseInt(urlParams.get("working_timeout")) : 100;
+let activeWorkingProcess = null;
 
 function data_view_show(form_id) {
 	const div_id = `div-${form_id}`;
@@ -13,7 +14,8 @@ function data_view_show(form_id) {
 
 	if (data_view != null) {
 		if (data_view.hidden == true) {
-			console.log(`${data_view.id}.hidden = false`);
+			if (urlParams.get("debug") == "true")
+				console.log(`${data_view.id}.hidden = false`);
 			data_view.hidden = false;
 		}
 	} else {
@@ -30,7 +32,8 @@ function updateChanges(event, changes) {
 		changes = Object.fromEntries(changes);
 	}
 
-	console.log(changes);
+	if (urlParams.get("debug") == "true")
+		console.log(changes);
 
 	for (let [formId, fields] of Object.entries(changes)) {
 		if (fields instanceof Map) {
@@ -129,7 +132,8 @@ function updateTables(event, tables) {
 		div.innerHTML = html;
 
 		if (div.hidden == true) {
-			console.log(`${div.id}.hidden = false`);
+			if (urlParams.get("debug") == "true")
+				console.log(`${div.id}.hidden = false`);
 			div.hidden = false;
 		}
 
@@ -138,7 +142,8 @@ function updateTables(event, tables) {
 
 		if (divForm != null) {
 			if (divForm.hidden == true) {
-				console.log(`${divForm.id}.hidden = false`);
+				if (urlParams.get("debug") == "true")
+					console.log(`${divForm.id}.hidden = false`);
 				divForm.hidden = false;
 			}
 		} else {
@@ -149,6 +154,10 @@ function updateTables(event, tables) {
 
 function addEventListener(callback) {
 	listeners.push(callback);
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function process(event, targetId, data, processViewResponse) {
@@ -195,23 +204,36 @@ async function process(event, targetId, data, processViewResponse) {
 		params.addEventListener = addEventListener;
 	}
 
+	for (let i = 0; i < 100 && activeWorkingProcess != null; i++) {
+		if (urlParams.get("debug") == "true")
+			console.log(`[process] waiting latest processing is done :\n${activeWorkingProcess}`);
+		await sleep(100);
+	}
+
+	if (urlParams.get("debug") == "true")
+		console.log(`module.process()`, params);
+	activeWorkingProcess = params;
 	return module.process(params)
 	.then(processViewResponse)
 	.catch(err => {
 		console.error(err);
 		document.querySelector('#http-error').innerHTML = err;
 		document.querySelector('#http-error').hidden = false;
+		activeWorkingProcess = null;
 	})
 	.then(() => {
 		if (form != null) {
 			//form.inert = false;
 		}
 
+		activeWorkingProcess = null;
 		setTimeout(() => document.getElementById('http-working').hidden = true, workingTimeout);
 	});
 }
 
 let appOnChange = async (event) => {
+	if (urlParams.get("debug") == "true")
+		console.log(`appOnChange`, event);
     let element = event.target;
 	const target = element.id;
 	http_log.innerHTML = `t:${target}, ${http_log.innerHTML}`;
@@ -239,7 +261,8 @@ let appOnChange = async (event) => {
 		value = element.files;
 	}
 
-	console.log(`appOnChange : ${target} =`, value);
+	if (urlParams.get("debug") == "true")
+		console.log(`appOnChange : ${target} =`, value);
 	let data = {};
 	data[target] = value;
 
@@ -248,6 +271,8 @@ let appOnChange = async (event) => {
 			viewResponse = Object.fromEntries(viewResponse);
 		}
 
+		if (urlParams.get("debug") == "true")
+			console.log(`appOnChange.updateChanges`);
 		updateChanges(event, viewResponse.changes);
 		updateTables(event, viewResponse.tables);
 	}
@@ -257,6 +282,11 @@ let appOnChange = async (event) => {
 
 let appOnClick = async (event) => {
     let element = event.target;
+
+	if (["button", "i", "a"].includes(element.localName) == false && element.href == null) {
+		return;
+	}
+
 	//element.focus();
 	// TODO : remover após resolver o problemar do webdriver retornar o "fieldset" ao invés do "button".
 	if (element.id.startsWith("fieldset")) {
@@ -285,7 +315,7 @@ let appOnClick = async (event) => {
 		return;
 	}
 
-	if (["button", "a"].includes(element.localName) && element.dataset.bsToggle != null) {
+	if (["button", "a"].includes(element.localName) && element.dataset != null && element.dataset.bsToggle != null) {
 		return;
 	}
 
@@ -298,7 +328,8 @@ let appOnClick = async (event) => {
 			viewResponse = Object.fromEntries(viewResponse);
 		}
 
-		console.log(viewResponse);
+		if (urlParams.get("debug") == "true")
+			console.log(viewResponse);
 		let html_map = viewResponse.html;
 
 		if (html_map instanceof Map) {
@@ -320,7 +351,7 @@ let appOnClick = async (event) => {
 			document.querySelector('#main').prepend(dataView);
 			document.querySelector('#' + div_id).addEventListener('change', appOnChange, {passive: false});
 			document.querySelector('#' + div_id).addEventListener('click', appOnClick, {passive: false});
-			document.querySelector('#' + div_id).addEventListener('keyup', appOnChange, {passive: false});
+			//document.querySelector('#' + div_id).addEventListener('keyup', appOnChange, {passive: false});
 
 			{
 				const element = document.querySelector('#apply-' + form_id);
@@ -331,6 +362,8 @@ let appOnClick = async (event) => {
 			}
 		}
 
+		if (urlParams.get("debug") == "true")
+			console.log(`appOnClick.updateChanges`);
 		updateChanges(event, viewResponse.changes);
 		updateTables(event, viewResponse.tables);
 
@@ -432,7 +465,8 @@ let appOnClick = async (event) => {
 	}
 
 	http_log.innerHTML = `..., ${http_log.innerHTML}`;
-	console.log("appOnClick : ", target);
+	if (urlParams.get("debug") == "true")
+		console.log("appOnClick : ", target);
 	document.querySelector('#http-error').innerHTML = "";
 	document.querySelector('#http-error').hidden = true;
 	document.querySelector('#http-working').innerHTML = "Processando...";
@@ -487,8 +521,9 @@ function processLoginResponse(login_response, data_view_manager) {
 
 	// History API.
 	window.addEventListener('hashchange', function() {
-		console.log('URL hash changed to:', window.location.hash);
-		let event = {target: {href: window.location.hash, id: ""}, type: "click"};
+		if (urlParams.get("debug") == "true")
+			console.log('URL hash changed to:', window.location.hash);
+		let event = {target: {href: window.location.hash, id: "", localName: "a"}, type: "click"};
 		appOnClick(event);
 	});
 

@@ -1,11 +1,10 @@
-#[cfg(not(target_arch = "wasm32"))]
-#[cfg(feature = "clipp")]
-async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::error::Error>> {
+use reqwest::StatusCode;
+use serde_json::{Value, json};
+
+async fn import(message: &Value) -> Result<(), Box<dyn std::error::Error>> {
     use std::collections::HashMap;
     use convert_case::Casing;
     use rsfbclient::{prelude::*, FbError};
-    use rufs_base_rust::entity_manager::EntityManager;
-    use serde_json::{json, Value};
 
 	fn get_json(row: &rsfbclient::Row) -> Result<Value, Box<dyn std::error::Error>> {
 		let mut obj = json!({});
@@ -27,7 +26,132 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
 		Ok(obj)
 	}
 
-    let mut fb_conn = rsfbclient::builder_native().from_string("firebird://SYSDBA:masterkey@localhost:3050//var/lib/firebird/3.0/data/CLIPP-3.fdb?charset=WIN1252")?.connect()?;//WIN1252,ISO8859_1
+	fn convert_obj_copy(obj_out: &mut Value, obj_in :&Value, primary_keys :&[&str]) -> Result<(), Box<dyn std::error::Error>> {
+		for (field_name_in, field) in obj_in.as_object().unwrap() {
+			let field_name_out = field_name_in.to_case(convert_case::Case::Camel);
+
+			match field {
+				Value::Object(_obj) => continue,
+				Value::Null => continue,
+				Value::String(value) => {
+					if value.is_empty() && primary_keys.contains(&field_name_in.as_str()) == false {
+						continue;
+					}
+				},
+				_ => {},
+			}
+
+			obj_out[field_name_out] = field.clone();
+		}
+
+		Ok(())
+	}
+
+	fn convert_obj(obj_in :&Value, primary_keys :&[&str]) -> Result<Value, Box<dyn std::error::Error>> {
+		let mut obj_out = json!({});
+		convert_obj_copy(&mut obj_out, obj_in, primary_keys)?;
+		Ok(obj_out)
+	}
+
+	#[cfg(debug_assertions)]
+	let url_base = format!("http://localhost:8080/nfe/rest/");
+	#[cfg(not(debug_assertions))]
+	let url_base = format!("http://rufs-nfe:8080/rest/");
+	let client = reqwest::Client::new();
+	let token = message.get("authorization").ok_or("Missing field 'authorization' in message")?.as_str().ok_or("Broken field 'authorization' in message")?;
+
+	let post = async |schema_name_snake: &str, obj: &Value| -> Result<Value, Box<dyn std::error::Error>> {
+		let url = format!("{url_base}{schema_name_snake}");
+		#[cfg(debug_assertions)]
+		println!("[nfe_import.post({schema_name_snake})] {url}");
+		let res = client.post(url).bearer_auth(token).json(obj).send().await?;
+		let status = res.status();
+
+		if status == StatusCode::OK {
+			return Ok(res.json().await?);
+		} else {
+			let text = res.text().await?;
+			return Err(text)?;
+		}
+	};
+
+	let publish = async |schema_name_snake :&str, primary_keys :&[&str], rec_imported :&Value, replace: bool| -> Result<Value, Box<dyn std::error::Error>> {
+		#[cfg(debug_assertions)]
+		println!("[nfe_import.publish({schema_name_snake})] starting ...");
+		#[cfg(debug_assertions)]
+		println!("[nfe_import.convert_obj()] starting ...");
+		let obj = convert_obj(rec_imported, primary_keys)?;
+		#[cfg(debug_assertions)]
+		println!("[nfe_import.convert_obj()] ... exited");
+		let mut query_list = vec![];
+
+		for primary_key_name in primary_keys {
+			#[cfg(debug_assertions)]
+			println!("[nfe_import.primary_key_name {primary_key_name}] starting ...");
+			let Some(primary_key) = obj.get(primary_key_name) else {
+				let str = serde_json::to_string_pretty(&obj).unwrap();
+				eprintln!("[nfe_import.merge.primary_key_name] error : {str}.");
+				return Err(format!("Missing field '{primary_key_name}' in structure {schema_name_snake} in parsed object : {str}"))?;
+			};
+
+			let primary_key = match primary_key {
+				Value::Number(number) => number.to_string(),
+				Value::String(value) => value.to_string(),
+				_ => return Err(format!("Invalid primary_key : {primary_key}"))?,
+			};
+
+			query_list.push(format!("{primary_key_name}={primary_key}"));
+			#[cfg(debug_assertions)]
+			println!("[nfe_import.primary_key_name {primary_key_name}] ... exited");
+		}
+
+		let url = format!("{url_base}{schema_name_snake}?{}", query_list.join("&"));
+
+		#[cfg(debug_assertions)]
+		println!("[nfe_import.put] {url}, starting ...");
+		let method;
+		let res = if replace {
+			method = "put";
+			client.put(&url).bearer_auth(token).json(&obj).send().await?
+		} else {
+			method = "patch";
+			client.patch(&url).bearer_auth(token).json(&obj).send().await?
+		};
+		#[cfg(debug_assertions)]
+		println!("[nfe_import.put] ... exited");
+
+		let status = res.status();
+
+		let obj = if status != StatusCode::OK {
+			let text = res.text().await?;
+
+			if text.starts_with("Missing data in") {
+				post(schema_name_snake, &obj).await?
+			} else {
+				eprintln!("[nfe_import.merge.publish()]\ncurl -X {method} {url} -d '{obj}';\nerror message : {text}");
+				return Err(text)?;
+			}
+		} else {
+			let value = res.json::<Value>().await?;
+
+			if let Some(list) = value.as_array() {
+				if list.len() == 0 {
+					post(schema_name_snake, &obj).await?
+				} else {
+					return Err(format!("Bad put/patch response : {:?}", list))?;
+				}
+			} else {
+				value
+			}
+		};
+
+		#[cfg(debug_assertions)]
+		println!("[nfe_import.publish({schema_name_snake})] ... finished");
+		return Ok(obj);
+	};
+
+	let db_url = message.get("dbUrl").ok_or("Missing field 'dbUrl' in message")?.as_str().ok_or("Broken field 'dbUrl' in message")?;
+    let mut fb_conn = rsfbclient::builder_pure_rust().from_string(db_url)?.connect()?;
 
     let map_person = {
         let sql = "
@@ -57,7 +181,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
         for row in rows {
             let obj = get_json(&row?)?;
 
-            let _obj_out = match rufs.entity_manager.insert(&rufs.openapi, "person", &obj).await {
+            let _obj_out = match publish("person", &["cnpjCpf"], &obj, false).await {
                 Ok(value) => value,
                 Err(err) => {
                     if err.to_string().contains(r#"duplicate key value violates unique constraint "person_pkey""#) {
@@ -159,7 +283,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
             let client_id = obj.get("idCliente").ok_or("broken")?.as_u64().ok_or("broken")?;
             obj["personDest"] = json!(map_person.get(&client_id));
 
-            let obj_out = match rufs.entity_manager.insert(&rufs.openapi, "request", &obj).await {
+            let obj_out = match publish("request", &["id"], &obj, false).await {
                 Ok(value) => value,
                 Err(err) => {
                     if err.to_string().contains(r#"duplicate key value violates unique constraint "request_person_person_dest_date_key""#) {
@@ -174,7 +298,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
             map_request.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, request_id);
             obj["request"] = json!(request_id);
 
-            let _obj_out = match rufs.entity_manager.insert(&rufs.openapi, "request_nfe", &obj).await {
+            let _obj_out = match post("request_nfe", &obj).await {
                 Ok(value) => value,
                 Err(err) => {
                     if err.to_string().contains(r#"duplicate key value violates unique constraint "request_person_person_dest_date_key""#) {
@@ -223,7 +347,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
                 }
             }
 
-            let obj_out = match rufs.entity_manager.insert(&rufs.openapi, "request", &obj).await {
+            let obj_out = match publish("request", &["id"], &obj, false).await {
                 Ok(value) => value,
                 Err(err) => {
                     if err.to_string().contains(r#"duplicate key value violates unique constraint "request_person_person_dest_date_key""#) {
@@ -263,7 +387,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
             let id_import = obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?;
 
             if ["9"].contains(&id_tipo_item) {
-                let obj_out = match rufs.entity_manager.insert(&rufs.openapi, "service", &obj).await {
+                let obj_out = match publish("service", &["id"], &obj, false).await {
                     Ok(value) => value,
                     Err(err) => {
                         return Err(err)?;
@@ -272,7 +396,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
 
                 map_service.insert(id_import, obj_out.get("id").ok_or("broken service id")?.as_u64().ok_or("broken service id u64")?);
             } else {
-                let obj_out = match rufs.entity_manager.insert(&rufs.openapi, "product", &obj).await {
+                let obj_out = match publish("product", &["id"], &obj, false).await {
                     Ok(value) => value,
                     Err(err) => {
                         return Err(err)?;
@@ -305,7 +429,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
 
             if let Some(id) = map_service.get(&id_import) {
                 obj["id"] = json!(id);
-                match rufs.entity_manager.insert(&rufs.openapi, "stock_service", &obj).await {
+                match publish("stock_service", &["id"], &obj, false).await {
                     Ok(_value) => {},
                     Err(err) => {
                         return Err(err)?;
@@ -313,7 +437,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
                 }
             } else if let Some(id) = map_product.get(&id_import) {
                 obj["id"] = json!(id);
-                match rufs.entity_manager.insert(&rufs.openapi, "stock_product", &obj).await {
+                match publish("stock_product", &["id"], &obj, false).await {
                     Ok(_value) => {},
                     Err(err) => {
                         return Err(err)?;
@@ -365,7 +489,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
 
             obj["product"] = json!(product);
 
-            let obj_out = match rufs.entity_manager.insert(&rufs.openapi, "request_repair", &obj).await {
+            let obj_out = match publish("request_repair", &["id"], &obj, false).await {
                 Ok(value) => value,
                 Err(err) => {
                     println!("[import_clipp] request import insert : {}", err);
@@ -418,7 +542,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
             if let Some(product) = map_product.get(&id_identificador) {
                 obj["product"] = json!(product);
 
-                let obj_out = match rufs.entity_manager.insert(&rufs.openapi, "request_product", &obj).await {
+                let obj_out = match publish("request_product", &["id"], &obj, false).await {
                     Ok(value) => value,
                     Err(err) => {
                         if err.to_string().contains(r#"duplicate key value violates unique constraint "request_product_pkey""#) {
@@ -433,7 +557,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
             } else if let Some(service) = map_service.get(&id_identificador) {
                 obj["service"] = json!(service);
 
-                let obj_out = match rufs.entity_manager.insert(&rufs.openapi, "request_service", &obj).await {
+                let obj_out = match publish("request_service", &["id"], &obj, false).await {
                     Ok(value) => value,
                     Err(err) => {
                         if err.to_string().contains(r#"duplicate key value violates unique constraint "request_service_pkey""#) {
@@ -494,7 +618,7 @@ async fn import_clipp(rufs: &RufsMicroService<'_>) -> Result<(), Box<dyn std::er
             if let Some(product) = map_product.get(&id_identificador) {
                 obj["product"] = json!(product);
 
-                let obj_out = match rufs.entity_manager.insert(&rufs.openapi, "request_product", &obj).await {
+                let obj_out = match publish("request_product", &["id"], &obj, false).await {
                     Ok(value) => value,
                     Err(err) => {
                         if err.to_string().contains(r#"duplicate key value violates unique constraint "request_product_pkey""#) {
@@ -535,9 +659,116 @@ TB_CONTA_RECEBER
     Ok(())
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 #[tokio::main]
-async fn main() {
-    #[cfg(feature = "clipp")]
-    import_clipp(&rufs).await?;
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    #[cfg(not(feature = "kafka"))]
+	{
+        let host = std::env::var("REDIS_HOST").unwrap_or("127.0.0.1".to_owned());
+        let client = redis::Client::open(format!("redis://{host}/")).map_err(|err| format!("Redis failt : {err}"))?;
+		let mut con = client.get_connection().expect("conn");
+
+		const GROUP_NAME: &str = "clipp_group";
+		let res: Result<(), _> = redis::Commands::xgroup_create_mkstream(&mut con, "clipp", GROUP_NAME, "$");
+
+		if let Err(e) = res {
+			println!("[clipp_import.main] Group already exists: {e:?}")
+		}
+
+		let opts = redis::streams::StreamReadOptions::default().block(10000).group(GROUP_NAME, "clipp-import-1");
+
+		loop {
+			let srr: Result<redis::streams::StreamReadReply, redis::RedisError> = redis::Commands::xread_options(&mut con,
+				&["clipp"],
+				&[">"],
+				&opts);
+
+			let srr = match srr {
+				Ok(srr) => srr,
+				Err(err) => {
+					eprintln!("[clipp_import.main] {err}");
+					break;
+				},
+			};
+
+			for redis::streams::StreamKey { key, ids } in srr.keys {
+				println!("[clipp_import.main] Stream key {key}");
+				let mut list_id = vec![];
+
+				for redis::streams::StreamId { id, map } in ids {
+					println!("[clipp_import.main] Redis Events Stream : ID {id}");
+
+					for (n, s) in map {
+						println!("[clipp_import.main] Redis Events Stream : Stream n {n}");
+
+						if let redis::Value::BulkString(bytes) = s {
+							let message = std::str::from_utf8(&bytes);
+
+							match message {
+								Ok(message) => {
+									println!("[clipp_import.main] Redis Events Stream : {message}.");
+									let value = serde_json::from_str::<Value>(message);
+
+									match value {
+											Ok(value) => {                                                
+												if let Err(err) = import(&value).await {
+													eprintln!("[clipp_import.main] Redis Events Stream : Error of process_broker_message({message}) : {}", err);
+												}
+											},
+											Err(err) => eprintln!("[clipp_import.main] Redis Events Stream : value is not valid json ({message}) : {}", err),
+										}
+								},
+								Err(err) => eprintln!("[clipp_import.main] Redis Events Stream : value is not utf8 string : {}", err),
+							}
+						} else {
+							panic!("Weird data")
+						}
+					}
+
+					list_id.push(id);
+				}
+
+				redis::TypedCommands::xack(&mut con, key, GROUP_NAME, &list_id).expect("ack");
+			}
+		}
+	}
+
+	Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::{Value, json};
+
+    #[tokio::test]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+		let list = [
+            // WIN1252,ISO8859_1
+            //"firebird://SYSDBA:masterkey@localhost:3050//var/lib/firebird/data/CLIPP-3.fdb?charset=WIN1252",
+            "firebird://SYSDBA:masterkey@localhost:3050//var/lib/firebird/data/CLIPP-2024_09_14.fdb?charset=WIN1252"
+		];
+
+		let customer_user = "12345678901.guest";
+		let password = "e10adc3949ba59abbe56e057f20f883e";
+		let client = reqwest::Client::new();
+		let res = client.post("http://localhost:8080/nfe/rest/login").json(&json!({"user": customer_user, "password": password})).send().await?;
+		let status = res.status();
+
+		let login_response = if status == reqwest::StatusCode::OK {
+			let res: Value = res.json().await?;
+			res
+		} else {
+			let text = res.text().await?;
+			return Err(text)?;
+		};
+
+		let mut message = json!({});
+		message["authorization"] = login_response.get("jwtHeader").ok_or("Missing jwtHeader in login response!")?.clone();
+
+		for item in list {
+			message["dbUrl"] = json!(item);
+			crate::import(&message).await?;
+		}
+
+        Ok(())
+    }
 }
