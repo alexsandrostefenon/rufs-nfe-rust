@@ -5,7 +5,7 @@ use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::sync::Mutex;
 #[cfg(not(target_arch = "wasm32"))]
-use rufs_base_rust::{rufs_micro_service::{RufsMicroService, RufsParams}, openapi::RufsOpenAPI, client::DataViewWatch};
+use rufs_base_rust::{rufs_micro_service::{RufsMicroService, RufsParams}, openapi::RufsOpenAPI};
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Clone, Parser, Debug)]
@@ -127,7 +127,6 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     use rufs_base_rust::rufs_micro_service::Claims;
     use serde_json::json;
     use serde_json::Value;
-    use rufs_nfe_rust::RufsNfe;
 
     async fn save_file(text :&str, token_payload: &Claims, headers: &std::collections::HashMap<String, String>) -> Result<String, Box<dyn std::error::Error>> {
         let mut text = text.replace("\n", "")
@@ -265,10 +264,6 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         Ok(format!("Processing {} of {} documents :\n{}", messages.len(), count, messages.join("\n")))
     }
 
-    lazy_static::lazy_static! {
-        static ref WATCHER: Box<dyn DataViewWatch> = Box::new(RufsNfe{}) as Box<dyn DataViewWatch>;
-    }
-
     {
         let host = std::env::var("REDIS_HOST").unwrap_or("127.0.0.1".to_owned());
         let client = redis::Client::open(format!("redis://{host}/")).map_err(|err| format!("Redis failt : {err}"))?;
@@ -318,7 +313,7 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     println!("[rufs_nfe.main] fs_prefix = {:?}", fs_prefix);
     let db_uri = RufsMicroService::build_db_uri(None, None, None, None, Some(&params.app_name), None);
     println!("[rufs_nfe.main] db_uri = {}", db_uri);
-    let mut rufs = RufsMicroService::connect(&db_uri, &format!("{}sql", fs_prefix), params, &WATCHER).await?;
+    let mut rufs = RufsMicroService::connect(&db_uri, &format!("{}sql", fs_prefix), params).await?;
 
     {
         use openapiv3::OpenAPI;
@@ -491,7 +486,16 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         }
 
         let rufs = Arc::new(Mutex::new(rufs));
+
+        #[cfg(debug_assertions)]
+        let rufs_routes = {
+            let watcher: Arc<Box<dyn rufs_base_rust::client::DataViewWatch>> = Arc::new(Box::new(rufs_nfe_rust::RufsNfe{}));
+            rufs_base_rust::rufs_micro_service::rufs_warp_debug(&rufs, &watcher).await
+        };
+
+        #[cfg(not(debug_assertions))]
         let rufs_routes = rufs_base_rust::rufs_micro_service::rufs_warp(&rufs).await;
+
         #[cfg(debug_assertions)]
         let listener = format!("0.0.0.0:{}", args.port);
         #[cfg(not(debug_assertions))]
@@ -543,9 +547,10 @@ async fn main() {
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     //use async_std::prelude::FutureExt;
     use futures_lite::future::FutureExt;
-    use rufs_nfe_rust::RufsNfe;
     use rufs_base_rust::client::DataViewWatch;
     use crate::{server,Args};
 
@@ -557,14 +562,11 @@ mod tests {
             server(&args).await
         };
 
-        lazy_static::lazy_static! {
-            static ref WATCHER: Box<dyn DataViewWatch> = Box::new(RufsNfe{}) as Box<dyn DataViewWatch>;
-        }
-
         let selelium = async {
             println!("selelium() - sleep 5...");
             tokio::time::sleep( std::time::Duration::from_secs( 5 ) ).await;
-            rufs_base_rust::client::tests::selelium(&WATCHER, "tests.side", "http://localhost:8080").await
+            let watcher: Arc<Box<dyn DataViewWatch>> = Arc::new(Box::new(rufs_nfe_rust::RufsNfe{}));
+            rufs_base_rust::client::tests::selelium(&watcher, "tests.side", "http://localhost:8080").await
         };
 
         {

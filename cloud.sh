@@ -174,6 +174,7 @@ if [ "$cmd_build" != '' ]; then
   release_debug_client='--release'
 
   if [ "$cmd_target" = 'debug' ]; then
+      sed -i 's/git = "https:\/\/github.com\/alexsandrostefenon\/rufs-base-rust.git"/path = "\.\.\/rufs-base-rust"/' Cargo.toml
       release_debug_server=''
       release_debug_client='--dev'
   fi
@@ -214,7 +215,7 @@ if [ "$cmd_test" = 'yes' ]; then
     cat /tmp/tmp.sql | $docker_cli_local exec -i postgres psql -1 postgres://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/rufs_nfe
 
     if [ "$cmd_db_drop" = 'yes' ]; then
-      echo '{"openapi": "3.0.3","info": {"title": "rufs-nfe","version": "1.0.21"},"paths": {},"components": {"schemas": {}}}' > $HOME/data/openapi-rufs_nfe.json
+      echo '{"openapi": "3.0.3","info": {"title": "rufs-nfe","version": "1.0.23"},"paths": {},"components": {"schemas": {}}}' > $HOME/data/openapi-rufs_nfe.json
       $docker_cli_local exec postgres pg_dump -n rufs_customer_template --inserts postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -f /app/data/rufs_customer_template.sql
     fi
   fi
@@ -232,7 +233,9 @@ if [ "$cmd_test" = 'yes' ]; then
   $compose_cli_local up -d selenium-side-runner
   mkdir -p ./tmp
   rm -f ./tmp/*
+  sed -Ezi 's/"command": "type",(.\s*)?"target": "id=new-request--date"/"command": "\/\/type","target": "id=new-request--date"/g' tests.side
   $compose_cli_local exec selenium-side-runner selenium-side-runner -j '"--bail 1 --detectOpenHandles"' tests.side
+  sed -i 's/"command": "\/\/type","target": "id=new-request--date"/"command": "type","target": "id=new-request--date"/' tests.side
   $compose_cli_local down selenium-side-runner
   $compose_cli_local down selenium-standalone-firefox
 fi
@@ -303,7 +306,7 @@ if [ "$cmd_test" != 'yes' ] && [ "$cmd_import" != '' ]; then
   echo 'SET session_replication_role = replica;' > /tmp/tmp.sql
   gunzip -c $cmd_import >> /tmp/tmp.sql
   cat /tmp/tmp.sql | $docker_cli_local exec -i postgres psql -1 postgres://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/rufs_nfe
-  echo '{"openapi": "3.0.3","info": {"title": "rufs-nfe","version": "1.0.21"},"paths": {},"components": {"schemas": {}}}' > $HOME/data/openapi-rufs_nfe.json
+  echo '{"openapi": "3.0.3","info": {"title": "rufs-nfe","version": "1.0.23"},"paths": {},"components": {"schemas": {}}}' > $HOME/data/openapi-rufs_nfe.json
   $docker_cli_local exec postgres pg_dump -n rufs_customer_template --inserts postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -f /app/data/rufs_customer_template.sql
 fi
 

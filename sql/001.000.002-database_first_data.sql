@@ -36,18 +36,7 @@ INSERT INTO rufs_group_owner (name) VALUES ('nfe_guest_group');
 INSERT INTO rufs_group (name) VALUES ('Mercado');
 
 --"get", "post", "put", "patch", "delete", "query"
-INSERT INTO rufs_customer_template.rufs_user (rufs_group_owner, name, password, path, menu, roles, routes) SELECT name, 'guest', 'e10adc3949ba59abbe56e057f20f883e', 'request/search',
-array[
-'{"group":"actions","label":"Importar","path":"request/import?overwrite[type]=0&overwrite[state]=10"}',
-'{"group":"actions","label":"Compra/Entrada","path":"request/new?overwrite[type]=0&overwrite[state]=10"}',
-'{"group":"actions","label":"Venda/Saída","path":"request/new?overwrite[type]=1&overwrite[state]=10"}',
-'{"group":"form","label":"Financeiro","path":"request_payment/search"}',
---'{"group":"form","label":"Estoque","path":"stock/search"}',
-'{"group":"form","label":"Produtos","path":"product/search"}',
-'{"group":"form","label":"Clientes e Fornecedores","path":"person/search"}',
-'{"group":"form","label":"Requisições","path":"request/search"}',
-'{"group":"form","label":"Contas","path":"account/search"}'
-]::jsonb[],
+INSERT INTO rufs_customer_template.rufs_user (rufs_group_owner, name, password, path, roles, menu, routes) SELECT name, 'guest', 'e10adc3949ba59abbe56e057f20f883e', 'request/search',
 array[
 '{"path": "/rufs_group_owner", "mask": 1}',
 '{"path": "/rufs_group", "mask": 1}',
@@ -79,7 +68,8 @@ array[
 --'{"path": "/stock", "mask": 7}'
 '{"path": "/request_freight", "mask": 23}'
 ]::jsonb[],
-array['{"path":"/app/request/:action","controller":"RequestController"}']::jsonb[]
+'{}'::jsonb,
+array[]::jsonb[]
 FROM rufs_customer_template.rufs_group_owner WHERE name='nfe_guest_group';
 
 --INSERT INTO rufs_group_user (rufs_user, rufs_group, rufs_group_owner) SELECT u.name, g.name, go.name FROM rufs_user AS u, rufs_group AS g, rufs_group_owner AS go WHERE u.name='guest' AND g.name='Mercado' AND go.name='nfe_guest_group';

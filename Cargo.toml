@@ -1,6 +1,6 @@
 [package]
 name = "rufs-nfe-rust"
-version = "1.0.22"
+version = "1.0.23"
 authors = ["Alexsandro Stefenon <alexsandrostefenon@gmail.com>"]
 edition = "2024"
 
@@ -44,7 +44,7 @@ serde_json = { version = "1.0.87", features = ["preserve_order"] }
 serde-xml-rs = "0.4"
 #openssl = "0.10"
 async-std = { version = "1.12.0", features = ["attributes", "tokio1"], optional = true }
-async-recursion = "1.0.4"
+async-trait = "0.1.77"
 regex = "1"
 indexmap = "1.9.2"
 openapiv3 = "1.0"
