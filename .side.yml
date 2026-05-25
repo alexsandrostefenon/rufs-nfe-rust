@@ -5,7 +5,6 @@ outputDirectory: "./tmp/"
 timeout: 15000
 debug: true
 debugStartup: true
-filter: ".*"
 maxWorkers: 1
 capabilities:
   browserName: firefox

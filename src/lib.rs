@@ -1,3 +1,6 @@
+#[cfg(not(target_arch = "wasm32"))]
+pub mod import;
+
 use chrono::NaiveDateTime;
 use rufs_base_rust::client::{DataView, DataViewWatch, ServerConnection, DataViewFormType, HtmlElementId};
 #[cfg(target_arch = "wasm32")]
@@ -93,57 +96,27 @@ impl RufsNfe {
 impl DataViewWatch for RufsNfe {
 
     async fn check_set_value(&self, data_view: &mut DataView, element_id: &HtmlElementId, server_connection: &ServerConnection, field_name: &str, field_value: &Value) -> Result<bool, Box<dyn std::error::Error>> {
-        #[cfg(debug_assertions)]
-        println!("[RufsNfe::check_set_value] 1");
-
         if data_view.data_view_id.schema_name == "request" {
             let schema_name = &element_id.data_view_id.schema_name;
 
-            #[cfg(debug_assertions)]
-            println!("[RufsNfe::check_set_value] 1.1");
-
             if schema_name == "requestProduct" && ["quantity", "value", "valueDesc"].contains(&field_name) {
-                #[cfg(debug_assertions)]
-                println!("[RufsNfe::check_set_value] 1.1.1");
-
                 if let Some(data_view_child) = data_view.childs.iter_mut().find(|item| &item.data_view_id.schema_name == schema_name) {
-                    #[cfg(debug_assertions)]
-                    println!("[RufsNfe::check_set_value] 1.1.1.1");
-
                     if data_view_child.params.instance.get("product").is_none() {
-                        #[cfg(debug_assertions)]
-                        println!("[RufsNfe::check_set_value] 1.1.1.1.1");
-
                         return Ok(true);
                     }
 
-                    #[cfg(debug_assertions)]
-                    println!("[RufsNfe::check_set_value] 1.1.1.2");
-
                     if field_name != "value" && data_view_child.params.instance.get("value").is_none() {
-                        #[cfg(debug_assertions)]
-                        println!("[RufsNfe::check_set_value] 1.1.1.2.1");
-
                         // TODO : se valor unitário está ausente, pegar o valor do cadastro de produtos.
                         data_view_child.set_value(server_connection, self, "value", &json!(0.0), None).await?;
                     }
-
-                    #[cfg(debug_assertions)]
-                    println!("[RufsNfe::check_set_value] 1.1.1.3");
 
                     if field_name != "quantity" && data_view_child.params.instance.get("quantity").is_none() {
                         data_view_child.set_value(server_connection, self, "quantity", &json!(1.0), None).await?;
                     }
 
-                    #[cfg(debug_assertions)]
-                    println!("[RufsNfe::check_set_value] 1.1.1.4");
-
                     if field_name != "valueDesc" && data_view_child.params.instance.get("valueDesc").is_none() {
                         data_view_child.set_value(server_connection, self, "valueDesc", &json!(0.0), None).await?;
                     }
-
-                    #[cfg(debug_assertions)]
-                    println!("[RufsNfe::check_set_value] 1.1.1.5");
 
                     let field_value :f64 = match field_value {
                         Value::Number(field_value) => field_value.as_f64().ok_or("expected type is f64")?,
@@ -154,9 +127,6 @@ impl DataViewWatch for RufsNfe {
                         Value::Object(_map) => todo!(),
                     };
 
-                    #[cfg(debug_assertions)]
-                    println!("[RufsNfe::check_set_value] 1.1.1.6");
-
                     let mut request_product: RequestProduct = match serde_json::from_value(data_view_child.params.instance.clone()) {
                         Ok(value) => value,
                         Err(err) => {
@@ -164,9 +134,6 @@ impl DataViewWatch for RufsNfe {
                             return Err(err)?;
                         }
                     };
-
-                    #[cfg(debug_assertions)]
-                    println!("[RufsNfe::check_set_value] 1.1.1.7");
 
                     let value_item = if field_name == "quantity" {
                         let value_desc = request_product.value_desc.unwrap_or(0.0);
@@ -180,9 +147,6 @@ impl DataViewWatch for RufsNfe {
                         request_product.value_item.unwrap_or(0.0)
                     };
 
-                    #[cfg(debug_assertions)]
-                    println!("[RufsNfe::check_set_value] 1.1.1.8 : value_item = {value_item}");
-
                     data_view_child.set_value(server_connection, self, "valueItem", &json!(value_item), None).await?;
 
                     match field_name {
@@ -194,17 +158,8 @@ impl DataViewWatch for RufsNfe {
                 }
             }
 
-            #[cfg(debug_assertions)]
-            println!("[RufsNfe::check_set_value] 1.2");
-
             if schema_name == "requestPayment" && ["type"].contains(&field_name) {
-                #[cfg(debug_assertions)]
-                println!("[RufsNfe::check_set_value] 1.2.1");
-
                 if let Some(data_view_child) = data_view.childs.iter_mut().find(|item| &item.data_view_id.schema_name == schema_name) {
-                    #[cfg(debug_assertions)]
-                    println!("[RufsNfe::check_set_value] 1.2.1.1");
-
                     let typ = field_value.as_u64().unwrap_or(1);
                     // due_date
                     if [1,4,10,11,12,13].contains(&typ) {
@@ -228,14 +183,8 @@ impl DataViewWatch for RufsNfe {
     }
 
     async fn check_save(&self, data_view :&mut DataView, element_id: &HtmlElementId, server_connection: &mut ServerConnection) -> Result<(bool, DataViewFormType), Box<dyn std::error::Error>> {
-        #[cfg(debug_assertions)]
-        println!("[RufsNfe::check_save] start, element_id = {:?} ...", element_id);
-
         if data_view.data_view_id.schema_name == "request" {
             let schema_name = &element_id.data_view_id.schema_name;
-
-            #[cfg(debug_assertions)]
-            println!("[RufsNfe::check_save] 1.1");
 
             if let Some(data_view_child) = data_view.childs.iter().find(|item| item.data_view_id.id == element_id.data_view_id.id) {
                 if schema_name == "requestProduct" {

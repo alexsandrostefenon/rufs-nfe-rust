@@ -1,9 +1,22 @@
-import {appOnClick} from "./app.js";
+import { addEventListener, dataViewManager, loginResponse } from "./app.js";
 
 let menuParams = null;
-let loginResponse = null;
-let dataViewManager = null;
 let lastScannedCode = null;
+
+function onRufsEvent(params) {
+    const event = JSON.parse(params);
+    console.log(event);
+    // {"service":"request","action":"notify","primaryKey":{"id":2}}
+    if (event.service == "request") {
+        const regExMenuSearch = /\.(new|view|edit|search)(\?)?/;
+        const regExMenuReplace = "/$1$2";
+        let schema = loginResponse.path./*replaceAll("/", ".").*/replace(regExMenuSearch, regExMenuReplace);
+
+        for (let element of document.querySelectorAll(`a[href='#!/app/${schema}']`)) {
+            element.click();
+        }
+    }
+}
 
 async function init(debug) {
 	const html = `
@@ -11,21 +24,7 @@ async function init(debug) {
 	return html;
 }
 
-function onRufsEvent(params) {
-    const event = JSON.parse(params);
-    console.log(event);
-    const href = `#!/app/request/search`;
-    // TODO : exibir notificação
-    //appOnClick({target: {href, id: ""}, type: "click"});
-}
-
 async function process(params) {
-    if (params != null && params.loginResponse != null) {
-        loginResponse = params.loginResponse;
-        dataViewManager = params.dataViewManager;
-        params.addEventListener(onRufsEvent);
-    }
-
     const {form_id, event, data} = params;
     const urlParams = new URLSearchParams(document.location.search);
     const debug = urlParams.get("debug") == "true";
@@ -59,9 +58,10 @@ async function process(params) {
     } else if (event == "keyup") {
     }
 
-    delete params.addEventListener;
     params.form_id = params.form_id.replaceAll(".js", "");
     return dataViewManager.process(params);
 }
+
+addEventListener(onRufsEvent);
 
 export {process};

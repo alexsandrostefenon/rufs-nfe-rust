@@ -227,15 +227,46 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         let url = "https://dfe-portal.svrs.rs.gov.br/Dfe/ConsultaPublicaDfe";
         // accept-encoding: gzip, deflate, br, zstd
         #[cfg(debug_assertions)]
-        println!("[server.import_nfce({id})] : {url}");
-        let res = client.post(url).form(&params).send().await?;
+        println!("[server.import_nfce({id})] : {url} waiting ...");
+
+        let res = match client.post(url).form(&params).send().await {
+            Ok(res) => {
+                res
+            },
+            Err(err) => {
+                let msg = format!("[import_nfce] Error 1 in send request to {url} : {err}.");
+
+                if msg.contains("Connection reset by peer") {
+                    match client.post(url).form(&params).send().await {
+                        Ok(res) => {
+                            res
+                        },
+                        Err(err) => {
+                            let msg = format!("[import_nfce] Error 2 in send request to {url} : {err}.");
+                            eprintln!("{msg}");
+                            return Err(msg)?;
+                        },
+                    }
+                } else {
+                    eprintln!("{msg}");
+                    return Err(msg)?;
+                }
+            },
+        };
+
         let status = res.status();
 
         if status == reqwest::StatusCode::OK {
+            #[cfg(debug_assertions)]
+            println!("[server.import_nfce({id})] {url} : ... response Ok");
+
             let text = res.text().await?;
             let message = save_file(&text, &token_payload, &headers).await?;
             return Ok(message)
         } else {
+            #[cfg(debug_assertions)]
+            println!("[server.import_nfce({id})] {url} : ... response Failt");
+
             let text = res.text().await?;
             return Err(text)?;
         }
@@ -590,13 +621,3 @@ mod tests {
         Ok(())
     }
 }
-
-/*
-[DbAdapterSql.delete_one(requestProduct, {"request":1,"product":1,"serials":""})]
-[RequestFilter.notify] broadcasting "{\"service\":\"requestProduct\",\"action\":\"delete\",\"primaryKey\":{\"request\":1,\"product\":1,\"serials\":\"\"}}" ...
-[DbAdapterSql.delete_one(requestPayment, {"id":1})]
-[RequestFilter.notify] broadcasting "{\"service\":\"requestPayment\",\"action\":\"delete\",\"primaryKey\":{\"id\":1}}" ...
-[DbAdapterSql.delete_one(request, {"id":1})]
-[RequestFilter.notify] broadcasting "{\"service\":\"request\",\"action\":\"delete\",\"primaryKey\":{\"id\":1}}" ...
-check_schema(db_schema -> rufs_customer_12345678901, user_id -> guest)
-*/

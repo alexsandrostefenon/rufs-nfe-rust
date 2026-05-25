@@ -1,7 +1,7 @@
+import { showStatus, dataViewManager, loginResponse } from "./app.js";
+
 const regExpNfeChaveAcesso = /(?<nfeId>\b\d{22}\s?\d{22,27}\b)/;
 let stoped = true;
-let loginResponse = null;
-let dataViewManager = null;
 let nfeIdOld = null;
 
 function sleep(ms) {
@@ -11,6 +11,10 @@ function sleep(ms) {
 function log(text, data) {
 	console.log(text, data);
 	const element = document.getElementById("nfe_import-log");
+
+	if (element == null) {
+		return;
+	}
 
 	if (typeof text != "string") {
 		text = JSON.stringify(text);
@@ -23,6 +27,7 @@ function log(text, data) {
 	}
 
 	element.value = text + "\n" + element.value;
+	element.hidden = false;
 }
 
 async function upload(text) {
@@ -74,7 +79,7 @@ async function upload(text) {
 		{
 			let count = 0;
 			let list = text.split("\n");
-			let nfeIdCalcel = "";
+			let nfeIdCancel = "";
 
 			for (let line of list) {
 				if (line.includes(`,"Chave de Acesso",`)) {
@@ -96,7 +101,7 @@ async function upload(text) {
 				}
 
 				if (line.includes(`,"Cancelamento",`)) {
-					nfeIdCalcel = nfeId;
+					nfeIdCancel = nfeId;
 					continue;
 				}
 
@@ -137,16 +142,14 @@ async function loadFrame(url) {
 
 	if (regExpNfeChaveAcessoResult == null) {
 		log(`Broken nfeId :`, url);
-		return;
+		return null;
 	}
 
 	const nfeId = regExpNfeChaveAcessoResult.groups.nfeId.replaceAll(" ", "");
 
 	if (nfeId == nfeIdOld) {
-		return;
+		return null;
 	}
-
-	nfeIdOld = nfeId;
 
 	const headers = {
 		"Authorization": "Bearer " + loginResponse.jwt_header
@@ -161,14 +164,16 @@ async function loadFrame(url) {
 		return list[0];
 	}
 
+	showStatus(`Importando NFE ${nfeId} ...`);
 	headers["Content-Type"] = "application/json";
 	return fetch(`import?id=${nfeId}`, {method: "POST", headers, body: `{}`})
 	.then(response => response.json())
 	.then(data => {
 		log('Upload successful: ', data);
+		nfeIdOld = nfeId;
 		return data;
 	})
-	.catch(() => {
+	.catch(err => {
 		const input_file = document.getElementById("nfe_import-input_file");
 		input_file.hidden = false;
 		url = `https://www.sefaz.rs.gov.br/dfe/Consultas/ConsultaPublicaDfe?nfeId=${nfeId}`;
@@ -242,63 +247,76 @@ function play(stream) {
 }
 
 async function init(debug) {
-	const listDevices = [];
-	listDevices.push(`<option value="file">Importar arquivo</option>`);
+	async function init_camera() {
+		if (navigator.mediaDevices != undefined) {
+			// QRCODE reader Copyright 2011 Lazar Laszlo, http://www.webqr.com
+			window.qrcode.canvas_qr2 = document.createElement('canvas');
+			window.qrcode.canvas_qr2.id = "qr-canvas";
+			window.qrcode.qrcontext2 = window.qrcode.canvas_qr2.getContext('2d');
+
+			window.qrcode.callback = async (response) => {
+				if (response.startsWith("error") == false) {
+					log(`[RequestController.qrcode] :`, response);
+					await loadFrame(response);
+				}
+			}
+
+			const listDevices = [];
+			listDevices.push(`<option value="file">Importar arquivo</option>`);
+			const _stream = await navigator.mediaDevices.getUserMedia({video: {width: 1280, height: 720}, audio: false});
+
+			if (navigator.mediaDevices.enumerateDevices != undefined) {
+				const devices = await navigator.mediaDevices.enumerateDevices();
+
+				devices.forEach(device => {
+					if (device.kind === "videoinput") {
+						if (debug == true) {
+							log(device);
+							log(navigator.mediaDevices.getSupportedConstraints());
+						}
+
+						listDevices.push(`<option value="${device.deviceId}">${device.label}</option>`);
+
+						if (device.getCapabilities != null) {
+							log(device.getCapabilities());
+						}
+					}
+				});
+
+				const element = document.getElementById("nfe_import-video_input");
+				element.innerHTML = listDevices.join("");
+				const div = document.getElementById("nfe_import-div_video_input");
+				div.hidden = false;
+			} else {
+				console.error("enumerateDevices() not supported.");
+			}
+		} else {
+			console.error("mediaDevices() not supported.");
+			log("mediaDevices() not supported.");
+		}
+
+		const element = document.getElementById("nfe_import-qr_code");
+
+		element.onclick = event => {
+			const element = document.getElementById("nfe_import-log");
+			element.value = "";
+			element.hidden = true;
+		}
+	}
+
+	setTimeout(init_camera, 100);
+
 	let inputFileHidden = "hidden";
 
 	if (debug == true) {
 		inputFileHidden = "";
-	}
-	// QRCODE reader Copyright 2011 Lazar Laszlo, http://www.webqr.com
-	window.qrcode.canvas_qr2 = document.createElement('canvas');
-	window.qrcode.canvas_qr2.id = "qr-canvas";
-	window.qrcode.qrcontext2 = window.qrcode.canvas_qr2.getContext('2d');
-
-	window.qrcode.callback = async (response) => {
-		if (response.startsWith("error") == false) {
-			log(`[RequestController.qrcode] :`, response);
-			await loadFrame(response);
-		}
-	}
-
-	if (navigator.mediaDevices != undefined) {
-		navigator.mediaDevices.getUserMedia({video: {width: 1280, height: 720}, audio: false})
-		.then(stream => {
-			//play(stream);
-
-			if (navigator.mediaDevices.enumerateDevices != undefined) {
-				navigator.mediaDevices.enumerateDevices().then(devices => {
-					let deviceId = null;
-
-					devices.forEach(device => {
-						if (device.kind === "videoinput") {
-							if (deviceId == null) {
-								deviceId = device.deviceId;
-							}
-
-							listDevices.push(`<option value="${device.deviceId}">${device.label}</option>`);
-							log(device);
-							log(navigator.mediaDevices.getSupportedConstraints());
-							log(device.getCapabilities());
-						}
-					});
-
-					const element = document.getElementById("nfe_import-video_input");
-					element.innerHTML = listDevices.join("");
-				});
-			} else {
-				console.error("enumerateDevices() not supported.");
-			}
-		});
-	} else {
-		console.error("mediaDevices() not supported.");
 	}
 
 	const html = `
 <h4>Importar NFe consumidor - SEFAZ-RS</h4>
 
 <form id="nfe_import" name="nfe_import" class="form-horizontal" role="form" data-rufs-module="nfe_import.js">
-	<div class="form-group">
+	<div class="form-group" id="nfe_import-div_video_input" hidden>
 	    <label for="video_input" class="col-sm-2 control-label">Dispositivo de video</label>
 
 	    <div class="col-sm-10">
@@ -324,7 +342,7 @@ async function init(debug) {
 		<label for="nfe_import-input_file_qr_code" class="col-sm-2 control-label">Qr-code (Foto/Imagem)</label>
 	    <input id="nfe_import-input_file_qr_code" type="file" accept="image/*"></input>
     </div>
-	<textarea style="overflow: auto;width: 100%" id="nfe_import-log" rows="5"></textarea>
+	<textarea style="overflow: auto;width: 100%" id="nfe_import-log" rows="5" hidden></textarea>
 </form>
 
 <video id="nfe_import-qr_video" style="width: 100%" hidden></video>
@@ -354,16 +372,11 @@ function deviceChange(videoInput) {
 }
 
 async function process(params) {
-	if (params != null && params.loginResponse != null) {
-		loginResponse = params.loginResponse;
-        dataViewManager = params.dataViewManager;
-	}
-
 	const {form_id, event, data} = params;
 	const urlParams = new URLSearchParams(document.location.search);
 	const debug = urlParams.get("debug") == "true";
 
-	const viewResponse = {
+	let viewResponse = {
 		html: {},
 		changes: {},
 		tables: {},
@@ -381,6 +394,7 @@ async function process(params) {
 				const html = await init(debug);
 				const formId = "nfe_import";
 				viewResponse.html[formId] = html;
+				//viewResponse.workingTimeout = 5000;
 			}
 		} else if (form_id == "nfe_import-exit") {
 			stop();
@@ -429,13 +443,22 @@ async function process(params) {
 		} else if (form_id == "nfe_import-video_input") {
 			deviceChange(data[form_id]);
 		} else if (form_id == "nfe_import-qr_code" && data[form_id] != "") {
-			await loadFrame(data[form_id]);
+			const element = document.getElementById(form_id);
+			const res = await loadFrame(data[form_id]);
+
+			if (res != null) {
+				//viewResponse.workingTimeout = 1000;
+			}
 		}
 	} else if (event == "keyup") {
 		const oldValue = data[form_id];
 
 		if (form_id == "nfe_import-qr_code" && oldValue != null && (oldValue.length >= 47 || (oldValue.length >= 44 && oldValue.startsWith("55") == false))) {
-			await loadFrame(oldValue);
+			const res = await loadFrame(oldValue);
+
+			if (res != null) {
+				//viewResponse.workingTimeout = 1000;
+			}
 		}
 	}
 

@@ -1,544 +1,9 @@
 use std::collections::VecDeque;
-use chrono::{DateTime, Months};
 use convert_case::Casing;
 use regex::Regex;
-use reqwest::StatusCode;
+use rufs_nfe_rust::import::{convert_obj, convert_obj_child, convert_obj_copy, import_document};
 use serde_json::{json, Value};
 use tokio::{fs::File, io::AsyncReadExt};
-
-async fn merge(file_path :&str, message :&Value, document_imported :&Value) -> Result<Value, Box<dyn std::error::Error>> {
-/*
-			item.taxGroup.ncm = ncm.data.id;
-			item.taxGroup.city = personEmitente.data.city;
-			const taxGroup = await serverConnection.services.nfeTaxGroup.patch(item.taxGroup);
-*/
-	fn convert_obj_copy(obj_out: &mut Value, obj_in :&Value, primary_keys :&[&str]) -> Result<(), Box<dyn std::error::Error>> {
-		for (field_name_in, field) in obj_in.as_object().unwrap() {
-			let field_name_out = field_name_in.to_case(convert_case::Case::Camel);
-
-			match field {
-				Value::Object(_obj) => continue,
-				Value::Null => continue,
-				Value::String(value) => {
-					if value.is_empty() && primary_keys.contains(&field_name_in.as_str()) == false {
-						continue;
-					}
-				},
-				_ => {},
-			}
-
-			obj_out[field_name_out] = field.clone();
-		}
-
-		Ok(())
-	}
-
-	fn convert_obj(obj_in :&Value, primary_keys :&[&str]) -> Result<Value, Box<dyn std::error::Error>> {
-		let mut obj_out = json!({});
-		convert_obj_copy(&mut obj_out, obj_in, primary_keys)?;
-		Ok(obj_out)
-	}
-
-	fn compare_request_product(a: &Value, b: &Value) -> bool {
-		let ret = (a.get("product") == b.get("product")) && (a.get("serials") == b.get("serials"));
-		ret
-	}
-
-	#[cfg(debug_assertions)]
-	let host = "localhost";
-	#[cfg(not(debug_assertions))]
-	let host = "rufs-nfe";
-	let port = 8080;
-	#[cfg(debug_assertions)]
-	let url_base = format!("http://{host}:{port}/nfe/rest/");
-	#[cfg(not(debug_assertions))]
-	let url_base = format!("http://{host}:{port}/rest/");
-	let client = reqwest::Client::new();
-
-	let Some(token) = message.get("authorization") else {
-		return Err(format!("Missing field authorization in message"))?;
-	};
-
-	let Some(token) = token.as_str() else {
-		return Err(format!("Field ath is not string."))?;
-	};
-
-	let post = async |schema_name_snake: &str, obj: &Value| -> Result<Value, Box<dyn std::error::Error>> {
-		let url = format!("{url_base}{schema_name_snake}");
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.post({schema_name_snake})] {url}");
-		let res = client.post(url).bearer_auth(token).json(obj).send().await?;
-		let status = res.status();
-
-		if status == StatusCode::OK {
-			return Ok(res.json().await?);
-		} else {
-			let text = res.text().await?;
-			return Err(text)?;
-		}
-	};
-
-	let publish = async |schema_name_snake :&str, primary_keys :&[&str], rec_imported :&Value, replace: bool| -> Result<Value, Box<dyn std::error::Error>> {
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.publish({schema_name_snake})] starting ...");
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.convert_obj()] starting ...");
-		let obj = convert_obj(rec_imported, primary_keys)?;
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.convert_obj()] ... exited");
-		let mut query_list = vec![];
-
-		for primary_key_name in primary_keys {
-			#[cfg(debug_assertions)]
-			println!("[nfe_import.primary_key_name {primary_key_name}] starting ...");
-			let Some(primary_key) = obj.get(primary_key_name) else {
-				let str = serde_json::to_string_pretty(&obj).unwrap();
-				eprintln!("[nfe_import.merge.primary_key_name] error : {str}.");
-				return Err(format!("Missing field '{primary_key_name}' in structure {schema_name_snake} in parsed object : {str}"))?;
-			};
-
-			let primary_key = match primary_key {
-				Value::Number(number) => number.to_string(),
-				Value::String(value) => value.to_string(),
-				_ => return Err(format!("Invalid primary_key : {primary_key}"))?,
-			};
-
-			query_list.push(format!("{primary_key_name}={primary_key}"));
-			#[cfg(debug_assertions)]
-			println!("[nfe_import.primary_key_name {primary_key_name}] ... exited");
-		}
-
-		let url = format!("{url_base}{schema_name_snake}?{}", query_list.join("&"));
-
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.put] {url}, starting ...");
-		let method;
-		let res = if replace {
-			method = "put";
-			client.put(&url).bearer_auth(token).json(&obj).send().await?
-		} else {
-			method = "patch";
-			client.patch(&url).bearer_auth(token).json(&obj).send().await?
-		};
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.put] ... exited");
-
-		let status = res.status();
-
-		let obj = if status != StatusCode::OK {
-			let text = res.text().await?;
-
-			if text.starts_with("Missing data in") {
-				post(schema_name_snake, &obj).await?
-			} else {
-				eprintln!("[nfe_import.merge.publish()]\ncurl -X {method} {url} -d '{obj}';\nerror message : {text}");
-				return Err(text)?;
-			}
-		} else {
-			let value = res.json::<Value>().await?;
-
-			if let Some(list) = value.as_array() {
-				if list.len() == 0 {
-					post(schema_name_snake, &obj).await?
-				} else {
-					return Err(format!("Bad put/patch response : {:?}", list))?;
-				}
-			} else {
-				value
-			}
-		};
-
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.publish({schema_name_snake})] ... finished");
-		return Ok(obj);
-	};
-
-	let person = document_imported.get("person").ok_or("Broken person")?;
-	publish("person", &["cnpjCpf"], &person, false).await?;
-	let person_cnpj_cpf = person.get("cnpj_cpf").ok_or("Missing cnpj_cpf in person")?.as_str().ok_or("Bad type")?;
-	let mut person_dest = document_imported.get("person_dest").ok_or("Broken person dest")?.clone();
-
-	if person_dest.get("cnpj_cpf").is_none() {
-		let regex = Regex::new(r#"(\d{8,14})"#)?;
-		let s = regex.find(file_path).ok_or("Broken customer_id")?.as_str();
-
-		let cnpj_cpf = if s.len() > 11 {
-			let s = format!("{:014}", s);
-			format!("{}.{}.{}/{}-{}", &s[0..2], &s[2..5], &s[5..8], &s[8..12], &s[12..14])
-		} else {
-			let s = format!("{:011}", s);
-			format!("{}.{}.{}-{}", &s[0..3], &s[3..6], &s[6..9], &s[9..11])
-		};
-
-		person_dest["cnpj_cpf"] = json!(cnpj_cpf);
-	}
-
-	publish("person", &["cnpjCpf"], &person_dest, false).await?;
-	let person_dest_cnpj_cpf = person_dest.get("cnpj_cpf").ok_or("Missing cnpj_cpf in person_dest")?.as_str().ok_or("Bad type")?;
-	let request_nfe_snake = document_imported.get("request_nfe").ok_or("Missing structure request_nfe in parsed object")?;
-	let mut request_nfe = convert_obj(request_nfe_snake, &[])?;
-	convert_obj_copy(&mut request_nfe, request_nfe_snake.get("emissao").ok_or("Missing 'emissao'")?, &[])?;
-	convert_obj_copy(&mut request_nfe, request_nfe_snake.get("destinatario").ok_or("Missing 'destinatario'")?, &[])?;
-	convert_obj_copy(&mut request_nfe, document_imported.get("informacoes_adicionais").ok_or("Missing 'informacoes_adicionais'")?, &[])?;
-	convert_obj_copy(&mut request_nfe, document_imported.get("totais").ok_or("Missing 'totais'")?, &[])?;
-
-	let nfe_id = request_nfe.get("nfeId").ok_or("Missing field nfeId")?.as_str().ok_or("Expected 'string' type")?;
-	let url = format!("{url_base}request_nfe?filter[nfeId]={nfe_id}");
-	#[cfg(debug_assertions)]
-	println!("[nfe_import.merge] curl -X get '{url}' -H 'Authorization: Bearer {token}';");
-	let res = client.get(&url).bearer_auth(token).send().await?;
-	let status = res.status();
-
-	if status == StatusCode::OK {
-		let list = res.json::<Value>().await?;
-		let list = list.as_array().ok_or("Bad format, expected list!")?;
-
-		if list.len() > 0 {
-			let ret = list.get(0).ok_or("broken")?;
-			println!("[nfe_import.merge] NFE {nfe_id} already processed, exiting !");
-			return Ok(ret.clone());
-		}
-	} else {
-		return Err(res.text().await?)?;
-	}
-
-	let request_type = request_nfe.get("type").ok_or("Missing field 'type' in 'request_nfe'")?.as_u64().ok_or("field 'type' is not 'u64'")?;
-	let date = request_nfe.get("date").ok_or("Missing field 'date' in 'request_nfe'")?.as_str().ok_or("field 'date' is not 'str'")?.to_string()+"+03:00";
-	let date_min = DateTime::parse_from_rfc3339(&date)?.checked_sub_months(Months::new(1)).ok_or("broken 'date_min'")?.to_rfc3339();
-	//let date_max = DateTime::parse_from_rfc3339(&date)?.checked_add_days(Days::new(1)).ok_or("broken")?.to_rfc3339();
-	let url = format!("{url_base}request?filter[person]={person_cnpj_cpf}&filter[personDest]={person_dest_cnpj_cpf}&filter[type]={request_type}&filter[paymentsValue]=0&filterRangeMin[date]={date_min}&filterRangeMax[date]={date}");
-	#[cfg(debug_assertions)]
-	println!("[nfe_import.merge] curl -X get '{url}' -H 'Authorization: Bearer {token}';");
-	let res = client.get(&url).bearer_auth(token).send().await?;
-	let status = res.status();
-
-	let mut request = if status == StatusCode::OK {
-		let list = res.json::<Value>().await?;
-		let list = list.as_array().ok_or("Bad format, expected list!")?;
-
-		match list.len() {
-			0 => {
-				request_nfe["person"] = json!(person_cnpj_cpf);
-				request_nfe["personDest"] = json!(person_dest_cnpj_cpf);
-				request_nfe["state"] = json!(80);
-				post("request", &request_nfe).await?
-			},
-			_ => list.last().ok_or("Broken")?.clone(),
-		}
-	} else {
-		return Err(res.text().await?)?;
-	};
-
-	let request_id = request.get("id").ok_or("broken")?.clone();
-	request_nfe["request"] = request_id.clone();
-
-	if let Some(date_in_out) = request_nfe.get("dateInOut") {
-		if date_in_out.as_str().ok_or("broken")?.is_empty() {
-			request_nfe["dateInOut"] = request_nfe.get("date").ok_or("broken")?.clone();
-		}
-	} else {
-		request_nfe["dateInOut"] = request_nfe.get("date").ok_or("broken")?.clone();
-	}
-
-	let list = document_imported.get("request_product").ok_or("Broken request_product")?.as_array().ok_or("expected array")?;
-	let mut list_to_publish = vec![];
-
-	fn add_f64(item_out: &mut Value, name_out: &str, item_in: &Value, name_in: &str) -> Result<f64, Box<dyn std::error::Error>> {
-		let value_in = if let Some(value) = item_in.get(name_in) {
-			value.as_f64().ok_or("broken value as f64")?
-		} else {
-			0.0
-		};
-
-		let value_out = if let Some(value_to_publish) = item_out.get(name_out) {
-			let value_to_publish = value_to_publish.as_f64().unwrap_or_default() + value_in;
-			item_out[name_out] = json!(value_to_publish);
-			value_to_publish
-		} else {
-			item_out[name_out] = json!(value_in);
-			value_in
-		};
-
-		Ok(value_out)
-	}
-
-	for request_product in list {
-		if request_product.get("quantity").is_none() {
-			continue;
-		}
-
-		let mut request_product = convert_obj(request_product, &[])?;
-		request_product["request"] = request.get("id").ok_or("broken")?.clone();
-		request_product["serials"] = json!("");
-/*
-		if let Some(id_import) = request_product.get("idImport") {
-			if let Some(id_import) = id_import.as_str() {
-				if id_import
-				request_product["id_import"] = json!(null);
-			}
-		}
-*/
-		let mut product_id = 0;
-		let mut do_patch_product = true;
-		let mut barcode_valid = false;
-
-		if let Some(barcode) = request_product.get_mut("barcode") {
-			let regex_barcode = Regex::new(r#"^0?()   \d{1,14}$"#)?;
-			let barcode_string = barcode.as_str().ok_or("Brokn barcode typ")?.to_string();
-
-			if regex_barcode.is_match(&barcode_string) {
-				let barcode_str = if barcode_string.len() == 14 && barcode_string.starts_with("0") {
-					&barcode_string[1..]
-				} else {
-					&barcode_string
-				};
-
-				let barcode_str = if barcode_str.len() == 13 && barcode_str.starts_with("00000") {
-					&barcode_str[5..]
-				} else {
-					barcode_str
-				};
-
-				if barcode_str.len() == 13 && barcode_str.starts_with("2") == false && barcode_str.starts_with("0000") == false {
-					barcode_valid = true;
-					*barcode = json!(barcode_str);
-				} else if barcode_str.len() == 8 && barcode_str.starts_with("2") == false && barcode_str.starts_with("0") == false {
-					barcode_valid = true;
-					*barcode = json!(barcode_str);
-				}
-
-				let url = format!("{url_base}barcode?barcode={barcode_str}");
-				#[cfg(debug_assertions)]
-				println!("[nfe_import.merge] curl -X get '{url}' -H 'Authorization: Bearer {token}';");
-				let res = client.get(&url).bearer_auth(token).send().await?;
-				let status = res.status();
-
-				if status == StatusCode::OK {
-					let list = res.json::<Value>().await?;
-					let list = list.as_array().ok_or("Bad format, expected list!")?;
-
-					if list.len() > 0 {
-						product_id = list.get(0).ok_or("Broken")?.get("product").ok_or("Missing field 'product'")?.as_u64().ok_or("'product' not 'u64'")?;
-						request_product["product"] = json!(product_id);
-					}
-				} else {
-					return Err(res.text().await?)?;
-				}
-			}
-		}
-
-		if product_id == 0 {
-			let name = request_product.get("name").ok_or("Missing field 'name'")?.as_str().ok_or("'product' not 'str'")?;
-			let url = format!("{url_base}product?filter[name]={name}");
-			#[cfg(debug_assertions)]
-			println!("[nfe_import.merge] curl -X get '{url}' -H 'Authorization: Bearer {token}';");
-			let res = client.get(&url).bearer_auth(token).send().await?;
-			let status = res.status();
-
-			if status == StatusCode::OK {
-				let list = res.json::<Value>().await?;
-				let list = list.as_array().ok_or("Bad format, expected list!")?;
-
-				if list.len() > 0 {
-					product_id = list.get(0).ok_or("Broken")?.get("id").ok_or("Missing field 'product'")?.as_u64().ok_or("'id' not u64")?;
-					request_product["product"] = json!(product_id);
-				}
-			} else {
-				return Err(res.text().await?)?;
-			}
-
-			if product_id == 0 {
-				do_patch_product = false;
-				product_id = post("product", &request_product).await?.get("id").ok_or("Missing field 'id'")?.as_u64().ok_or("'id ' is not u64")?;
-				request_product["product"] = json!(product_id);
-			}
-
-			if barcode_valid {
-				let _barcode = publish("barcode", &["barcode"], &request_product, false).await?;
-			}
-		}
-
-		if do_patch_product {
-			let url = format!("{url_base}product?id={product_id}");
-			#[cfg(debug_assertions)]
-			println!("[nfe_import.merge] curl -X patch '{url}' -H 'Authorization: Bearer {token}';");
-			let res = client.patch(url).bearer_auth(token).json(&request_product).send().await?;
-
-			if res.status() != StatusCode::OK {
-				return Err(res.text().await?)?;
-			}
-		}
-
-		if let Some(item_to_publish) = list_to_publish.iter_mut().find(|x| compare_request_product(x, &request_product)) {
-			add_f64(item_to_publish, "quantity", &request_product, "quantity")?;
-			add_f64(item_to_publish, "valueItem", &request_product, "valueItem")?;
-			add_f64(item_to_publish, "valueDesc", &request_product, "valueDesc")?;
-			add_f64(item_to_publish, "valueFreight", &request_product, "valueFreight")?;
-			item_to_publish["merged"] = json!(true);
-		} else {
-			list_to_publish.push(request_product);
-		}
-	}
-
-	let mut value_products = 0.0;
-
-	for request_product in list_to_publish.iter_mut() {
-		let value_desc = if let Some(value) = request_product.get("valueDesc") {
-			value.as_f64().ok_or("broken valieItem f64")?
-		} else {
-			0.0
-		};
-
-		let value_item = request_product.get("valueItem").ok_or("broken valueItem")?.as_f64().ok_or("broken valieItem f64")?;
-		value_products += value_item - value_desc;
-		#[cfg(debug_assertions)]
-		println!("value_products {value_products} += value_item {value_item} - value_desc {value_desc};");
-
-		if request_product.get("merged").is_none() == false {
-			let quantity = request_product.get("quantity").ok_or("broken quantity")?.as_f64().ok_or("broken quantity f64")?;
-
-			if quantity != 0.0 {
-				let value = (value_item * 100.0) / quantity;
-				request_product["value"] = json!(value.round() / 100.0);
-			}
-		}
-
-		let _item = publish("request_product", &["request", "product", "serials"], &request_product, true).await?;
-	}
-
-	let map_accounts = std::collections::HashMap::from([
-		(1, "Caixa interno"),
-		(2, "Conta corrente"),
-		(3, "Cartão de Crédito"),
-		(4, "Conta corrente"),
-		(5, "Caixa interno"),
-		(10, "Vale Alimentação"),
-		(11, "Vale Refeição"),
-		(12, "Vale Presente"),
-		(13, "Vale Combustível"),
-		(14, "Conta corrente"),
-		(15, "Conta corrente"),
-		(17, "Conta corrente"),
-		(20, "Conta corrente"),
-	]);
-
-	let list_payments = {
-		if let Some(list) = document_imported.get("request_payment") {
-			list.as_array().ok_or("'request_payment' is not array.")?.clone()
-		} else {
-			let url = format!("{url_base}config?filter[name]=nfe_import-maybe_missing_payment_years");
-			let res = client.get(&url).bearer_auth(token).send().await?;
-			let status = res.status();
-
-			let regex = if status == StatusCode::OK {
-				let list = res.json::<Value>().await?;
-				let list = list.as_array().ok_or("Bad format, expected list!")?;
-
-				if list.len() == 1 {
-					let ret = list.get(0).ok_or("Broken get first item in list")?;
-					let pattern = ret.get("value").ok_or("Missing field 'value'.")?.as_str().ok_or("Field 'value' not string.")?;
-					Regex::new(pattern)?
-				} else {
-					return Err("Broken config 'nfe_import-maybe_missing_payment_years'.")?;
-				}
-			} else {
-				return Err(res.text().await?)?;
-			};
-
-			if regex.is_match(&date) {
-				let request_payment = json!({"type": 90});
-				vec![request_payment]
-			} else {
-				return Err("Missing field 'request_payment'.")?;
-			}
-		}
-	};
-
-	let mut value_payments = 0.0;
-	let mut count_sem_pagamento = 0;
-
-	for request_payment in &list_payments {
-		let account = {
-			let payment_type = request_payment.get("type").ok_or("Missing field 'type'.")?.as_u64().ok_or("field 'type' is not 'u64'")?;
-			let description = map_accounts.get(&payment_type).unwrap_or(&"Caixa interno");
-			let url = format!("{url_base}account?person={person_dest_cnpj_cpf}&description={description}");
-			#[cfg(debug_assertions)]
-			println!("[nfe_import.merge] curl -X get '{url}' -H 'Authorization: Bearer {token}';");
-			let res = client.get(&url).bearer_auth(token).send().await?;
-
-			if res.status() == StatusCode::OK {
-				let list = res.json::<Value>().await?;
-				let list = list.as_array().ok_or("Bad format, expected list!")?;
-
-				if list.len() > 0 {
-					list.get(0).ok_or("broken request_payment list index 0")?.clone()
-				} else {
-					let account = json!({"person": person_dest_cnpj_cpf, "description": description});
-					#[cfg(debug_assertions)]
-					println!("[nfe_import.merge] curl -X post '{url}' -H 'Authorization: Bearer {token}';");
-					let res = client.post(url_base.clone() + "account").bearer_auth(token).json(&account).send().await?;
-					let status = res.status();
-
-					if status == StatusCode::OK {
-						res.json::<Value>().await?
-					} else {
-						return Err(res.text().await?)?;
-					}
-				}
-			} else {
-				return Err(res.text().await?)?;
-			}
-		};
-
-		let mut request_payment = convert_obj(request_payment, &[])?;
-		request_payment["account"] = account.get("id").ok_or("Missing field 'id' in account")?.clone();
-		request_payment["request"] = request.get("id").ok_or("broken")?.clone();
-		request_payment["dueDate"] = json!(date);
-		post("request_payment", &request_payment).await?;
-
-		value_payments += if let Some(value) = request_payment.get("value") {
-			value.as_f64().ok_or("broken value as f64")?
-		} else {
-			0.0
-		};
-
-		if let Some(typ) = request_payment.get("type") {
-			if let Some(typ) = typ.as_u64() {
-				if typ == 90 {
-					count_sem_pagamento += 1;
-				}
-			}
-		}
-	}
-
-	request["paymentsValue"] = json!(value_payments);
-	let mut request_freight = document_imported.get("request_freight").ok_or("Broken request_freight")?.clone();
-
-	if let Some(value_frete) = request.get("transportValue") {
-		if request_freight.get("value").is_none() {
-			request_freight["value"] = value_frete.clone();
-		}
-	}
-
-	let transport_value = request_freight.get("value").ok_or("Broken request_freight.value")?.as_f64().unwrap_or(0.0);
-
-	if transport_value > 0.0 {
-		request["transportValue"] = json!(transport_value);
-		request_freight["value"] = json!(transport_value);
-		request_freight["request"] = request_id;
-		publish("request_freight", &["request"], &request_freight, true).await?;
-	}
-
-	publish("request", &["id"], &request, true).await?;
-
-	if count_sem_pagamento == 0 || count_sem_pagamento != list_payments.len() {
-		if f64::round(value_payments * 100.0) != f64::round(value_products * 100.0 + transport_value * 100.0) {
-			return Err(format!("value_products ({value_products}) !=  value_payments ({value_payments}) !"))?;
-		}
-	}
-
-	post("request_nfe", &request_nfe).await
-}
 
 async fn parse_html(html: &str) -> Result<Value, Box<dyn std::error::Error>> {
 	fn get_uf_code(uf :&str) -> usize {
@@ -1014,8 +479,6 @@ async fn parse_html(html: &str) -> Result<Value, Box<dyn std::error::Error>> {
 		}
     }
 
-	#[cfg(debug_assertions)]
-    tokio::fs::write(format!("/tmp/tmp.json"), obj_out.to_string().as_bytes()).await?;
     Ok(obj_out)
 }
 
@@ -1030,6 +493,14 @@ async fn import(message :&Value) -> Result<(), Box<dyn std::error::Error>> {
 
 	let Some(file_path) = file_path.as_str() else {
 		Err(r#"Field "file" in broker message is not string !"#)?
+	};
+
+	let Some(auth_token) = message.get("authorization") else {
+		return Err(format!("Missing field authorization in message"))?;
+	};
+
+	let Some(auth_token) = auth_token.as_str() else {
+		return Err(format!("Field ath is not string."))?;
 	};
 
     let contents = {
@@ -1053,7 +524,63 @@ async fn import(message :&Value) -> Result<(), Box<dyn std::error::Error>> {
             if let Some(pos_end) = find_subsequence(&contents, b"</html>") {
                 let text = std::str::from_utf8(&contents[..pos_end+7])?.to_string();
                 let obj = parse_html(&text).await?;
-				merge(file_path, message, &obj).await?;
+				#[cfg(debug_assertions)]
+				tokio::fs::write(format!("/tmp/tmp.json"), obj.to_string().as_bytes()).await?;
+				let request_nfe_snake = obj.get("request_nfe").ok_or("Missing structure request_nfe in parsed object")?;
+				let mut document = convert_obj(request_nfe_snake, &[])?;
+				document["person"] = convert_obj_child(&obj, "person", &[], "nfe_import.1")?;
+				let mut person_dest = convert_obj_child(&obj, "person_dest", &[], "nfe_import.1")?;
+
+				if person_dest.get("cnpjCpf").is_none() {
+					let regex = Regex::new(r#"(\d{8,14})"#)?;
+					let s = regex.find(file_path).ok_or("Broken customer_id")?.as_str();
+
+					let cnpj_cpf = if s.len() > 11 {
+						let s = format!("{:014}", s);
+						format!("{}.{}.{}/{}-{}", &s[0..2], &s[2..5], &s[5..8], &s[8..12], &s[12..14])
+					} else {
+						let s = format!("{:011}", s);
+						format!("{}.{}.{}-{}", &s[0..3], &s[3..6], &s[6..9], &s[9..11])
+					};
+
+					person_dest["cnpjCpf"] = json!(cnpj_cpf);
+				}
+
+				document["personDest"] = person_dest;
+				document["requestFreight"] = convert_obj_child(&obj, "request_freight", &[], "nfe_import.1")?;
+				document["requestProduct"] = obj.get("request_product").ok_or("Missing field 'request_product'")?.clone();
+				convert_obj_copy(&mut document, request_nfe_snake.get("emissao").ok_or("Missing 'emissao'")?, &[])?;
+				convert_obj_copy(&mut document, obj.get("informacoes_adicionais").ok_or("Missing 'informacoes_adicionais'")?, &[])?;
+				convert_obj_copy(&mut document, obj.get("totais").ok_or("Missing 'totais'")?, &[])?;
+
+				if let Some(destinatario) = request_nfe_snake.get("destinatario") {
+					convert_obj_copy(&mut document, destinatario, &[])?;
+				}
+
+				if let Some(date_in_out) = document.get("dateInOut") {
+					if date_in_out.as_str().ok_or("broken")?.is_empty() {
+						document["dateInOut"] = document.get("date").ok_or("broken")?.clone();
+					}
+				} else {
+					document["dateInOut"] = document.get("date").ok_or("broken")?.clone();
+				}
+
+				if let Some(request_payment) = obj.get("request_payment") {
+					document["requestPayment"] = request_payment.clone();
+				} else {
+					let date = document.get("date").ok_or("Missing field 'date' in 'request_nfe'")?.as_str().ok_or("field 'date' is not 'str'")?;
+
+					if date.starts_with("2017") {
+						let value = document.get("valueTotalNfe").ok_or("Missing field 'valueTotalNfe'.")?;
+						document["requestPayment"] = json!([{"type": 90, "value": value}]);
+					} else {
+						return Err("Missing section 'request_payment'.")?;
+					}
+				}
+
+				#[cfg(debug_assertions)]
+				tokio::fs::write(format!("/tmp/request_nfe.json"), document.to_string().as_bytes()).await?;
+				import_document(auth_token, document, true, true).await?;
             }
         }
     }
@@ -1189,36 +716,40 @@ mod tests {
     #[tokio::test]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		let list = [
-			"43171090180621000863550000000159291000159290", // Broken person dest
-			"43170292091891001390650110000525481000855918", // request_nfe_pkey"DETAIL: Key (request)=(1658) already exists.
+  			"43260588212113149839650030000013411018049861", // Missing 'destinatario'
 
-			"43181195199741000150650020001794631001794630", // 95.199.741/0001-50, 808.037.920-34, 2018-11-27 14:10:51
-			"43180914843149000147650020000566701136191282", // 14.843.149/0001-47, 808.037.920-34, 2018-09-14 18:37:01
-			"43180914843149000147650030000611731182506560", // 14.843.149/0001-47, 808.037.920-34, 2018-09-29 18:39:22
+			//"43260315029819000159650520000358211710388616",
+			//"43260293332468000326653070000375049290520880",
+			//"43171090180621000863550000000159291000159290", // Broken person dest
+			//"43170292091891001390650110000525481000855918", // request_nfe_pkey"DETAIL: Key (request)=(1658) already exists.
 
-			"43191002607110000141550000000013621475459270", // 02.607.110/0001-41, 808.037.920-34, 2019-10-25 15:36:39
-			"43191002607110000141550000000013541357527045", // 02.607.110/0001-41, 808.037.920-34, 2019-10-23 10:48:54
-			"43190808542850000204650020000547031000476378", // value_products (202.86) !=  value_payments (0) !
+			// "43181195199741000150650020001794631001794630", // 95.199.741/0001-50, 808.037.920-34, 2018-11-27 14:10:51
+			// "43180914843149000147650020000566701136191282", // 14.843.149/0001-47, 808.037.920-34, 2018-09-14 18:37:01
+			// "43180914843149000147650030000611731182506560", // 14.843.149/0001-47, 808.037.920-34, 2018-09-29 18:39:22
 
-			"43200900078083000131650180001087291391162253", // 00.078.083/0001-31, 808.037.920-34, 2020-09-12 10:45:03
-			"43200294384930000130651020000001701016483200", // value_products (18.05) !=  value_payments (20.05) !
+			// "43191002607110000141550000000013621475459270", // 02.607.110/0001-41, 808.037.920-34, 2019-10-25 15:36:39
+			// "43191002607110000141550000000013541357527045", // 02.607.110/0001-41, 808.037.920-34, 2019-10-23 10:48:54
+			// "43190808542850000204650020000547031000476378", // value_products (202.86) !=  value_payments (0) !
 
-			"43220742933931000192650010000041021817287600", // (type)=(18) is not present in table "payment_type".
-			"43220792016757006718651010000084189702004762", // 92.016.757/0067-18, 808.037.920-34, 2022-07-16 16:02:04
+			// "43200900078083000131650180001087291391162253", // 00.078.083/0001-31, 808.037.920-34, 2020-09-12 10:45:03
+			// "43200294384930000130651020000001701016483200", // value_products (18.05) !=  value_payments (20.05) !
 
-			"43231189218333000103550010001063231194485952", // Broken person dest
-			"43230742933931000192650010000112171255613542", // (type)=(18) is not present in table "payment_type".
-			"43230489218333000103550010001029251194485950", // Broken person dest
-			"43230279379491016772650100000327571901246299", // value_products (219.91) !=  value_payments (221) !
+			// "43220742933931000192650010000041021817287600", // (type)=(18) is not present in table "payment_type".
+			// "43220792016757006718651010000084189702004762", // 92.016.757/0067-18, 808.037.920-34, 2022-07-16 16:02:04
 
-			"43241115071607000130650120000443271428209858", // [NfeParser.parseHtml.parseFields] : TODO alread maped field codigo_uf, oldValue="35", newValue="41"
-			"43240979379491016772650080000483231900909654", // 79.379.491/0167-72, 808.037.920-34, 2024-09-29 18:52:15
-			"43240179379491016772650120000316461900977785", // 79.379.491/0167-72, 808.037.920-34, 2024-01-23 20:36:10
+			// "43231189218333000103550010001063231194485952", // Broken person dest
+			// "43230742933931000192650010000112171255613542", // (type)=(18) is not present in table "payment_type".
+			// "43230489218333000103550010001029251194485950", // Broken person dest
+			// "43230279379491016772650100000327571901246299", // value_products (219.91) !=  value_payments (221) !
 
-			"43251192665611047564651000005239261559978127", // 92.665.611/0475-64, 808.037.920-34, 2025-11-28 14:44:15
-			"43251104436058000133651040002333441992737622", // 04.436.058/0001-33, 808.037.920-34, 2025-11-10 19:18:57
-			"43251004796820000273650010000241461902414669", // 04.796.820/0002-73, 808.037.920-34, 2025-10-23 21:02:42
-			"43251008422432000100650020000041211008937715", // 08.422.432/0001-00, 808.037.920-34, 2025-10-18 18:02:53
+			// "43241115071607000130650120000443271428209858", // [NfeParser.parseHtml.parseFields] : TODO alread maped field codigo_uf, oldValue="35", newValue="41"
+			// "43240979379491016772650080000483231900909654", // 79.379.491/0167-72, 808.037.920-34, 2024-09-29 18:52:15
+			// "43240179379491016772650120000316461900977785", // 79.379.491/0167-72, 808.037.920-34, 2024-01-23 20:36:10
+
+			// "43251192665611047564651000005239261559978127", // 92.665.611/0475-64, 808.037.920-34, 2025-11-28 14:44:15
+			// "43251104436058000133651040002333441992737622", // 04.436.058/0001-33, 808.037.920-34, 2025-11-10 19:18:57
+			// "43251004796820000273650010000241461902414669", // 04.796.820/0002-73, 808.037.920-34, 2025-10-23 21:02:42
+			// "43251008422432000100650020000041211008937715", // 08.422.432/0001-00, 808.037.920-34, 2025-10-18 18:02:53
 			//"43250888212113097774650030000134821181872187", // 88.212.113/0977-74, 808.037.920-34, 2025-08-24 19:18:50
 		];
 
@@ -1240,7 +771,7 @@ mod tests {
 		message["authorization"] = login_response.get("jwtHeader").ok_or("Missing jwtHeader in login response!")?.clone();
 
 		for item in list {
-			message["file"] = json!(format!("data/80803792034-juliana-{item}.html"));
+			message["file"] = json!(format!("data/12345678901-guest-{item}.html"));
 			crate::import(&message).await?;
 		}
 

@@ -1,416 +1,369 @@
-use reqwest::StatusCode;
+use indexmap::IndexMap;
 use serde_json::{Value, json};
 
 async fn import(message: &Value) -> Result<(), Box<dyn std::error::Error>> {
-    use std::collections::HashMap;
     use convert_case::Casing;
     use rsfbclient::{prelude::*, FbError};
 
 	fn get_json(row: &rsfbclient::Row) -> Result<Value, Box<dyn std::error::Error>> {
+        fn get_json_copy(obj :&mut Value, row :&rsfbclient::Row) -> Result<(), Box<dyn std::error::Error>> {
+            for column in &row.cols {
+                let value : Value = match &column.value {
+                    rsfbclient::SqlType::Text(value) => json!(value),
+                    rsfbclient::SqlType::Integer(value) => json!(value),
+                    rsfbclient::SqlType::Floating(value) => json!(value),
+                    rsfbclient::SqlType::Timestamp(value) => json!(value),
+                    rsfbclient::SqlType::Binary(_value) => serde_json::Value::Null,
+                    rsfbclient::SqlType::Boolean(value) => json!(value),
+                    rsfbclient::SqlType::Null => serde_json::Value::Null,
+                };
+
+                obj[column.name.to_case(convert_case::Case::Camel)] = value;
+            }
+
+            Ok(())
+        }
+
 		let mut obj = json!({});
-
-		for column in &row.cols {
-			let value : Value = match &column.value {
-                rsfbclient::SqlType::Text(value) => json!(value),
-                rsfbclient::SqlType::Integer(value) => json!(value),
-                rsfbclient::SqlType::Floating(value) => json!(value),
-                rsfbclient::SqlType::Timestamp(value) => json!(value),
-                rsfbclient::SqlType::Binary(_value) => serde_json::Value::Null,
-                rsfbclient::SqlType::Boolean(value) => json!(value),
-                rsfbclient::SqlType::Null => serde_json::Value::Null,
-            };
-
-			obj[column.name.to_case(convert_case::Case::Camel)] = value;
-		}
-
+        get_json_copy(&mut obj, row)?;
 		Ok(obj)
 	}
 
-	fn convert_obj_copy(obj_out: &mut Value, obj_in :&Value, primary_keys :&[&str]) -> Result<(), Box<dyn std::error::Error>> {
-		for (field_name_in, field) in obj_in.as_object().unwrap() {
-			let field_name_out = field_name_in.to_case(convert_case::Case::Camel);
-
-			match field {
-				Value::Object(_obj) => continue,
-				Value::Null => continue,
-				Value::String(value) => {
-					if value.is_empty() && primary_keys.contains(&field_name_in.as_str()) == false {
-						continue;
-					}
-				},
-				_ => {},
-			}
-
-			obj_out[field_name_out] = field.clone();
-		}
-
-		Ok(())
-	}
-
-	fn convert_obj(obj_in :&Value, primary_keys :&[&str]) -> Result<Value, Box<dyn std::error::Error>> {
-		let mut obj_out = json!({});
-		convert_obj_copy(&mut obj_out, obj_in, primary_keys)?;
-		Ok(obj_out)
-	}
-
-	#[cfg(debug_assertions)]
-	let url_base = format!("http://localhost:8080/nfe/rest/");
-	#[cfg(not(debug_assertions))]
-	let url_base = format!("http://rufs-nfe:8080/rest/");
-	let client = reqwest::Client::new();
-	let token = message.get("authorization").ok_or("Missing field 'authorization' in message")?.as_str().ok_or("Broken field 'authorization' in message")?;
-
-	let post = async |schema_name_snake: &str, obj: &Value| -> Result<Value, Box<dyn std::error::Error>> {
-		let url = format!("{url_base}{schema_name_snake}");
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.post({schema_name_snake})] {url}");
-		let res = client.post(url).bearer_auth(token).json(obj).send().await?;
-		let status = res.status();
-
-		if status == StatusCode::OK {
-			return Ok(res.json().await?);
-		} else {
-			let text = res.text().await?;
-			return Err(text)?;
-		}
-	};
-
-	let publish = async |schema_name_snake :&str, primary_keys :&[&str], rec_imported :&Value, replace: bool| -> Result<Value, Box<dyn std::error::Error>> {
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.publish({schema_name_snake})] starting ...");
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.convert_obj()] starting ...");
-		let obj = convert_obj(rec_imported, primary_keys)?;
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.convert_obj()] ... exited");
-		let mut query_list = vec![];
-
-		for primary_key_name in primary_keys {
-			#[cfg(debug_assertions)]
-			println!("[nfe_import.primary_key_name {primary_key_name}] starting ...");
-			let Some(primary_key) = obj.get(primary_key_name) else {
-				let str = serde_json::to_string_pretty(&obj).unwrap();
-				eprintln!("[nfe_import.merge.primary_key_name] error : {str}.");
-				return Err(format!("Missing field '{primary_key_name}' in structure {schema_name_snake} in parsed object : {str}"))?;
-			};
-
-			let primary_key = match primary_key {
-				Value::Number(number) => number.to_string(),
-				Value::String(value) => value.to_string(),
-				_ => return Err(format!("Invalid primary_key : {primary_key}"))?,
-			};
-
-			query_list.push(format!("{primary_key_name}={primary_key}"));
-			#[cfg(debug_assertions)]
-			println!("[nfe_import.primary_key_name {primary_key_name}] ... exited");
-		}
-
-		let url = format!("{url_base}{schema_name_snake}?{}", query_list.join("&"));
-
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.put] {url}, starting ...");
-		let method;
-		let res = if replace {
-			method = "put";
-			client.put(&url).bearer_auth(token).json(&obj).send().await?
-		} else {
-			method = "patch";
-			client.patch(&url).bearer_auth(token).json(&obj).send().await?
-		};
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.put] ... exited");
-
-		let status = res.status();
-
-		let obj = if status != StatusCode::OK {
-			let text = res.text().await?;
-
-			if text.starts_with("Missing data in") {
-				post(schema_name_snake, &obj).await?
-			} else {
-				eprintln!("[nfe_import.merge.publish()]\ncurl -X {method} {url} -d '{obj}';\nerror message : {text}");
-				return Err(text)?;
-			}
-		} else {
-			let value = res.json::<Value>().await?;
-
-			if let Some(list) = value.as_array() {
-				if list.len() == 0 {
-					post(schema_name_snake, &obj).await?
-				} else {
-					return Err(format!("Bad put/patch response : {:?}", list))?;
-				}
-			} else {
-				value
-			}
-		};
-
-		#[cfg(debug_assertions)]
-		println!("[nfe_import.publish({schema_name_snake})] ... finished");
-		return Ok(obj);
-	};
-
-	let db_url = message.get("dbUrl").ok_or("Missing field 'dbUrl' in message")?.as_str().ok_or("Broken field 'dbUrl' in message")?;
+    let db_url = message.get("dbUrl").ok_or("Missing field 'dbUrl' in message")?.as_str().ok_or("Broken field 'dbUrl' in message")?;
+	let date_initial = message.get("dateInitial").ok_or("Missing field 'dateInitial' in message")?.as_str().ok_or("Broken field 'dateInitial' in message")?;
+	println!("[clipp_import.import] rsfbclient::builder_pure_rust().from_string({db_url})?.connect()? ...");
     let mut fb_conn = rsfbclient::builder_pure_rust().from_string(db_url)?.connect()?;
+	println!("[clipp_import.import] ... connected.");
 
-    let map_person = {
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] map_person ...");
+
+    let mut map_person = IndexMap::new();
+
+    {
         let sql = "
         select
-        left(nome, 255) as name,
-        left(observacao, 255) as additional_data,
-        cast(id_pais as integer) as country,
-        end_cep as zip,--replace(end_cep,'-','') as zip,
-        cast(id_cidade as integer) as city,
-        end_bairro as district,
-        coalesce(end_tipo,'') || ' ' || coalesce(end_lograd,'') as address,
-        end_numero as address_number,
-        end_comple as complement,
-        email_cont as email,
-        fone_celul as phone,
-        insc_estad as ie_rg,
-        insc_munic as im,
-        nome_fanta as fantasy,
-        c.id_cliente as id_import,
-        coalesce(f.cpf,j.cnpj,lpad(cast(c.id_cliente as varchar(18)),15,'00.000.000/0000') || '-00') as cnpj_cpf
+            left(nome, 255) as name,
+            left(observacao, 255) as additional_data,
+            cast(id_pais as integer) as country,
+            end_cep as zip,--replace(end_cep,'-','') as zip,
+            cast(id_cidade as integer) as city,
+            end_bairro as district,
+            coalesce(end_tipo,'') || ' ' || coalesce(end_lograd,'') as address,
+            end_numero as address_number,
+            end_comple as complement,
+            email_cont as email,
+            coalesce(ddd_celul,'') || coalesce(fone_celul,'') as phone,
+            insc_estad as ie_rg,
+            insc_munic as im,
+            nome_fanta as fantasy,
+            c.id_cliente as id_import,
+            coalesce(trim(f.cpf),trim(j.cnpj),lpad(cast(c.id_cliente as varchar(18)),15,'00.000.000/0000') || '-00') as cnpj_cpf
         from tb_cliente c left outer join tb_cli_pf f on c.id_cliente = f.id_cliente left outer join tb_cli_pj j on c.id_cliente = j.id_cliente order by id_import
         ";
 
-        let mut map = HashMap::new();
         let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ())?;
 
         for row in rows {
             let obj = get_json(&row?)?;
-
-            let _obj_out = match publish("person", &["cnpjCpf"], &obj, false).await {
-                Ok(value) => value,
-                Err(err) => {
-                    if err.to_string().contains(r#"duplicate key value violates unique constraint "person_pkey""#) {
-                        map.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj.get("cnpjCpf").ok_or("broken cnpj_cpf")?.as_str().ok_or("broken str")?.to_string());
-                        continue;
-                    }
-
-                    return Err(err)?;
-                },
-            };
-
-            map.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj.get("cnpjCpf").ok_or("broken cnpj_cpf")?.as_str().ok_or("broken str")?.to_string());
-        }
-
-        map
-    };
-
-    let mut map_request = HashMap::new();
-
-    {
-        /*
-  NF_NUMERO integer NOT NULL,
-  NF_SERIE varchar(3) CHARACTER SET WIN1252 NOT NULL COLLATE WIN_PTBR,
-  NF_MODELO varchar(2) CHARACTER SET WIN1252 NOT NULL COLLATE WIN_PTBR,
-  DT_EMISSAO date NOT NULL,
-  DT_SAIDA date,
-  HR_SAIDA time,
-  ESPECIE varchar(15) CHARACTER SET WIN1252 COLLATE WIN_PTBR,
-  TIPO_FRETE char(1) CHARACTER SET WIN1252 NOT NULL COLLATE WIN_PTBR,
-  PES_LIQUID numeric(18,4),
-  PES_BRUTO numeric(18,4),
-  STATUS char(1) CHARACTER SET WIN1252 NOT NULL COLLATE WIN_PTBR,
-  ENT_SAI char(1) CHARACTER SET WIN1252 NOT NULL COLLATE WIN_PTBR,
-  ID_FMAPGTO smallint NOT NULL,
-  ID_PARCELA smallint NOT NULL,
-  MARCA varchar(15) CHARACTER SET WIN1252 COLLATE WIN_PTBR,
-  QTD_VOLUM numeric(18,4),
-  NUM_VOLUM varchar(15) CHARACTER SET WIN1252 COLLATE WIN_PTBR,
-  PROD_REV char(1) CHARACTER SET WIN1252 COLLATE WIN_PTBR,
-  SOMA_FRETE char(1) CHARACTER SET WIN1252 COLLATE WIN_PTBR,
-  VLR_TROCO numeric(18,4) DEFAULT 0,
-  IND_PRES char(1),
-  IND_IE_DEST char(1),
-  DESCONTO_CONDICIONAL char(1) CHARACTER SET WIN1252 DEFAULT 'S' NOT NULL COLLATE WIN_PTBR,
-  INF_COMP_FIXA blob sub_type 1 CHARACTER SET WIN1252 COLLATE WIN_PTBR,
-  INF_COMP_EDIT blob sub_type 1 CHARACTER SET WIN1252 COLLATE WIN_PTBR,
-  ENDERECO_ENTREGA char(1) DEFAULT 'N' NOT NULL,
-  ENVIO_API timestamp,
-
-	date_in_out timestamp default CURRENT_TIMESTAMP,--dhSaiEnt
-	versao varchar(4) default '3.10',
-	nfe_id char(47),
-	--natOp varchar(60) default 'VENDA',
-	--indPag integer default 0,-- 0=Pagamento à vista; 1=Pagamento a prazo; 2=Outros.
-	mod integer default 55,-- 55=NF-e emitida em substituição ao modelo 1 ou 1A; 65=NFC-e, utilizada nas operações de venda no varejo (a critério da UF aceitar este modelo de documento).
-	serie integer default 1,
-	numero integer GENERATED BY DEFAULT AS IDENTITY not null,--nNF
-	--(request.type-1) --tpNF integer default 1,-- 0=Entrada; 1=Saída
-	--idDest integer default 1,-- 1=Operação interna; 2=Operação interestadual; 3=Operação com exterior.
-	tp_imp integer default 1,-- 0=Sem geração de DANFE; 1=DANFE normal, Retrato; 2=DANFE normal, Paisagem; 3=DANFE Simplificado; 4=DANFE NFC-e; 5=DANFE NFC-e somente em mensagem eletrônica
-	tp_emis integer default 1,
-	c_dv integer,-- DV da Chave de Acesso da NF-e, o DV será calculado com a aplicação do algoritmo módulo 11 (base 2,9) da Chave de Acesso. (vide item 5 do Manual de Orientação)
-	--tpAmb integer default 1,-- 1=Produção/2=Homologação
-	--finNFe integer default 1,-- 1=NF-e normal; 2=NF-e complementar; 3=NF-e de ajuste; 4=Devolução de mercadoria.
-	ind_final integer default 1, -- 0=Normal; 1=Consumidor final;
-	ind_pres integer default 1, -- 0=Não se aplica (por exemplo, Nota Fiscal complementar ou de ajuste); 1=Operação presencial; 2=Operação não presencial, pela Internet; 3=Operação não presencial, Teleatendimento; 4=NFC-e em operação com entrega a domicílio; 9=Operação não presencial, outros
-	proc_emi integer default 0,
-	ver_proc varchar(20) default '1.0.000',
-	ind_ie_dest integer default 9,--,-- 1=Contribuinte ICMS (informar a IE do destinatário); 2=Contribuinte isento ICMS; 9=Não Contribuinte, que pode ou não possuir Inscrição Estadual
-        */
-        let sql = r#"
-        select
-        2 as type,
-        320 as state,
-        '90.979.337/0001-85' as person,
-        id_cliente,
-        (dt_saida || 'T' || hr_saida) as "date_in_out",
-        (dt_saida || 'T' || hr_saida) as "date",
-        NF_NUMERO as numero,
-        cast(NF_SERIE as int) as serie,
-        cast(NF_MODELO as int) as mod,
-        ENT_SAI,
-        left(INF_COMP_EDIT,255) as additional_data,
-        ID_NFVENDA as id_import
-        from tb_nfvenda order by id_import
-        "#;
-        let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ())?;
-
-        for row in rows {
-            let row = match row {
-                Ok(row) => row,
-                Err(err) => {
-                    println!("[import_clipp] request import select : {}", err);
-                    return Err(err)?;
-                },
-            };
-
-            let mut obj = get_json(&row)?;
-            let client_id = obj.get("idCliente").ok_or("broken")?.as_u64().ok_or("broken")?;
-            obj["personDest"] = json!(map_person.get(&client_id));
-
-            let obj_out = match publish("request", &["id"], &obj, false).await {
-                Ok(value) => value,
-                Err(err) => {
-                    if err.to_string().contains(r#"duplicate key value violates unique constraint "request_person_person_dest_date_key""#) {
-                        continue;
-                    }
-
-                    return Err(err)?;
-                },
-            };
-
-            let request_id = obj_out.get("id").ok_or("broken request id")?.as_u64().ok_or("broken u64")?;
-            map_request.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, request_id);
-            obj["request"] = json!(request_id);
-
-            let _obj_out = match post("request_nfe", &obj).await {
-                Ok(value) => value,
-                Err(err) => {
-                    if err.to_string().contains(r#"duplicate key value violates unique constraint "request_person_person_dest_date_key""#) {
-                        continue;
-                    }
-
-                    return Err(err)?;
-                },
-            };
+            map_person.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj);
         }
     }
 
-    {
-        let sql = r#"
-        select
-        id_status,
-        2 as type,
-        id_status as state,
-        '90.979.337/0001-85' as person,
-        id_cliente,
-        (dt_os || 'T' || hr_os) as "date",
-        left(observacao,255) as additional_data,
-        id_os*10000 as id_import
-        from tb_os order by id_import
-        "#;
-        let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ())?;
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] ...map_person.");
 
-        for row in rows {
-            let row = match row {
-                Ok(row) => row,
-                Err(err) => {
-                    println!("[import_clipp] request import select : {}", err);
-                    return Err(err)?;
-                },
-            };
-
-            let mut obj = get_json(&row)?;
-            let client_id = obj.get("idCliente").ok_or("broken")?.as_u64().ok_or("broken")?;
-            obj["personDest"] = json!(map_person.get(&client_id));
-            let obj_id_status_in = obj.get("idStatus").ok_or("Missing id_status")?.as_u64().ok_or("broken u64")?;
-
-            for (id_in, id_out) in vec![(1, 220),(2, 250), (3, 270), (4, 280), (5, 250), (6, 220), (7, 260), (9, 320), (10, 310), (11, 240), (12, 320)] {
-                if obj_id_status_in == id_in {
-                    obj["state"] = json!(id_out);
-                    break;
-                }
-            }
-
-            let obj_out = match publish("request", &["id"], &obj, false).await {
-                Ok(value) => value,
-                Err(err) => {
-                    if err.to_string().contains(r#"duplicate key value violates unique constraint "request_person_person_dest_date_key""#) {
-                        continue;
-                    }
-
-                    return Err(err)?;
-                },
-            };
-
-            map_request.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj_out.get("id").ok_or("broken request id")?.as_u64().ok_or("broken u64")?);
-        }
-    }
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] tb_estoque ...");
 
     let (map_product, map_service) = {
+        //TABLE TB_ESTOQUE ID_ESTOQUE
+        //TABLE TB_EST_IDENTIFICADOR ID_IDENTIFICADOR
         let sql = r#"
         select
-        left(descricao, 120) as name,
-        left(observacao, 255) as description,
-        left(lower(uni_medida), 2) as unity,
-        prc_venda as "value",
-        prc_custo as value_cost,
-        margem_lb as margin_sale,
-        (case grade_serie when 'S' then true else false end) as serial_control,
-        id_tipoitem,
-        id_estoque as id_import
-        from tb_estoque order by id_import
+            e.descricao as name,
+            left(observacao, 255) as description,
+            left(lower(uni_medida), 2) as unity,
+            prc_venda as "value",
+            prc_custo as value_cost,
+            margem_lb as margin_sale,
+            --case grade_serie when 'S' then 'true' else 'false' end as serial_control,
+            e.id_tipoitem,
+            ei.id_identificador
+        from
+            tb_est_identificador as ei,
+            tb_estoque as e,
+            --tb_est_grupo as eg,
+            tb_est_tipo_item_sis etis
+        where
+            ei.id_estoque = e.id_estoque
+            --and e.id_grupo = eg.id_grupo
+            and e.id_tipoitem = etis.id_tipoitem
+        order by id_identificador
         "#;
 
-        let mut map_product = HashMap::new();
-        let mut map_service = HashMap::new();
+        let mut map_product = IndexMap::new();
+        let mut map_service = IndexMap::new();
         let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ())?;
 
         for row in rows {
             let obj = get_json(&row?)?;
             let id_tipo_item = obj.get("idTipoitem").ok_or("broken id_tipoitem")?.as_str().ok_or("broken id_tipoitem str")?;
-            let id_import = obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?;
+            let id_identificador = obj.get("idIdentificador").ok_or("broken idIdentificador")?.as_u64().ok_or("broken u64")?;
 
             if ["9"].contains(&id_tipo_item) {
-                let obj_out = match publish("service", &["id"], &obj, false).await {
+                /*
+                let obj = match publish("service", &["id"], &obj, false).await {
                     Ok(value) => value,
                     Err(err) => {
                         return Err(err)?;
                     },
                 };
-
-                map_service.insert(id_import, obj_out.get("id").ok_or("broken service id")?.as_u64().ok_or("broken service id u64")?);
+                */
+                map_service.insert(id_identificador, obj);
             } else {
-                let obj_out = match publish("product", &["id"], &obj, false).await {
+                /*
+                let obj = match publish("product", &["id"], &obj, false).await {
                     Ok(value) => value,
                     Err(err) => {
                         return Err(err)?;
                     },
                 };
-
-                map_product.insert(id_import, obj_out.get("id").ok_or("broken product id")?.as_u64().ok_or("broken u64")?);
+                */
+                map_product.insert(id_identificador, obj);
             }
 
         }
 
         (map_product, map_service)
     };
-    // stock_product, stock_service
+
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] ... tb_estoque.");
+
+    let mut map_documents = IndexMap::new();
+
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] tb_os ...");
+
+    {
+        let sql = r#"
+        select
+        id_status,
+        1 as type,
+        id_status as state,
+        id_cliente,
+        (dt_os || 'T' || hr_os) as "date",
+        left(observacao,255) as additional_data,
+        id_os as id_import
+        from tb_os where dt_os >= ? order by id_import
+        "#;
+        let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ((date_initial),))?;
+
+        for row in rows {
+            let row = match row {
+                Ok(row) => row,
+                Err(err) => {
+                    println!("[import_clipp] request import select : {}", err);
+                    return Err(err)?;
+                },
+            };
+
+            let mut document = get_json(&row)?;
+            let client_id = document.get("idCliente").ok_or("broken")?.as_u64().ok_or("broken")?;
+            document["personDest"] = map_person.get(&client_id).ok_or("Broken 'personDest'")?.clone();
+            document["requestService"] = json!([]);
+            document["requestProduct"] = json!([]);
+            document["requestPayment"] = json!([]);
+            document["requestFreight"] = json!({"value": 0.0});
+            let obj_id_status_in = document.get("idStatus").ok_or("Missing id_status")?.as_u64().ok_or("broken u64")?;
+
+            for (id_in, id_out) in vec![(1, 220),(2, 250), (3, 270), (4, 280), (5, 250), (6, 220), (7, 260), (9, 320), (10, 310), (11, 240), (12, 320)] {
+                if obj_id_status_in == id_in {
+                    document["state"] = json!(id_out);
+                    break;
+                }
+            }
+
+            map_documents.insert(document.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, document);
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] ... tb_os.");
+
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] tb_os_objeto_os ...");
+
+    fn merge(obj_out :&mut Value, obj_in :&Value) -> Result<(), Box<dyn std::error::Error>> {
+        let map_out = obj_out.as_object_mut().ok_or("[clipp_import.merge] Broken obj_out.as_object_mut")?;
+        let map_in = obj_in.as_object().ok_or("[clipp_import.merge] Broken obj_in.as_object")?;
+
+        for (field_name, value) in map_in {
+            if map_out.get(field_name).is_some() {
+                continue;
+            }
+
+            map_out.insert(field_name.clone(), value.clone());
+        }
+
+        Ok(())
+    }
+
+    {
+        let sql = r#"
+        select
+            defeito as defect,
+            coalesce(ident1,'') as serial,
+            ident2 as inmetro,
+            ident3 as marca,
+            ident4 as modelo,
+            ident5 as capacidade,
+            ('Marca: ' || coalesce(ident3,'') || '\nModelo: ' || coalesce(ident4,'') || '\nCapacidade: ' || coalesce(ident5,'')) as additional_data,
+            id_os as id_import
+        from tb_os_objeto_os where id_os in (select id_os from tb_os where dt_os >= ?) order by id_import
+        "#;
+        let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ((date_initial),))?;
+
+        for row in rows {
+            let row = match row {
+                Ok(row) => row,
+                Err(err) => {
+                    println!("[import_clipp] request_repair import select : {}", err);
+                    return Err(err)?;
+                },
+            };
+
+            let mut obj = get_json(&row)?;
+            obj["name"] = json!("EQUIPAMENTO PARA CONSERTO, REPARO OU MANUTENCAO");
+            let id_os = obj.get("idImport").ok_or("Missing idOs")?.as_u64().ok_or("broken u64 idOs")?;
+            let document = map_documents.get_mut(&id_os).ok_or("[import_clipp] Missing id_os in map_request.")?;
+            #[cfg(debug_assertions)]
+            println!("[clipp_import] id_os={id_os} : {obj}");
+            document["requestRepair"] = obj;
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] ... tb_os_objeto_os.");
+
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] tb_os_item ...");
+
+    {
+        let sql = r#"
+        select
+            id_identificador,
+            id_os,
+            qtd_item as quantity,
+            vlr_unit as "value",
+            vlr_desc as value_desc,
+            vlr_total as value_item,
+            id_itemos as id_import
+        from tb_os_item where id_os in (select id_os from tb_os where dt_os >= ?) order by id_import
+        "#;
+        let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ((date_initial),))?;
+
+        for row in rows {
+            let row = match row {
+                Ok(row) => row,
+                Err(err) => {
+                    println!("[import_clipp] request_product import select : {}", err);
+                    return Err(err)?;
+                },
+            };
+
+            let mut obj = get_json(&row)?;
+            #[cfg(debug_assertions)]
+            println!("[clipp_import] request_product {obj}");
+            let id_identificador = obj.get("idIdentificador").ok_or("Missing idIdentificador")?.as_u64().ok_or("broken u64 idIdentificador")?;
+            let id_os = obj.get("idOs").ok_or("Missing idOs")?.as_u64().ok_or("broken u64 idOs")?;
+            let request = map_documents.get_mut(&id_os).ok_or("[import_clipp] Missing id_os in map_request.")?;
+
+            if let Some(product) = map_product.get(&id_identificador) {
+                merge(&mut obj, product)?;
+                let request_product = request.get_mut("requestProduct").ok_or("[import_clipp] Broken 'requestProduct'")?.as_array_mut().ok_or("[import_clipp] Broken 'requestProduct' as array")?;
+                request_product.push(obj);
+            } else if let Some(service) = map_service.get(&id_identificador) {
+                merge(&mut obj, service)?;
+                let request_service = request.get_mut("requestService").ok_or("[import_clipp] Broken 'requestService'")?.as_array_mut().ok_or("[import_clipp] Broken 'requestService' as array")?;
+                request_service.push(obj);
+            } else {
+                println!("{}", serde_json::to_string_pretty(&obj)?);
+                return Err("idIdentificador is not product or service")?;
+            }
+        }
+    }
+
+	let auth_token = message.get("authorization").ok_or("Missing field 'authorization' in message")?.as_str().ok_or("Broken field 'authorization' in message")?;
+	let customer = message.get("customer").ok_or("Missing field 'customer' in message")?.as_str().ok_or("Broken field 'customer' in message")?;
+
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] ... tb_os_item.");
+
+    for (_id_import, mut document) in map_documents {
+        document["person"] = json!({"cnpjCpf": customer});
+        let _request = rufs_nfe_rust::import::import_document(auth_token, document, false, false).await?;
+        //let request_id = request.get("id").ok_or("broken request id")?.as_u64().ok_or("broken u64")?;
+    }
+/*
+TB_MOVDIARIO                   	55651
+TB_OS_ITEM                     	16521
+TB_CTAPAG_MOVTO                	13898
+TB_ALIQUOTAS_IBPT              	12097
+TB_CTAREC_MOVTO                	11913
+TB_OS                          	6248
+TB_OS_NOME                     	6247
+TB_OS_OBJETO_OS                	6247
+TB_CONTA_RECEBER               	5981
+TB_CTAREC_BAIXA                	5909
+TB_CIDADE_SIS                  	5571
+TB_CIDADE_CARTORIO             	5570
+TB_CONTA_PAGAR                 	3038
+TB_CTAPAG_BAIXA_MOVTO          	3014
+TB_CTAPAG_BAIXA                	2975
+TB_CLIENTE                     	2802
+TB_CLI_PJ                      	1815
+TB_CEST_NCM                    	1251
+TB_EST_PRODUTO_LOG             	1178
+TB_COD_PROD_ANP                	1040
+TB_EST_SERVICO_SIS             	1017
+TB_CLI_PF                      	1010
+TB_FUNC_MOD_COLUNA_SIS         	1006
+TB_EST_IDENTIFICADOR           	910
+TB_ESTOQUE                     	910
+TB_EST_PRODUTO                 	896
+TB_FUNC_AUDITORIA_SIS          	801
+TB_CFOP_SIS                    	787
+TB_PLANO_CONTAS_SPED_SIS       	666
+TB_NFVENDA_CONF_SIS            	653
+TB_CLI_PF_ADICIONAIS           	609
+TB_EST_SERIAL                  	504
+TB_PARAMETRO                   	399
+TB_BANCO_SIS                   	363
+TB_FORNECEDOR                  	354
+TB_D4_PAF                      	324
+TB_EST_PRODUTO_EMPRESA_LOG     	282
+TB_PAIS_SIS                    	256
+IBE$VERSION_HISTORY            	201
+TB_PLANO_CONTAS                	169
+TB_OS_HIST_OS                  	163
+TB_EST_QTD_HISTORICO           	136
+TB_CST_SIS                     	135
+TB_CENQ_IPI_SIS                	129
+TB_FUNC_MODULO                 	127
+TB_CTAREC_BAIXA_MOVTO          	122
+TB_NFV_ITEM                    	117
+TB_NFV_ITEM_ICMS               	117
+TB_NFV_ITEM_ST                 	117
+TB_NFV_ITEM_ARMA               	117
+TB_J2_PAF                      	115
+TB_EST_PRODUTO_EMPRESA         	113
+*/
+/*
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] stock_product ...");
+
     {
         let sql = r#"
         select
@@ -447,137 +400,57 @@ async fn import(message: &Value) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    let _map_request_repair = {
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] ... stock_product.");
+*/
+/*
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] tb_nfvenda ...");
+
+    {
         let sql = r#"
         select
-        defeito as defect,
-        coalesce(ident1,'') as serial,
-        ident2 as inmetro,
-        ident3 as marca,
-        ident4 as modelo,
-        ident5 as capacidade,
-        ('Marca: ' || coalesce(ident3,'') || '\nModelo: ' || coalesce(ident4,'') || '\nCapacidade: ' || coalesce(ident5,'')) as additional_data,
-        id_os as id_import
-        from tb_os_objeto_os order by id_import
+        1 as type,
+        320 as state,
+        id_cliente,
+        (dt_saida || 'T' || hr_saida) as "date_in_out",
+        (dt_saida || 'T' || hr_saida) as "date",
+        NF_NUMERO as numero,
+        cast(NF_SERIE as int) as serie,
+        cast(NF_MODELO as int) as mod,
+        ENT_SAI,
+        left(INF_COMP_EDIT,255) as additional_data,
+        ID_NFVENDA*10000 as id_import
+        from tb_nfvenda where dt_saida >= ? order by id_import
         "#;
-        let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ())?;
-        let mut map = HashMap::new();
+        let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ((date_initial),))?;
 
         for row in rows {
             let row = match row {
                 Ok(row) => row,
                 Err(err) => {
-                    println!("[import_clipp] request_repair import select : {}", err);
+                    println!("[import_clipp] request import select : {}", err);
                     return Err(err)?;
                 },
             };
 
-            let mut obj = get_json(&row)?;
-            let id_os = obj.get("idImport").ok_or("Missing idOs")?.as_u64().ok_or("broken u64 idOs")? * 10000;
-
-            let Some(request) = map_request.get(&id_os) else {
-                println!("{}", serde_json::to_string_pretty(&obj)?);
-                return Err("[import_clipp] request_repair : Missing id_os in map_request.")?;
-            };
-
-            obj["request"] = json!(request);
-
-            let Some(product) = map_product.get(&1) else {
-                println!("{}", serde_json::to_string_pretty(&obj)?);
-                return Err("[import_clipp] Missing product in map_product.")?;
-            };
-
-            obj["product"] = json!(product);
-
-            let obj_out = match publish("request_repair", &["id"], &obj, false).await {
-                Ok(value) => value,
-                Err(err) => {
-                    println!("[import_clipp] request import insert : {}", err);
-                    return Err(err)?;
-                },
-            };
-
-            map.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj_out.get("request").ok_or("broken request id in request repair.")?.as_u64().ok_or("broken u64")?);
+            let mut document = get_json(&row)?;
+            let client_id = document.get("idCliente").ok_or("broken")?.as_u64().ok_or("broken")?;
+            document["personDest"] = map_person.get(&client_id).ok_or("Broken 'personDest'")?.clone();
+            document["person"] = json!({"cnpjCpf": person_omission});
+            document["requestProduct"] = json!([]);
+            document["requestPayment"] = json!([]);
+            document["requestFreight"] = json!({"value": 0.0});
+            let request = rufs_nfe_rust::import::import_document(auth_token, document, false).await?;
+            let request_id = request.get("id").ok_or("broken request id")?.as_u64().ok_or("broken u64")?;
+            map_request.insert(request.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, request_id);
         }
+    }
 
-        map
-    };
-
-    let (mut map_request_product, _map_request_service) = {
-        let sql = r#"
-        select
-        id_identificador,
-        id_os,
-        qtd_item as quantity,
-        vlr_unit as "value",
-        vlr_desc as value_desc,
-        vlr_total as value_item,
-        id_itemos as id_import
-        from tb_os_item order by id_import
-        "#;
-        let rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ())?;
-        let mut map_request_product = HashMap::new();
-        let mut map_request_service = HashMap::new();
-
-        for row in rows {
-            let row = match row {
-                Ok(row) => row,
-                Err(err) => {
-                    println!("[import_clipp] request_product import select : {}", err);
-                    return Err(err)?;
-                },
-            };
-
-            let mut obj = get_json(&row)?;
-            let id_identificador = obj.get("idIdentificador").ok_or("Missing idIdentificador")?.as_u64().ok_or("broken u64 idIdentificador")?;
-            let id_os = obj.get("idOs").ok_or("Missing idOs")?.as_u64().ok_or("broken u64 idOs")? * 10000;
-
-            let Some(request) = map_request.get(&id_os) else {
-                println!("{}", serde_json::to_string_pretty(&obj)?);
-                return Err("[import_clipp] Missing id_os in map_request.")?;
-            };
-
-            obj["request"] = json!(request);
-
-            if let Some(product) = map_product.get(&id_identificador) {
-                obj["product"] = json!(product);
-
-                let obj_out = match publish("request_product", &["id"], &obj, false).await {
-                    Ok(value) => value,
-                    Err(err) => {
-                        if err.to_string().contains(r#"duplicate key value violates unique constraint "request_product_pkey""#) {
-                            continue;
-                        }
-
-                        return Err(err)?;
-                    },
-                };
-
-                map_request_product.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj_out);
-            } else if let Some(service) = map_service.get(&id_identificador) {
-                obj["service"] = json!(service);
-
-                let obj_out = match publish("request_service", &["id"], &obj, false).await {
-                    Ok(value) => value,
-                    Err(err) => {
-                        if err.to_string().contains(r#"duplicate key value violates unique constraint "request_service_pkey""#) {
-                            continue;
-                        }
-
-                        return Err(err)?;
-                    },
-                };
-
-                map_request_service.insert(obj.get("idImport").ok_or("broken id_import")?.as_u64().ok_or("broken u64")?, obj_out);
-            } else {
-                println!("{}", serde_json::to_string_pretty(&obj)?);
-                return Err("idIdentificador is not product or service")?;
-            }
-        }
-
-        (map_request_product, map_request_service)
-    };
-
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] ... tb_nfvenda.");
+*/
+/*
     {
         let sql = r#"
         select
@@ -606,7 +479,7 @@ async fn import(message: &Value) -> Result<(), Box<dyn std::error::Error>> {
 
             let mut obj = get_json(&row)?;
             let id_identificador = obj.get("idIdentificador").ok_or("Missing idIdentificador")?.as_u64().ok_or("broken u64 idIdentificador")?;
-            let id_nfvenda = obj.get("idNfvenda").ok_or("Missing idNfvenda")?.as_u64().ok_or("broken u64 idNfvenda")?;
+            let id_nfvenda = obj.get("idNfvenda").ok_or("Missing idNfvenda")?.as_u64().ok_or("broken u64 idNfvenda")? * 10000;
 
             let Some(request) = map_request.get(&id_nfvenda) else {
                 println!("{}", serde_json::to_string_pretty(&obj)?);
@@ -637,7 +510,8 @@ async fn import(message: &Value) -> Result<(), Box<dyn std::error::Error>> {
         }
 
     }
-
+*/
+/*
     {
         let sql = r#"
         select
@@ -649,8 +523,8 @@ async fn import(message: &Value) -> Result<(), Box<dyn std::error::Error>> {
         from tb_conta_receber r,tb_nfv_ctarec a where r. order by id_import
         "#;
         let _rows: Box<dyn Iterator<Item = Result<rsfbclient::Row, FbError>>> = fb_conn.query_iter(sql, ())?;
-
     }
+*/
 /*
 TB_NFVENDA_FMAPAGTO_NFCE
 TB_NFV_CTAREC
@@ -761,7 +635,7 @@ mod tests {
 			return Err(text)?;
 		};
 
-		let mut message = json!({});
+		let mut message = json!({"customer": "123.456.789-01", "dateInitial": "2024-09-12"});
 		message["authorization"] = login_response.get("jwtHeader").ok_or("Missing jwtHeader in login response!")?.clone();
 
 		for item in list {

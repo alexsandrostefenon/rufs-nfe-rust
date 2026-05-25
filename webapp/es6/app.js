@@ -7,6 +7,7 @@ const http_log = document.querySelector('#http-log');
 const urlParams = new URLSearchParams(document.location.search);
 const workingTimeout = urlParams.get("working_timeout") ? parseInt(urlParams.get("working_timeout")) : 100;
 let activeWorkingProcess = null;
+let lastClickHash = null;
 
 function data_view_show(form_id) {
 	const div_id = `div-${form_id}`;
@@ -160,6 +161,25 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function showStatus(text) {
+	if (urlParams.get("debug") == "true") {
+		console.log("[showStatus] : ", text);
+	}
+
+	document.querySelector('#http-error').innerHTML = "";
+	document.querySelector('#http-error').hidden = true;
+	document.querySelector('#http-working').innerHTML = text;
+	document.querySelector('#http-working').hidden = false;
+}
+
+function hideStatus() {
+	if (urlParams.get("debug") == "true") {
+		console.log("[hideStatus]");
+	}
+
+	document.getElementById('http-working').hidden = true;
+}
+
 async function process(event, targetId, data, processViewResponse) {
 	let element = null;
 	let form = null;
@@ -170,6 +190,7 @@ async function process(event, targetId, data, processViewResponse) {
 		const regExResult = regEx.exec(targetId);
 
 		if (regExResult != null && regExResult.groups.es6 != null) {
+			showStatus(`Carregando módulo ${regExResult.groups.es6} ...`);
 			module = await import("./" + regExResult.groups.es6);
 		}
 	} else {
@@ -177,10 +198,16 @@ async function process(event, targetId, data, processViewResponse) {
 		form = element.form;
 
 		if (element.dataset.rufsModule != null) {
+			showStatus(`Carregando módulo ${element.dataset.rufsModule} ...`);
 			module = await import("./" + element.dataset.rufsModule);
 		} else if (form != null && form.dataset.rufsModule != null) {
+			showStatus(`Carregando módulo ${form.dataset.rufsModule} ...`);
 			module = await import("./" + form.dataset.rufsModule);
 		}
+	}
+
+	if (module == dataViewManager) {
+		//showStatus("Processando...");
 	}
 
 	if (form != null) {
@@ -195,45 +222,53 @@ async function process(event, targetId, data, processViewResponse) {
 
 	const params = {form_id: targetId, event: event.type, data};
 
-	if (module.login == null) {
-		params.loginResponse = loginResponse;
-		params.dataViewManager = dataViewManager;
-	}
-
-	if (module.__wbg_ptr == null) {
-		params.addEventListener = addEventListener;
-	}
-
 	for (let i = 0; i < 100 && activeWorkingProcess != null; i++) {
 		if (urlParams.get("debug") == "true")
 			console.log(`[process] waiting latest processing is done :\n${activeWorkingProcess}`);
 		await sleep(100);
 	}
 
-	if (urlParams.get("debug") == "true")
-		console.log(`module.process()`, params);
+	if (urlParams.get("debug") == "true") {
+		console.log(`[module.process()] params :`, params);
+	}
+
 	activeWorkingProcess = params;
 	return module.process(params)
-	.then(processViewResponse)
+	.then(viewResponse => {
+		if (urlParams.get("debug") == "true") {
+			console.log(`[module.process()] viewResponse :`, viewResponse);
+		}
+
+		processViewResponse(viewResponse);
+		return viewResponse;
+	})
 	.catch(err => {
 		console.error(err);
 		document.querySelector('#http-error').innerHTML = err;
 		document.querySelector('#http-error').hidden = false;
 		activeWorkingProcess = null;
 	})
-	.then(() => {
+	.then(viewResponse => {
 		if (form != null) {
 			//form.inert = false;
 		}
 
 		activeWorkingProcess = null;
-		setTimeout(() => document.getElementById('http-working').hidden = true, workingTimeout);
+		let timeout = workingTimeout;
+
+		if (viewResponse != null && viewResponse["workingTimeout"] != null) {
+			timeout = viewResponse.workingTimeout;
+		}
+
+		setTimeout(() => hideStatus(), timeout);
 	});
 }
 
 let appOnChange = async (event) => {
-	if (urlParams.get("debug") == "true")
+	if (urlParams.get("debug") == "true") {
 		console.log(`appOnChange`, event);
+	}
+
     let element = event.target;
 	const target = element.id;
 	http_log.innerHTML = `t:${target}, ${http_log.innerHTML}`;
@@ -261,8 +296,6 @@ let appOnChange = async (event) => {
 		value = element.files;
 	}
 
-	if (urlParams.get("debug") == "true")
-		console.log(`appOnChange : ${target} =`, value);
 	let data = {};
 	data[target] = value;
 
@@ -271,10 +304,16 @@ let appOnChange = async (event) => {
 			viewResponse = Object.fromEntries(viewResponse);
 		}
 
-		if (urlParams.get("debug") == "true")
+		if (urlParams.get("debug") == "true") {
 			console.log(`appOnChange.updateChanges`);
+		}
+
 		updateChanges(event, viewResponse.changes);
 		updateTables(event, viewResponse.tables);
+	}
+
+	if (urlParams.get("debug") == "true") {
+		console.log(`[appOnChange] process : ${target}`);
 	}
 
 	await process(event, target, data, processViewResponse);
@@ -457,7 +496,9 @@ let appOnClick = async (event) => {
 	let target = element.id;
 
 	if (target == "" && element.href != null && element.href.includes("#!/app/")) {
-		target = element.href;
+		const posIni = element.href.indexOf("#!/app/");
+		lastClickHash = element.href.substring(posIni);
+		target = lastClickHash;
 	}
 
 	if (target == null || target.startsWith("menu-")) {
@@ -465,13 +506,12 @@ let appOnClick = async (event) => {
 	}
 
 	http_log.innerHTML = `..., ${http_log.innerHTML}`;
-	if (urlParams.get("debug") == "true")
-		console.log("appOnClick : ", target);
-	document.querySelector('#http-error').innerHTML = "";
-	document.querySelector('#http-error').hidden = true;
-	document.querySelector('#http-working').innerHTML = "Processando...";
-	document.querySelector('#http-working').hidden = false;
 
+	if (urlParams.get("debug") == "true") {
+		console.log(`[appOnClick] process : ${target}`);
+	}
+
+	showStatus("Processando...");
 	await process(event, target, {}, processViewResponse);
 }
 
@@ -521,8 +561,15 @@ function processLoginResponse(login_response, data_view_manager) {
 
 	// History API.
 	window.addEventListener('hashchange', function() {
-		if (urlParams.get("debug") == "true")
+		if (window.location.hash == lastClickHash) {
+			lastClickHash = null;
+			return;
+		}
+
+		if (urlParams.get("debug") == "true") {
 			console.log('URL hash changed to:', window.location.hash);
+		}
+
 		let event = {target: {href: window.location.hash, id: "", localName: "a"}, type: "click"};
 		appOnClick(event);
 	});
@@ -534,4 +581,4 @@ function processLoginResponse(login_response, data_view_manager) {
 	}
 }
 
-export {processLoginResponse, appOnClick};
+export {addEventListener, processLoginResponse, appOnClick, appOnChange, showStatus, dataViewManager, loginResponse};

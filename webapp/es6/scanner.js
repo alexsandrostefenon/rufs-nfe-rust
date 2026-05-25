@@ -1,3 +1,5 @@
+import { addEventListener, dataViewManager } from "./app.js";
+
 const regExpNfeChaveAcesso = /(?<chaveNfe>\b\d{22}\s?\d{22,27}\b)/;
 let stoped = true;
 let menuParams = null;
@@ -123,7 +125,32 @@ function play(stream) {
 	});
 }
 
+function deviceChange(videoInput) {
+	stop();
+
+	if (videoInput == "file") {
+		return;
+	}
+
+	let video_options = {
+		deviceId: {exact: videoInput},
+		//facingMode: 'environment',
+		width: 1280,
+		width: 720
+	};
+
+	navigator.mediaDevices.getUserMedia({video: video_options, audio: false}).then(stream => {
+		play(stream);
+	});
+}
+
+function onRufsEvent(params) {
+	const event = JSON.parse(params);
+	console.log(event);
+}
+
 async function init(debug) {
+	addEventListener(onRufsEvent);
 	const listDevices = [];
 	listDevices.push(`<option value="file">Importar arquivo</option>`);
 	let inputFileHidden = "hidden";
@@ -150,7 +177,10 @@ async function init(debug) {
 							listDevices.push(`<option value="${device.deviceId}">${device.label}</option>`);
 							log(device);
 							log(navigator.mediaDevices.getSupportedConstraints());
-							log(device.getCapabilities());
+
+							if (device.getCapabilities != null) {
+								log(device.getCapabilities());
+							}
 						}
 					});
 
@@ -200,37 +230,7 @@ async function init(debug) {
 	return html;
 }
 
-function deviceChange(videoInput) {
-	stop();
-
-	if (videoInput == "file") {
-		return;
-	}
-
-	let video_options = {
-		deviceId: {exact: videoInput},
-		//facingMode: 'environment',
-		width: 1280,
-		width: 720
-	};
-
-	navigator.mediaDevices.getUserMedia({video: video_options, audio: false}).then(stream => {
-		play(stream);
-	});
-}
-
-function onRufsEvent(params) {
-	const event = JSON.parse(params);
-	console.log(event);
-}
-
 async function process(params) {
-	if (params != null && params.loginResponse != null) {
-		loginResponse = params.loginResponse;
-        dataViewManager = params.dataViewManager;
-		params.addEventListener(onRufsEvent);
-	}
-
 	const {form_id, event, data} = params;
 	const urlParams = new URLSearchParams(document.location.search);
 	const debug = urlParams.get("debug") == "true";

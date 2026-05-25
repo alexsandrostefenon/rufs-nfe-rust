@@ -6,7 +6,7 @@ set -e
 cmd_env='./.env'
 cmd_target='release'
 
-PARSED=$(getopt --options='ei:' --longoptions='env:,db-backup,db-drop,db-drop-tests-schemas,db-import:,install,setup,build,target:,test,deploy,update,scp-in:' --name "$0" -- "$@") || exit 2
+PARSED=$(getopt --options='ei:' --longoptions='install,setup,build,env:,test,deploy,update,db-drop-tests-schemas,db-import:,db-backup,db-drop,target:,scp-in:' --name "$0" -- "$@") || exit 2
 eval set -- "$PARSED"
 
 while true; do
@@ -131,12 +131,19 @@ fi
 
 if [ "$cmd_setup" = 'yes' ]; then
     if [ "$vps_provider" = 'aws' ]; then
-        $exec sudo yum install -y docker postgresql16.x86_64
-        $exec sudo usermod -aG docker $vps_user
-        $exec sudo systemctl enable docker
-        $exec sudo systemctl start docker
-        $exec sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/bin/docker-compose
-        $exec sudo chmod 755 /usr/bin/docker-compose
+      $exec sudo yum install -y docker postgresql16.x86_64
+      $exec sudo usermod -aG docker $vps_user
+      $exec sudo systemctl enable docker
+      $exec sudo systemctl start docker
+      $exec sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/bin/docker-compose
+      $exec sudo chmod 755 /usr/bin/docker-compose
+    fi
+
+    if [ "$vps_provider" = 'local' ]; then
+      $docker_cli_target build -t rust-runtime -f runtime.Dockerfile
+      $docker_cli_target build -v $PWD/../rufs-base-rust:$PWD/../rufs-base-rust -v $PWD:$PWD -t rust-build --build-arg working_dir=$PWD -f build.Dockerfile
+      $docker_cli_target build -t selenium-side-runner -f selenium-side-runner.Dockerfile
+      echo "Setup of containerized environment is done !"
     fi
 
     if [ "$vps_provider" != 'local' ]; then
@@ -157,13 +164,6 @@ if [ "$cmd_setup" = 'yes' ]; then
       #$exec $docker_cli_target run -it --rm --name certbot -p 80:80 -v "./etc/letsencrypt:/etc/letsencrypt" -v "./var/lib/letsencrypt:/var/lib/letsencrypt" certbot/certbot certonly;#select '1'
       ##$exec $docker_cli_target  run --rm --entrypoint=cat nginx /etc/nginx/nginx.conf > ./nginx/etc/nginx.conf
     #fi
-
-    if [ "$vps_provider" = 'local' ]; then
-      $docker_cli_target build -t selenium-side-runner -f selenium-side-runner.Dockerfile &&
-      $docker_cli_target build -t rust-runtime -f runtime.Dockerfile &&
-      $docker_cli_target build -v $PWD/../rufs-base-rust:$PWD/../rufs-base-rust -v $PWD:$PWD -t rust-build --build-arg working_dir=$PWD -f build.Dockerfile &&
-      echo "Setup of containerized environment is done !";
-    fi
 fi
 
 if [ "$cmd_build" != '' ]; then
@@ -189,6 +189,7 @@ if [ "$cmd_build" != '' ]; then
 fi
 
 if [ "$cmd_db_drop_tests_schemas" = 'yes' ]; then
+  sed -Ezi 's/"command": "\/\/type",(.\s*)?"target": "id=new-request--date"/"command": "type","target": "id=new-request--date"/g' tests.side
   $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
 fi
 
@@ -197,6 +198,8 @@ if [ "$cmd_test" = 'yes' ]; then
   $compose_cli_local down selenium-standalone-firefox
   $compose_cli_local down rufs-nfe
   $compose_cli_local down nfe-import
+  $compose_cli_local down clipp-import
+  $compose_cli_local down firebirdsql-v2_5
   $compose_cli_local down redis
   #$compose_cli_local down broker
   $compose_cli_local down nginx
@@ -220,8 +223,6 @@ if [ "$cmd_test" = 'yes' ]; then
     fi
   fi
 
-  $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
-  echo "Reseted testing data !"
   $compose_cli_local up -d nginx
   #$compose_cli_local up -d broker
   #$docker_cli_local exec -it broker /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic nfe
@@ -234,8 +235,24 @@ if [ "$cmd_test" = 'yes' ]; then
   mkdir -p ./tmp
   rm -f ./tmp/*
   sed -Ezi 's/"command": "type",(.\s*)?"target": "id=new-request--date"/"command": "\/\/type","target": "id=new-request--date"/g' tests.side
-  $compose_cli_local exec selenium-side-runner selenium-side-runner -j '"--bail 1 --detectOpenHandles"' tests.side
-  sed -i 's/"command": "\/\/type","target": "id=new-request--date"/"command": "type","target": "id=new-request--date"/' tests.side
+
+  $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
+  $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_sefaz' -j '"--bail 1 --detectOpenHandles"' tests.side
+
+  $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
+  $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'main' -j '"--bail 1 --detectOpenHandles"' tests.side
+
+  if [[ -f 'data/clipp.fdb' ]]; then
+    $compose_cli_local up -d firebirdsql-v2_5
+    $compose_cli_local up -d clipp-import
+    $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
+    #echo -n "123456" | openssl dgst -md5 | grep -oP '\w{16,}'
+    JWT=$($compose_cli_local exec selenium-side-runner curl -s http://rufs-nfe:8080/rest/login -H 'Content-Type: application/json' -d '{"user":"12345678901.guest", "password": "e10adc3949ba59abbe56e057f20f883e"}' | grep -oP '[\w_\.\-]{128,}')
+    $docker_cli_local exec -it redis redis-cli xadd clipp '*' data '{"customer": "123.456.789-01", "authorization": "'$JWT'", "dateInitial": "2024-09-12", "dbUrl": "firebird://SYSDBA:masterkey@firebirdsql-v2_5:3050//var/lib/firebird/data/clipp.fdb?charset=WIN1252"}'
+    $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_clipp' -j '"--bail 1 --detectOpenHandles"' tests.side
+  fi
+
+  sed -i 's/"command": "\/\/type","target": "id=new-request--date"/"command": "type","target": "id=new-request--date"/g' tests.side
   $compose_cli_local down selenium-side-runner
   $compose_cli_local down selenium-standalone-firefox
 fi
