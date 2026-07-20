@@ -6,5 +6,5 @@ COPY ./pkg/*.js /app/pkg/
 COPY ./target/release/clipp_import /app/
 COPY ./target/release/nfe_import /app/
 COPY ./target/release/rufs-nfe-rust /app/
-EXPOSE 8080
+#EXPOSE 8080
 ENTRYPOINT ["/app/rufs-nfe-rust"]

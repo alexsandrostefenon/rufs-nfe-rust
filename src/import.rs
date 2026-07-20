@@ -4,7 +4,7 @@ use regex::Regex;
 use reqwest::StatusCode;
 use serde_json::{Value, json};
 
-pub fn convert_obj_copy(obj_out: &mut Value, obj_in :&Value, primary_keys :&[&str]) -> Result<(), Box<dyn std::error::Error>> {
+pub fn convert_obj_copy(obj_out: &mut Value, obj_in :&Value, fields_not_null :&[&str]) -> Result<(), Box<dyn std::error::Error>> {
 	let map = obj_in.as_object().ok_or("obj_in is not 'map' object!")?;
 
 	for (field_name_in, field) in map {
@@ -14,7 +14,7 @@ pub fn convert_obj_copy(obj_out: &mut Value, obj_in :&Value, primary_keys :&[&st
 			Value::Object(_obj) => continue,
 			Value::Null => continue,
 			Value::String(value) => {
-				if value.is_empty() && primary_keys.contains(&field_name_in.as_str()) == false {
+				if value.is_empty() && fields_not_null.contains(&field_name_in.as_str()) == false {
 					continue;
 				}
 			},
@@ -27,13 +27,13 @@ pub fn convert_obj_copy(obj_out: &mut Value, obj_in :&Value, primary_keys :&[&st
 	Ok(())
 }
 
-pub fn convert_obj(obj_in :&Value, primary_keys :&[&str]) -> Result<Value, Box<dyn std::error::Error>> {
+pub fn convert_obj(obj_in :&Value, fields_not_null :&[&str]) -> Result<Value, Box<dyn std::error::Error>> {
 	let mut obj_out = json!({});
-	convert_obj_copy(&mut obj_out, obj_in, primary_keys)?;
+	convert_obj_copy(&mut obj_out, obj_in, fields_not_null)?;
 	Ok(obj_out)
 }
 
-pub fn convert_obj_child(obj :&Value, child_name :&str, primary_keys :&[&str], trace :&str) -> Result<Value, Box<dyn std::error::Error>> {
+pub fn convert_obj_child(obj :&Value, child_name :&str, fields_not_null :&[&str], trace :&str) -> Result<Value, Box<dyn std::error::Error>> {
 	let obj_in = obj.get(child_name).ok_or(format!("[{trace}] Missing child '{child_name}'"))?;
 
 	if obj_in.is_object() == false {
@@ -41,19 +41,17 @@ pub fn convert_obj_child(obj :&Value, child_name :&str, primary_keys :&[&str], t
 	}
 
 	let mut obj_out = json!({});
-	convert_obj_copy(&mut obj_out, obj_in, primary_keys)?;
+	convert_obj_copy(&mut obj_out, obj_in, fields_not_null)?;
 	Ok(obj_out)
 }
 
 pub async fn import_document(auth_token :&str, mut document :Value, require_request_nfe :bool, check_payments :bool) -> Result<Value, Box<dyn std::error::Error>> {
 	#[cfg(debug_assertions)]
-	let host = "localhost";
-	#[cfg(not(debug_assertions))]
-	let host = "rufs-nfe";
+	tokio::fs::write(format!("/tmp/request_nfe.json"), document.to_string().as_bytes()).await?;
 	#[cfg(debug_assertions)]
-	let url_base = format!("http://{host}:8080/nfe/rest/");
+	let url_base = format!("http://localhost:8081/rest/");
 	#[cfg(not(debug_assertions))]
-	let url_base = format!("http://{host}:8080/rest/");
+	let url_base = format!("http://rufs-nfe:8080/rest/");
 	let client = reqwest::Client::new();
 
 	let post = async |schema_name_snake: &str, obj: &Value| -> Result<Value, Box<dyn std::error::Error>> {
@@ -64,7 +62,12 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 		let status = res.status();
 
 		if status == StatusCode::OK {
-			return Ok(res.json().await?);
+			match res.json().await {
+				Ok(value) => return Ok(value),
+				Err(err) => {
+					return Err(format!("{err}"))?;
+				},
+			}
 		} else {
 			#[cfg(debug_assertions)]
 			eprintln!("[import_document.post({schema_name_snake})] obj : {obj}");
@@ -73,12 +76,14 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 		}
 	};
 
-	let publish = async |schema_name_snake :&str, primary_keys :&[&str], rec_imported :&Value, replace: bool| -> Result<Value, Box<dyn std::error::Error>> {
+	let publish = async |schema_name_snake :&str, primary_keys :&[&str], fields_not_null :&[&str], rec_imported :&Value, replace: bool| -> Result<Value, Box<dyn std::error::Error>> {
 		#[cfg(debug_assertions)]
 		println!("[import_document.publish({schema_name_snake})] starting ...");
 		#[cfg(debug_assertions)]
 		println!("[import_document.convert_obj()] starting ...");
-		let obj = convert_obj(rec_imported, primary_keys)?;
+		let mut fields_not_null_aux = primary_keys.to_vec();
+		fields_not_null_aux.extend_from_slice(fields_not_null);
+		let obj = convert_obj(rec_imported, fields_not_null_aux.as_slice())?;
 		#[cfg(debug_assertions)]
 		println!("[import_document.convert_obj()] ... exited");
 		let mut query_list = vec![];
@@ -151,15 +156,15 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 	};
 
 	let person = document.get("person").ok_or("Broken person")?;
-	publish("person", &["cnpjCpf"], &person, false).await?;
+	publish("person", &["cnpjCpf"], &[], &person, false).await?;
 	let person_dest = document.get("personDest").ok_or("Broken personDest")?;
-	publish("person", &["cnpjCpf"], person_dest, false).await?;
+	publish("person", &["cnpjCpf"], &[], person_dest, false).await?;
 
 	if let Some(value) = document.get("nfeId") {
 		let nfe_id = value.as_str().ok_or("Expected 'string' type")?;
 		let url = format!("{url_base}request_nfe?filter[nfeId]={nfe_id}");
 		#[cfg(debug_assertions)]
-		println!("[import_document.merge] curl -X get '{url}' -H 'Authorization: Bearer {auth_token}';");
+		println!("[import_document.merge] curl -X GET '{url}' -H 'Authorization: Bearer {auth_token}';");
 		let res = client.get(&url).bearer_auth(auth_token).send().await?;
 		let status = res.status();
 
@@ -195,7 +200,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 		//let date_max = DateTime::parse_from_rfc3339(&date)?.checked_add_days(Days::new(1)).ok_or("broken")?.to_rfc3339();
 		let url = format!("{url_base}request?filter[person]={person_cnpj_cpf}&filter[personDest]={person_dest_cnpj_cpf}&filter[paymentsValue]=0&filterRangeMin[date]={date_min}&filterRangeMax[date]={date}");
 		#[cfg(debug_assertions)]
-		println!("[import_document.merge] curl -X get '{url}' -H 'Authorization: Bearer {auth_token}';");
+		println!("[import_document.merge] curl -X GET '{url}' -H 'Authorization: Bearer {auth_token}';");
 		let res = client.get(&url).bearer_auth(auth_token).send().await?;
 		let status = res.status();
 
@@ -220,7 +225,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 	let request_id = request.get("id").ok_or("Missing 'id' in 'request'.")?.clone();
 
 	if let Some(obj) = document.get("requestRepair") {
-		let mut request_repair = convert_obj(obj, &[])?;
+		let mut request_repair = convert_obj(obj, &["serial"])?;
 		request_repair["request"] = request_id.clone();
 
 		let Some(name) = request_repair.get("name") else {
@@ -231,7 +236,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 		let name = name.as_str().ok_or("'product' not 'str'")?;
 		let url = format!("{url_base}product?filter[name]={name}");
 		#[cfg(debug_assertions)]
-		println!("[import_document.merge] curl -X get '{url}' -H 'Authorization: Bearer {auth_token}';");
+		println!("[import_document.merge] curl -X GET '{url}' -H 'Authorization: Bearer {auth_token}';");
 		let mut product_id = 0;
 		let res = client.get(&url).bearer_auth(auth_token).send().await?;
 		let status = res.status();
@@ -262,7 +267,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 			}
 		}
 
-		let _item = publish("request_repair", &["request"], &request_repair, true).await?;
+		let _item = publish("request_repair", &["request"], &["serial"], &request_repair, true).await?;
 	}
 
 	let mut value_products = 0.0;
@@ -304,7 +309,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 			let mut barcode_valid = false;
 
 			if let Some(barcode) = request_product.get_mut("barcode") {
-				let regex_barcode = Regex::new(r#"^0?()   \d{1,14}$"#)?;
+				let regex_barcode = Regex::new(r#"^\d{1,14}$"#)?;//"^0?()   \d{1,14}$"
 				let barcode_string = barcode.as_str().ok_or("Brokn barcode typ")?.to_string();
 
 				if regex_barcode.is_match(&barcode_string) {
@@ -330,7 +335,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 
 					let url = format!("{url_base}barcode?barcode={barcode_str}");
 					#[cfg(debug_assertions)]
-					println!("[import_document.merge] curl -X get '{url}' -H 'Authorization: Bearer {auth_token}';");
+					println!("[import_document.merge] curl -X GET '{url}' -H 'Authorization: Bearer {auth_token}';");
 					let res = client.get(&url).bearer_auth(auth_token).send().await?;
 					let status = res.status();
 
@@ -357,7 +362,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 				let name = name.as_str().ok_or("'product' not 'str'")?;
 				let url = format!("{url_base}product?filter[name]={name}");
 				#[cfg(debug_assertions)]
-				println!("[import_document.merge] curl -X get '{url}' -H 'Authorization: Bearer {auth_token}';");
+				println!("[import_document.merge] curl -X GET '{url}' -H 'Authorization: Bearer {auth_token}';");
 				let res = client.get(&url).bearer_auth(auth_token).send().await?;
 				let status = res.status();
 
@@ -380,7 +385,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 				}
 
 				if barcode_valid {
-					let _barcode = publish("barcode", &["barcode"], &request_product, false).await?;
+					let _barcode = publish("barcode", &["barcode"], &[], &request_product, false).await?;
 				}
 			}
 
@@ -405,6 +410,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 				add_f64(item_to_publish, "valueItem", &request_product, "valueItem")?;
 				add_f64(item_to_publish, "valueDesc", &request_product, "valueDesc")?;
 				add_f64(item_to_publish, "valueFreight", &request_product, "valueFreight")?;
+				add_f64(item_to_publish, "valueAllTax", &request_product, "valueAllTax")?;
 				item_to_publish["merged"] = json!(true);
 			} else {
 				list_to_publish.push(request_product);
@@ -432,7 +438,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 				}
 			}
 
-			let _item = publish("request_product", &["request", "product", "serials"], &request_product, true).await?;
+			let _item = publish("request_product", &["request", "product", "serials"], &[], &request_product, true).await?;
 		}
 	}
 
@@ -456,7 +462,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 			let name = name.as_str().ok_or("'service' not 'str'")?;
 			let url = format!("{url_base}service?filter[name]={name}");
 			#[cfg(debug_assertions)]
-			println!("[import_document.merge] curl -X get '{url}' -H 'Authorization: Bearer {auth_token}';");
+			println!("[import_document.merge] curl -X GET '{url}' -H 'Authorization: Bearer {auth_token}';");
 			let mut service_id = 0;
 			let res = client.get(&url).bearer_auth(auth_token).send().await?;
 			let status = res.status();
@@ -524,7 +530,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 				}
 			}
 
-			let _item = publish("request_service", &["request", "service"], &request_service, true).await?;
+			let _item = publish("request_service", &["request", "service"], &[], &request_service, true).await?;
 		}
 	}
 
@@ -553,7 +559,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 			let description = map_accounts.get(&payment_type).unwrap_or(&"Caixa interno");
 			let url = format!("{url_base}account?person={person_dest_cnpj_cpf}&description={description}");
 			#[cfg(debug_assertions)]
-			println!("[import_document.merge] curl -X get '{url}' -H 'Authorization: Bearer {auth_token}';");
+			println!("[import_document.merge] curl -X GET '{url}' -H 'Authorization: Bearer {auth_token}';");
 			let res = client.get(&url).bearer_auth(auth_token).send().await?;
 
 			if res.status() == StatusCode::OK {
@@ -596,6 +602,11 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 	request["paymentsValue"] = json!(value_payments);
 	let mut request_freight = document.get("requestFreight").ok_or("Broken request_freight")?.clone();
 
+	if let Some(value) = request_freight.get("cnpjCpf") && let Some(cnpj_cpf) = value.as_str() {
+		publish("person", &["cnpjCpf"], &[], &request_freight, false).await?;
+		request_freight["person"] = json!(cnpj_cpf);
+	}
+
 	if let Some(value_frete) = request.get("transportValue") {
 		if request_freight.get("value").is_none() {
 			request_freight["value"] = value_frete.clone();
@@ -606,9 +617,11 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 
 	if transport_value > 0.0 {
 		request["transportValue"] = json!(transport_value);
-		request_freight["value"] = json!(transport_value);
 		request_freight["request"] = request_id.clone();
-		publish("request_freight", &["request"], &request_freight, true).await?;
+		publish("request_freight", &["request"], &[], &request_freight, true).await?;
+	} else if let Some(_containers_count) = request_freight.get("containersCount") {
+		request_freight["request"] = request_id.clone();
+		publish("request_freight", &["request"], &[], &request_freight, true).await?;
 	}
 
 	let total_value = f64::round(value_products * 100.0 + value_services * 100.0 + transport_value * 100.0);
@@ -617,7 +630,7 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 		return Err(format!("total_value ({total_value}) !=  value_payments ({value_payments}) !"))?;
 	}
 
-	let request = publish("request", &["id"], &request, true).await?;
+	let request = publish("request", &["id"], &[], &request, true).await?;
 
 	if document.get("nfeId").is_none() {
 		return Ok(request);

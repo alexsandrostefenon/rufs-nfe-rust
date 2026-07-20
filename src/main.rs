@@ -128,7 +128,7 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     use serde_json::json;
     use serde_json::Value;
 
-    async fn save_file(text :&str, token_payload: &Claims, headers: &std::collections::HashMap<String, String>) -> Result<String, Box<dyn std::error::Error>> {
+    async fn save_file(text :&str, ext :&str, token_payload: &Claims, headers: &std::collections::HashMap<String, String>) -> Result<String, Box<dyn std::error::Error>> {
         let mut text = text.replace("\n", "")
             .replace("&nbsp;", " ")
             .replace("/script>", "/script>\n")
@@ -143,7 +143,8 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             text = regex.replace_all(&text, replacement).to_string();
         }
 
-        text = text
+        let text = if ext == "html" {
+            text
             .replace("> <", "><")
             .replace("; display: none", "")
             .replace(" style=\"display:none\"", "")
@@ -153,11 +154,13 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             .replace("<fieldset", "\n<fieldset")
             .replace("<label", "\n<label")
             .replace("<input", "\n<input")
-            ;
+        } else {
+            text
+        };
 
         let re = regex::Regex::new(r"\b(?P<id>\d{22}\s?\d{22})\b").unwrap();
 
-        let Some(cap) = re.captures(&text) else {
+        let Some(cap) = re.captures_iter(&text).last() else {
             return Err("[save_file] Broken query regex.")?;
         };
 
@@ -165,7 +168,7 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
             return Err("[save_file] Missing 'id' in query regex.")?;
         };
 
-        let file_path = format!("data/{}-{}-{}.html", token_payload.customer, token_payload.name, id.as_str());
+        let file_path = format!("data/{}-{}-{}.{}", token_payload.customer, token_payload.name, id.as_str(), ext);
 
         {
             #[cfg(debug_assertions)]
@@ -206,7 +209,115 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         Ok(format!(r#"pushed event : {file_path}"#))
     }
 
-    async fn import_nfce(token_payload: &Claims, line_with_nfe_id :&str, headers :&HashMap<String, String>) -> Result<String, Box<dyn std::error::Error>> {
+    async fn import_nfe(token_payload: &Claims, line_with_nfe_id :&str, headers :&HashMap<String, String>) -> Result<String, Box<dyn std::error::Error>> {
+        async fn import_nfe_rs(token_payload: &Claims, headers :&HashMap<String, String>, id :&str) -> Result<String, Box<dyn std::error::Error>> {
+            let client = reqwest::Client::new();
+            let mut params = std::collections::HashMap::new();
+            params.insert("sistema", "Dfe");
+            params.insert("EhConsultaPublicaSiteSefaz", "True");
+            params.insert("Ambiente", "1");
+            params.insert("ChaveAcessoDfe", &id);
+            let url = "https://dfe-portal.svrs.rs.gov.br/Dfe/ConsultaPublicaDfe";
+            // accept-encoding: gzip, deflate, br, zstd
+            #[cfg(debug_assertions)]
+            println!("[server.import_nfe_rs({id})] : {url} waiting ...");
+
+            let res = match client.post(url).form(&params).send().await {
+                Ok(res) => {
+                    res
+                },
+                Err(err) => {
+                    let msg = format!("[import_nfe_rs] Error 1 in send request to {url} : {err}.");
+
+                    if msg.contains("Connection reset by peer") {
+                        match client.post(url).form(&params).send().await {
+                            Ok(res) => {
+                                res
+                            },
+                            Err(err) => {
+                                let msg = format!("[import_nfe_rs] Error 2 in send request to {url} : {err}.");
+                                eprintln!("{msg}");
+                                return Err(msg)?;
+                            },
+                        }
+                    } else {
+                        eprintln!("{msg}");
+                        return Err(msg)?;
+                    }
+                },
+            };
+
+            let status = res.status();
+
+            if status == reqwest::StatusCode::OK {
+                #[cfg(debug_assertions)]
+                println!("[server.import_nfe_rs({id})] {url} : ... response Ok");
+
+                let text = res.text().await?;
+
+                if text.contains("EAN") == false {
+                    return import_consultadanfe_com(token_payload, headers, id).await;
+                }
+
+                let message = save_file(&text, "html", &token_payload, &headers).await?;
+                return Ok(message)
+            } else {
+                #[cfg(debug_assertions)]
+                println!("[server.import_nfe_rs({id})] {url} : ... response Failt");
+
+                let text = res.text().await?;
+                return Err(text)?;
+            }
+        }
+
+        async fn import_consultadanfe_com(token_payload: &Claims, headers :&HashMap<String, String>, id :&str) -> Result<String, Box<dyn std::error::Error>> {
+            // curl -X POST https://consultadanfe.com/api/v1/consulta -H "Content-Type: application/json" -d '{"chave": ""}'
+            let client = reqwest::Client::new();
+            let url = "https://consultadanfe.com/api/v1/consulta";
+            #[cfg(debug_assertions)]
+            println!("[server.import_consultadanfe_com({id})] : {url} waiting ...");
+            let value = json!({"chave": id});
+
+            let res = match client.post(url).json(&value).send().await {
+                Ok(res) => {
+                    res
+                },
+                Err(err) => {
+                    let msg = format!("[import_consultadanfe_com] Error 1 in send request to {url} : {err}.");
+                    eprintln!("{msg}");
+                    return Err(msg)?;
+                },
+            };
+
+            let status = res.status();
+
+            if status == reqwest::StatusCode::OK {
+                #[cfg(debug_assertions)]
+                println!("[server.import_consultadanfe_com({id})] {url} : ... response Ok");
+
+                let value = res.json::<Value>().await?;
+
+                let Some(xml_base64) = value.get("xml_base64") else {
+                    return Err(r#"[server.import_consultadanfe_com] : missing field "xml_base64"."#)?;
+                };
+
+                let Some(xml_base64_str) = xml_base64.as_str() else {
+                    return Err(r#"[server.import_consultadanfe_com] : field "xml_base64" is not string."#)?;
+                };
+
+                use base64::prelude::*;
+                let text = String::from_utf8(BASE64_STANDARD.decode(xml_base64_str)?)?;
+                let message = save_file(&text, "xml", &token_payload, &headers).await?;
+                return Ok(message)
+            } else {
+                #[cfg(debug_assertions)]
+                println!("[server.import_consultadanfe_com({id})] {url} : ... response Failt");
+
+                let text = res.text().await?;
+                return Err(text)?;
+            }
+        }
+
         let re = regex::Regex::new(r"\b(?P<id>\d{22}\s?\d{22})\b").unwrap();
 
         let Some(cap) = re.captures(&line_with_nfe_id) else {
@@ -218,57 +329,11 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         };
 
         let id = id.as_str().replace(" ", "");
-        let client = reqwest::Client::new();
-        let mut params = std::collections::HashMap::new();
-        params.insert("sistema", "Dfe");
-        params.insert("EhConsultaPublicaSiteSefaz", "True");
-        params.insert("Ambiente", "1");
-        params.insert("ChaveAcessoDfe", &id);
-        let url = "https://dfe-portal.svrs.rs.gov.br/Dfe/ConsultaPublicaDfe";
-        // accept-encoding: gzip, deflate, br, zstd
-        #[cfg(debug_assertions)]
-        println!("[server.import_nfce({id})] : {url} waiting ...");
 
-        let res = match client.post(url).form(&params).send().await {
-            Ok(res) => {
-                res
-            },
-            Err(err) => {
-                let msg = format!("[import_nfce] Error 1 in send request to {url} : {err}.");
-
-                if msg.contains("Connection reset by peer") {
-                    match client.post(url).form(&params).send().await {
-                        Ok(res) => {
-                            res
-                        },
-                        Err(err) => {
-                            let msg = format!("[import_nfce] Error 2 in send request to {url} : {err}.");
-                            eprintln!("{msg}");
-                            return Err(msg)?;
-                        },
-                    }
-                } else {
-                    eprintln!("{msg}");
-                    return Err(msg)?;
-                }
-            },
-        };
-
-        let status = res.status();
-
-        if status == reqwest::StatusCode::OK {
-            #[cfg(debug_assertions)]
-            println!("[server.import_nfce({id})] {url} : ... response Ok");
-
-            let text = res.text().await?;
-            let message = save_file(&text, &token_payload, &headers).await?;
-            return Ok(message)
+        if id.starts_with("43") {
+            return import_nfe_rs(token_payload, headers, &id).await;
         } else {
-            #[cfg(debug_assertions)]
-            println!("[server.import_nfce({id})] {url} : ... response Failt");
-
-            let text = res.text().await?;
-            return Err(text)?;
+            return import_consultadanfe_com(token_payload, headers, &id).await;
         }
     }
 
@@ -287,7 +352,7 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
 
             #[cfg(debug_assertions)]
             println!("[server.import_nfce_csv()] : {line}");
-            let message = import_nfce(&token_payload, line, &headers).await?;
+            let message = import_nfe(&token_payload, line, &headers).await?;
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
             messages.push(message);
         }
@@ -486,10 +551,15 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
                     let text = warp_try!(String::from_utf8(data));
                     #[cfg(debug_assertions)]
                     println!("[server.handle_upload()] : text({})", text.len());
+
                     let message = if query.contains("type=csv") {
                         warp_try!(import_nfce_csv(&token_payload, &text, &headers).await)
+                    } else if query.contains("type=xml") {
+                        warp_try!(save_file(&text, "xml", &token_payload, &headers).await)
+                    } else if query.contains("type=html") {
+                        warp_try!(save_file(&text, "html", &token_payload, &headers).await)
                     } else {
-                        warp_try!(save_file(&text, &token_payload, &headers).await)
+                        warp_try!(save_file(&text, "txt", &token_payload, &headers).await)
                     };
 
                     messages.push(message);
@@ -511,7 +581,7 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
                 warp_try!(rufs_base_rust::request_filter::check_authorization::<RufsMicroService>(&rms, &headers, &path, &method).await)
             };
 
-            let res = warp_try!(import_nfce(&token_payload, &query, &headers).await);
+            let res = warp_try!(import_nfe(&token_payload, &query, &headers).await);
             let ret = warp::reply::json(&res);
             return Ok(Box::new(ret));
         }

@@ -18,7 +18,8 @@ async fn import(message: &Value) -> Result<(), Box<dyn std::error::Error>> {
                     rsfbclient::SqlType::Null => serde_json::Value::Null,
                 };
 
-                obj[column.name.to_case(convert_case::Case::Camel)] = value;
+                let field_name = column.name.to_case(convert_case::Case::Camel);
+                obj[field_name] = value;
             }
 
             Ok(())
@@ -81,7 +82,7 @@ async fn import(message: &Value) -> Result<(), Box<dyn std::error::Error>> {
         //TABLE TB_EST_IDENTIFICADOR ID_IDENTIFICADOR
         let sql = r#"
         select
-            e.descricao as name,
+            trim(replace(e.descricao, '+', ' ')) as name,
             left(observacao, 255) as description,
             left(lower(uni_medida), 2) as unity,
             prc_venda as "value",
@@ -301,11 +302,21 @@ async fn import(message: &Value) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(debug_assertions)]
     println!("[clipp_import] ... tb_os_item.");
 
+    let mut i = 1;
+    let size = map_documents.len();
+    println!("[clipp_import] rufs_nfe_rust::import::import_document ({size}) ...");
+
     for (_id_import, mut document) in map_documents {
+        println!("[clipp_import] rufs_nfe_rust::import::import_document {}/{}.", i, size);
+        i += 1;
         document["person"] = json!({"cnpjCpf": customer});
         let _request = rufs_nfe_rust::import::import_document(auth_token, document, false, false).await?;
         //let request_id = request.get("id").ok_or("broken request id")?.as_u64().ok_or("broken u64")?;
     }
+
+    #[cfg(debug_assertions)]
+    println!("[clipp_import] ... finished.");
+
 /*
 TB_MOVDIARIO                   	55651
 TB_OS_ITEM                     	16521
@@ -617,8 +628,7 @@ mod tests {
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		let list = [
             // WIN1252,ISO8859_1
-            //"firebird://SYSDBA:masterkey@localhost:3050//var/lib/firebird/data/CLIPP-3.fdb?charset=WIN1252",
-            "firebird://SYSDBA:masterkey@localhost:3050//var/lib/firebird/data/CLIPP-2024_09_14.fdb?charset=WIN1252"
+            "firebird://SYSDBA:masterkey@localhost:3050//var/lib/firebird/data/clipp-12345678901.fdb?charset=WIN1252"
 		];
 
 		let customer_user = "12345678901.guest";
@@ -635,7 +645,7 @@ mod tests {
 			return Err(text)?;
 		};
 
-		let mut message = json!({"customer": "123.456.789-01", "dateInitial": "2024-09-12"});
+		let mut message = json!({"customer": "123.456.789-01", "dateInitial": "2004-09-12"});
 		message["authorization"] = login_response.get("jwtHeader").ok_or("Missing jwtHeader in login response!")?.clone();
 
 		for item in list {

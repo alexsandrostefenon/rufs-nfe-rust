@@ -1,24 +1,349 @@
 use std::collections::VecDeque;
 use convert_case::Casing;
+use quickxml_to_serde::{JsonArray, JsonType};
 use regex::Regex;
 use rufs_nfe_rust::import::{convert_obj, convert_obj_child, convert_obj_copy, import_document};
 use serde_json::{json, Value};
 use tokio::{fs::File, io::AsyncReadExt};
 
-async fn parse_html(html: &str) -> Result<Value, Box<dyn std::error::Error>> {
-	fn get_uf_code(uf :&str) -> usize {
-		match uf {
-			"RS" => 43,
-			"SP" => 35,
-			"SC" => 42,
-			"PR" => 41,
-			"DF" => 53,
-			"ES" => 32,
-			"RJ" => 33,
-			_ => 0
-		}
+fn get_uf_code(uf :&str, default :usize) -> usize {
+	match uf {
+		"RS" => 43,
+		"SP" => 35,
+		"SC" => 42,
+		"PR" => 41,
+		"DF" => 53,
+		"ES" => 32,
+		"RJ" => 33,
+		"MG" => 31,
+		_ => default
+	}
+}
+
+async fn parse_xml(xml: &str) -> Result<Value, Box<dyn std::error::Error>> {
+	fn label_to_name(label :&str) -> String {
+		let name = match label {
+			"CNPJ" => "cnpjCpf",
+			"CPF" => "cnpjCpf",
+			"UF" => "uf",
+			"xNome" => "name",
+			"IE" => "ieRg",
+			"?nome_fantasia" => "fantasy",
+			"xLgr" => "address",
+			"xEnder" => "address",
+			"nro" => "addressNumber",
+			"xCpl" => "complement",
+			"xBairro" => "district",
+			"CEP" => "zip",
+			"cMun" => "city",
+			"fone" => "phone",
+			"cPais" => "country",
+			"?inscricao_municipal" => "im",
+			"?cnae_fiscal" => "cnae",
+			"CRT" => "crt",
+			"?inscricao_suframa" => "suframa",
+			"?e_mail" => "email",
+
+			"dhEmi" => "date",
+			"vNF" => "sumValue",
+			"idDest" => "idDest",
+
+			"modFrete" => "payBy",
+			"pesoL" => "weight",
+			"qVol" => "containersCount",
+			"pesoB" => "weightFinal",
+
+			"xProd" => "name",
+			"cProd" => "model",
+			"NCM" => "ncm",
+			"CEST" => "cest",
+			"cEAN" => "barcode",
+			"uCom" => "unity",
+			"qCom" => "quantity",
+			"vUnCom" => "value",
+			"vProd" => "valueItem",
+			"?codigo_produto" => "idImport",
+			"?origem_mercadoria" => "orig",
+			"CFOP" => "cfop",
+			"vTotTrib" => "valueAllTax",
+
+			"vPag"=> "value",
+
+			"vFrete" => "valueFreight",
+			"?value_frete" => "transportValue",
+
+			"?tributacao_icms" => "cstIcms",
+			"tPag" => "type",
+			"tpNF" => "type",
+			"finNFe" => "finNfe",
+			"natOp" => "natOp",
+			"?tipo_operacao" => "type",
+
+			"digVal" => "digest",
+
+			"vDesc" => "valueDesc",
+
+			"chNFe" => "nfeId",
+			"dhSaiEnt" => "dateInOut",
+			"mod" => "mod",
+			"nNF" => "numero",
+			"tpImp" => "tpImp",
+			"cDV" => "cDv",
+			"indFinal" => "indFinal",
+			"indPres" => "indPres",
+			"procEmi" => "procEmi",
+			"verProc" => "verProc",
+			"indIEDest" => "indIeDest",//enderDest
+			"vII" => "valueIi",
+			"vIPI" => "valueIpi",
+			"vPIS" => "valuePis",
+			"vCOFINS" => "valueCofins",
+			"vICMS" => "valueIcms",
+			"?value_icms_substituicao" => "valueIcmsSt",
+			_ => &label,
+		};
+		name.to_string()
 	}
 
+	fn copy(obj_out: &mut Value, obj_in :&Value) -> Result<(), Box<dyn std::error::Error>> {
+		let map = obj_in.as_object().ok_or("obj_in is not 'map' object!")?;
+
+		for (field_name_in, field) in map {
+			let field_name_out = label_to_name(field_name_in);
+
+			let value = match field {
+				Value::Object(_obj) => continue,
+				Value::Null => continue,
+				Value::String(str) => {
+					if str.is_empty() {
+						continue;
+					}
+
+					if ["dhEmi", "dhSaiEnt"].contains(&field_name_in.as_str()) {
+						json!(&str[..19])
+					} else {
+						field.clone()
+					}
+				},
+				Value::Bool(_) => continue,
+				Value::Number(number) => {
+					if ["CNPJ", "CPF", "IE"].contains(&field_name_in.as_str()) {
+						json!(number.to_string())
+					} else {
+						field.clone()
+					}
+				},
+				Value::Array(_values) => continue,
+			};
+
+			obj_out[field_name_out] = value;
+		}
+
+		Ok(())
+	}
+
+	fn adjust_person_uf(person :&mut Value, default :usize) -> usize {
+		let mut uf = 43;
+
+		if let Some(value) = person.get_mut("uf") {
+			if let Some(uf_str) = value.as_str() {
+				uf = get_uf_code(uf_str, default);
+				*value = json!(uf);
+			}
+		}
+
+		if person.get("uf").is_none() && let Some(value) = person.get("city") {
+			if let Some(city) = value.as_str() && city.len() > 2 {
+				uf = city[..2].parse::<usize>().unwrap_or(default);
+				person["uf"] = json!(uf);
+			}
+		}
+
+		if person.get("uf").is_none() {
+			uf = default;
+			person["uf"] = json!(uf);
+		}
+
+		uf
+	}
+
+	let config = quickxml_to_serde::Config::new_with_custom_values(false, "@", "#text", quickxml_to_serde::NullValue::EmptyObject)
+						 .add_json_type_override("/nfeProc/protNFe/infProt/chNFe", JsonArray::Infer(JsonType::AlwaysString))
+						 .add_json_type_override("/nfeProc/NFe/infNFe/det/prod/cEAN", JsonArray::Infer(JsonType::AlwaysString))
+						 ;
+
+	let obj = quickxml_to_serde::xml_str_to_json(xml, &config)?;
+
+	let Some(nfe_proc) = obj.get("nfeProc") else {
+		return Err(r#"Missing element "nfeProc"#)?;
+	};
+
+	let Some(prot_nfe) = nfe_proc.get("protNFe") else {
+		return Err(r#"Missing element "protNFe"#)?;
+	};
+
+	let Some(inf_prot) = prot_nfe.get("infProt") else {
+		return Err(r#"Missing element "infProt"#)?;
+	};
+
+	let Some(nfe) = nfe_proc.get("NFe") else {
+		return Err(r#"Missing element "NFe"#)?;
+	};
+
+	let Some(inf_nfe) = nfe.get("infNFe") else {
+		return Err(r#"Missing element "infNFe"#)?;
+	};
+
+	let Some(inf_adic) = inf_nfe.get("infAdic") else {
+		return Err(r#"Missing element "infAdic"#)?;
+	};
+
+	let Some(total) = inf_nfe.get("total") else {
+		return Err(r#"Missing element "total"#)?;
+	};
+
+	let Some(icms_tot) = total.get("ICMSTot") else {
+		return Err(r#"Missing element "ICMSTot"#)?;
+	};
+
+	let Some(ide) = inf_nfe.get("ide") else {
+		return Err(r#"Missing element "ide"#)?;
+	};
+
+	let Some(dest) = inf_nfe.get("dest") else {
+		return Err(r#"Missing element "dest"#)?;
+	};
+
+	let mut document = json!({});
+	copy(&mut document, nfe_proc)?;
+	copy(&mut document, prot_nfe)?;
+	copy(&mut document, inf_prot)?;
+	copy(&mut document, nfe)?;
+	copy(&mut document, inf_nfe)?;
+	copy(&mut document, inf_adic)?;
+	copy(&mut document, total)?;
+	copy(&mut document, icms_tot)?;
+	copy(&mut document, ide)?;
+	copy(&mut document, dest)?;
+	let mut uf = 43;
+	// person
+	{
+		let Some(emit) = inf_nfe.get("emit") else {
+			return Err(r#"Missing element "emit"#)?;
+		};
+
+		let Some(ender_emit) = emit.get("enderEmit") else {
+			return Err(r#"Missing element "enderEmit"#)?;
+		};
+
+		let mut person = json!({});
+		copy(&mut person, emit)?;
+		copy(&mut person, ender_emit)?;
+		uf = adjust_person_uf(&mut person, uf);
+		document["person"] = person;
+	}
+	// person_dest
+	{
+		let Some(ender_dest) = dest.get("enderDest") else {
+			return Err(r#"Missing element "enderDest"#)?;
+		};
+
+		let mut person = json!({});
+		copy(&mut person, dest)?;
+		copy(&mut person, ender_dest)?;
+		uf = adjust_person_uf(&mut person, uf);
+		document["personDest"] = person;
+	}
+	// transporte
+	{
+		let Some(transp) = inf_nfe.get("transp") else {
+			return Err(r#"Missing element "transp""#)?;
+		};
+
+		let mut request_freight = json!({});
+		copy(&mut request_freight, transp)?;
+
+		if let Some(vol) = transp.get("vol") {
+			copy(&mut request_freight, vol)?;
+		}
+
+		if let Some(transporta) = transp.get("transporta") {
+			copy(&mut request_freight, transporta)?;
+		}
+
+		adjust_person_uf(&mut request_freight, uf);
+		document["requestFreight"] = request_freight;
+	}
+	// lista de produtos
+	{
+		let Some(det) = inf_nfe.get("det") else {
+			return Err(r#"Missing element "det""#)?;
+		};
+
+		let det = if det.is_array() {
+			det.clone()
+		} else {
+			json!([det.clone()])
+		};
+
+		let mut list = vec![];
+
+		for item in det.as_array().unwrap() {
+			let Some(prod) = item.get("prod") else {
+				return Err(r#"Missing element "prod""#)?;
+			};
+
+			let Some(imposto) = item.get("imposto") else {
+				return Err(r#"Missing element "imposto""#)?;
+			};
+
+			let mut obj_out = json!({});
+			copy(&mut obj_out, prod)?;
+			copy(&mut obj_out, imposto)?;
+			list.push(obj_out);			
+		}
+
+		document["requestProduct"] = json!(list);
+	}
+	// lista pagamentos
+	{
+		let Some(pag) = inf_nfe.get("pag") else {
+			return Err(r#"Missing element "pag""#)?;
+		};
+
+		let Some(value) = pag.get("detPag") else {
+			return Err(r#"Missing element "detPag""#)?;
+		};
+
+		let value = if value.is_array() {
+			value.clone()
+		} else {
+			json!([value.clone()])
+		};
+
+		let mut list = vec![];
+
+		for obj_in in value.as_array().unwrap() {
+			let mut obj_out = json!({});
+			copy(&mut obj_out, obj_in)?;
+			list.push(obj_out);			
+		}
+
+		document["requestPayment"] = json!(list);
+	}
+
+	if let Some(value)  = document.get("valueItem") {
+		document["productsValue"] = value.clone();
+	}
+
+	if let Some(value)  = document.get("valueDesc") {
+		document["descValue"] = value.clone();
+	}
+
+	Ok(document)
+}
+
+async fn parse_html(html: &str) -> Result<Value, Box<dyn std::error::Error>> {
 	fn label_to_name(label :&str) -> String {
 		let label = unaccent::unaccent(label)
 			.replace("\n", " ")
@@ -117,19 +442,6 @@ async fn parse_html(html: &str) -> Result<Value, Box<dyn std::error::Error>> {
 			"" => "",
 			_ => &label,
 		};
-	/*
-	"base_calculo_icms": "65,89",
-	"valor_total_nfe": "159,87",
-	"indicador_intermediador_marketplace": "0 - Operação sem intermediador",
-	"digest_value_nf_e": "CbxWV71Bxz5aLVHcuEsJqlNP2gA=",
-	"municipio_ocorrencia_fato_gerador_icms": "4309050",
-	"indicador_escala_relevante": "S - Produzido em Escala Relevante;",
-	"indicador_composicao_valor_total_nf_e": "1 - O valor do item (vProd) compõe o valor total da NF-e (vProd)",
-	"modalidade_definicao_bc_icms_normal": "3 - Valor da Operação",
-	"base_calculo_icms_normal": "3,49",
-	"aliquota_icms_normal": "17,0000",
-	"valor_icms_normal": "0,59",
-	*/
 		name.to_string()
 	}
 
@@ -208,7 +520,7 @@ async fn parse_html(html: &str) -> Result<Value, Box<dyn std::error::Error>> {
 	*/
 		let value = match field {
 			//"chave_acesso" => value.replace(" ", ""),
-			"uf" => get_uf_code(&value).to_string(),
+			"uf" => get_uf_code(&value, 43).to_string(),
 			"nfe_id" => {
 				let regex_nfe_id = Regex::new(r#".*(?P<id>\d{44,47}).*"#).unwrap();
 				regex_nfe_id.replace_all(&value, "$id").to_string()
@@ -516,8 +828,13 @@ async fn import(message :&Value) -> Result<(), Box<dyn std::error::Error>> {
         file.read_to_end(&mut bytes).await?;
         bytes
     };
-	// verifica e processa site da sefaz RS
-    if let Some(_pos_ini) = find_subsequence(&contents, b"Content/css/SiteSefaz.css") {
+	
+    if let Some(_pos_ini) = find_subsequence(&contents, b"<nfeProc") {
+		let xml = std::str::from_utf8(&contents)?;
+        let document = parse_xml(xml).await?;
+		import_document(auth_token, document, true, false).await?;
+	} else if let Some(_pos_ini) = find_subsequence(&contents, b"Content/css/SiteSefaz.css") {
+		// processa site da sefaz RS
         if let Some(pos_ini) = find_subsequence(&contents, b"<html>") {
             let contents = &contents[pos_ini..];
 
@@ -578,8 +895,6 @@ async fn import(message :&Value) -> Result<(), Box<dyn std::error::Error>> {
 					}
 				}
 
-				#[cfg(debug_assertions)]
-				tokio::fs::write(format!("/tmp/request_nfe.json"), document.to_string().as_bytes()).await?;
 				import_document(auth_token, document, true, true).await?;
             }
         }
@@ -665,7 +980,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			};
 
 			for redis::streams::StreamKey { key, ids } in srr.keys {
-				println!("[nfe_import.main] Stream key {key}");
+				println!("[nfe_import.main] V1.1.1.2606251 Stream key {key}");
 				let mut list_id = vec![];
 
 				for redis::streams::StreamId { id, map } in ids {
@@ -716,41 +1031,7 @@ mod tests {
     #[tokio::test]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		let list = [
-  			"43260588212113149839650030000013411018049861", // Missing 'destinatario'
-
-			//"43260315029819000159650520000358211710388616",
-			//"43260293332468000326653070000375049290520880",
-			//"43171090180621000863550000000159291000159290", // Broken person dest
-			//"43170292091891001390650110000525481000855918", // request_nfe_pkey"DETAIL: Key (request)=(1658) already exists.
-
-			// "43181195199741000150650020001794631001794630", // 95.199.741/0001-50, 808.037.920-34, 2018-11-27 14:10:51
-			// "43180914843149000147650020000566701136191282", // 14.843.149/0001-47, 808.037.920-34, 2018-09-14 18:37:01
-			// "43180914843149000147650030000611731182506560", // 14.843.149/0001-47, 808.037.920-34, 2018-09-29 18:39:22
-
-			// "43191002607110000141550000000013621475459270", // 02.607.110/0001-41, 808.037.920-34, 2019-10-25 15:36:39
-			// "43191002607110000141550000000013541357527045", // 02.607.110/0001-41, 808.037.920-34, 2019-10-23 10:48:54
-			// "43190808542850000204650020000547031000476378", // value_products (202.86) !=  value_payments (0) !
-
-			// "43200900078083000131650180001087291391162253", // 00.078.083/0001-31, 808.037.920-34, 2020-09-12 10:45:03
-			// "43200294384930000130651020000001701016483200", // value_products (18.05) !=  value_payments (20.05) !
-
-			// "43220742933931000192650010000041021817287600", // (type)=(18) is not present in table "payment_type".
-			// "43220792016757006718651010000084189702004762", // 92.016.757/0067-18, 808.037.920-34, 2022-07-16 16:02:04
-
-			// "43231189218333000103550010001063231194485952", // Broken person dest
-			// "43230742933931000192650010000112171255613542", // (type)=(18) is not present in table "payment_type".
-			// "43230489218333000103550010001029251194485950", // Broken person dest
-			// "43230279379491016772650100000327571901246299", // value_products (219.91) !=  value_payments (221) !
-
-			// "43241115071607000130650120000443271428209858", // [NfeParser.parseHtml.parseFields] : TODO alread maped field codigo_uf, oldValue="35", newValue="41"
-			// "43240979379491016772650080000483231900909654", // 79.379.491/0167-72, 808.037.920-34, 2024-09-29 18:52:15
-			// "43240179379491016772650120000316461900977785", // 79.379.491/0167-72, 808.037.920-34, 2024-01-23 20:36:10
-
-			// "43251192665611047564651000005239261559978127", // 92.665.611/0475-64, 808.037.920-34, 2025-11-28 14:44:15
-			// "43251104436058000133651040002333441992737622", // 04.436.058/0001-33, 808.037.920-34, 2025-11-10 19:18:57
-			// "43251004796820000273650010000241461902414669", // 04.796.820/0002-73, 808.037.920-34, 2025-10-23 21:02:42
-			// "43251008422432000100650020000041211008937715", // 08.422.432/0001-00, 808.037.920-34, 2025-10-18 18:02:53
-			//"43250888212113097774650030000134821181872187", // 88.212.113/0977-74, 808.037.920-34, 2025-08-24 19:18:50
+  			"33191200776574001390550050218069231186030638.xml",
 		];
 
 		let customer_user = "12345678901.guest";
@@ -771,7 +1052,7 @@ mod tests {
 		message["authorization"] = login_response.get("jwtHeader").ok_or("Missing jwtHeader in login response!")?.clone();
 
 		for item in list {
-			message["file"] = json!(format!("data/12345678901-guest-{item}.html"));
+			message["file"] = json!(format!("data/12345678901-guest-{item}"));
 			crate::import(&message).await?;
 		}
 

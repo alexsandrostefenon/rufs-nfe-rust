@@ -6,7 +6,7 @@ set -e
 cmd_env='./.env'
 cmd_target='release'
 
-PARSED=$(getopt --options='ei:' --longoptions='install,setup,build,env:,test,deploy,update,db-drop-tests-schemas,db-import:,db-backup,db-drop,target:,scp-in:' --name "$0" -- "$@") || exit 2
+PARSED=$(getopt --options='ei:' --longoptions='install,setup,build,env:,test,deploy,update,logs:,db-drop-tests-schemas,db-import:,db-backup,ssh,db-drop,target:,scp-in:,customer:,user:,password:,clipp-import:' --name "$0" -- "$@") || exit 2
 eval set -- "$PARSED"
 
 while true; do
@@ -43,6 +43,10 @@ while true; do
     cmd_db_backup='yes'
     shift
     ;;
+  --ssh)
+    cmd_ssh='yes'
+    shift
+    ;;
   -i | --db-import)
     cmd_import="$2"
     shift 2
@@ -59,8 +63,33 @@ while true; do
     cmd_update='yes'
     shift
     ;;
+  --logs)
+    cmd_logs="$2"
+
+    if [ "$cmd_logs" = 'all' ]; then
+      cmd_logs='rufs-nfe nfe-import nginx'
+    fi
+
+    shift 2
+    ;;
   --scp-in)
     cmd_scp_in="$2"
+    shift 2
+    ;;
+  --customer)
+    customer="$2"
+    shift 2
+    ;;
+  --user)
+    user_name="$2"
+    shift 2
+    ;;
+  --password)
+    password="$2"
+    shift 2
+    ;;
+  --clipp-import)
+    cmd_clipp_import="$2"
     shift 2
     ;;
   --)
@@ -95,6 +124,27 @@ function db_drop() {
   rm -f $HOME/data/rufs_customer_template.sql
   $docker_cli_local exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "DROP DATABASE IF EXISTS rufs_nfe"
   $docker_cli_local exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "CREATE DATABASE rufs_nfe WITH OWNER $PGUSER"
+}
+
+function clipp_import() {
+  #$compose_cli_local up -d selenium-side-runner
+  #$compose_cli_local up -d firebirdsql-v2_5
+  $compose_cli_local up -d clipp-import
+  sleep 1
+  local date_initial=$1
+  local customer=$2
+  local user_name=$3
+  local password=$4
+
+  if [ "$user_name" = '' ]; then
+    password=$($docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -tc "select password from rufs_customer_$customer.rufs_user where name='admin'" | grep -oP '\w+')
+    user_name=$($docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -tc "select name from rufs_customer_$customer.rufs_user where password='$password' and name!='admin'" | grep -oP '\w+')
+  else
+    password=$(echo -n $password | openssl dgst -md5 | grep -oP '\w{16,}')
+  fi
+
+  JWT=$($compose_cli_local exec curl curl -s http://rufs-nfe:8080/rest/login -H 'Content-Type: application/json' -d '{"user":"'$customer'.'$user_name'", "password": "'$password'"}' | grep -oP '[\w_\.\-]{128,}')
+  $docker_cli_local exec -it redis redis-cli xadd clipp '*' data '{"customer": "'$customer'", "authorization": "'$JWT'", "dateInitial": "'$date_initial'", "dbUrl": "firebird://SYSDBA:masterkey@firebirdsql-v2_5:3050//var/lib/firebird/data/clipp-'$customer'.fdb?charset=WIN1252"}'
 }
 
 if [ "$vps_provider" != 'local' ]; then
@@ -174,9 +224,9 @@ if [ "$cmd_build" != '' ]; then
   release_debug_client='--release'
 
   if [ "$cmd_target" = 'debug' ]; then
-      sed -i 's/git = "https:\/\/github.com\/alexsandrostefenon\/rufs-base-rust.git"/path = "\.\.\/rufs-base-rust"/' Cargo.toml
-      release_debug_server=''
-      release_debug_client='--dev'
+    sed -i 's/git = "https:\/\/github.com\/alexsandrostefenon\/rufs-base-rust.git"/path = "\.\.\/rufs-base-rust"/' Cargo.toml
+    release_debug_server=''
+    release_debug_client='--dev'
   fi
 
   exec="$docker_cli_local run --rm -v $PWD/../rufs-base-rust:$PWD/../rufs-base-rust -v $PWD:$PWD -w $PWD -it rust-build"
@@ -195,7 +245,7 @@ fi
 
 if [ "$cmd_test" = 'yes' ]; then
   $compose_cli_local down selenium-side-runner
-  $compose_cli_local down selenium-standalone-firefox
+  #$compose_cli_local down selenium-standalone-firefox
   $compose_cli_local down rufs-nfe
   $compose_cli_local down nfe-import
   $compose_cli_local down clipp-import
@@ -224,17 +274,18 @@ if [ "$cmd_test" = 'yes' ]; then
   fi
 
   $compose_cli_local up -d nginx
-  #$compose_cli_local up -d broker
-  #$docker_cli_local exec -it broker /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic nfe
-  $compose_cli_local up -d redis
-  $compose_cli_local up -d nfe-import
-  $compose_cli_local up -d rufs-nfe
-  $compose_cli_local up -d selenium-standalone-firefox
-  sleep 8
+  sleep 1;#8
   $compose_cli_local up -d selenium-side-runner
   mkdir -p ./tmp
   rm -f ./tmp/*
   sed -Ezi 's/"command": "type",(.\s*)?"target": "id=new-request--date"/"command": "\/\/type","target": "id=new-request--date"/g' tests.side
+
+  #$compose_cli_local up -d broker
+  #$docker_cli_local exec -it broker /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic nfe
+  #$compose_cli_local up -d redis
+  $compose_cli_local up -d nfe-import
+  #$compose_cli_local up -d rufs-nfe
+  sleep 1
 
   $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
   $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_sefaz' -j '"--bail 1 --detectOpenHandles"' tests.side
@@ -242,19 +293,14 @@ if [ "$cmd_test" = 'yes' ]; then
   $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
   $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'main' -j '"--bail 1 --detectOpenHandles"' tests.side
 
-  if [[ -f 'data/clipp.fdb' ]]; then
-    $compose_cli_local up -d firebirdsql-v2_5
-    $compose_cli_local up -d clipp-import
+  if [[ -f 'data/clipp-12345678901.fdb' ]]; then
     $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
-    #echo -n "123456" | openssl dgst -md5 | grep -oP '\w{16,}'
-    JWT=$($compose_cli_local exec selenium-side-runner curl -s http://rufs-nfe:8080/rest/login -H 'Content-Type: application/json' -d '{"user":"12345678901.guest", "password": "e10adc3949ba59abbe56e057f20f883e"}' | grep -oP '[\w_\.\-]{128,}')
-    $docker_cli_local exec -it redis redis-cli xadd clipp '*' data '{"customer": "123.456.789-01", "authorization": "'$JWT'", "dateInitial": "2024-09-12", "dbUrl": "firebird://SYSDBA:masterkey@firebirdsql-v2_5:3050//var/lib/firebird/data/clipp.fdb?charset=WIN1252"}'
+    clipp_import 2024-09-12 12345678901 guest 123456
     $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_clipp' -j '"--bail 1 --detectOpenHandles"' tests.side
   fi
 
   sed -i 's/"command": "\/\/type","target": "id=new-request--date"/"command": "type","target": "id=new-request--date"/g' tests.side
   $compose_cli_local down selenium-side-runner
-  $compose_cli_local down selenium-standalone-firefox
 fi
 
 if [ "$cmd_deploy" = 'yes' ]; then
@@ -301,7 +347,10 @@ if [ "$cmd_update" = 'yes' ]; then
     fi
 
     $exec $compose_cli_target up -d nginx
-    $exec $compose_cli_target logs -f rufs-nfe nfe-import nginx
+fi
+
+if [ "$cmd_logs" != '' ]; then
+  $exec $compose_cli_target logs -f $cmd_logs
 fi
 
 if [ "$cmd_test" != 'yes' ] && [ "$cmd_db_drop" = 'yes' ]; then
@@ -329,4 +378,14 @@ fi
 
 if [ "$cmd_scp_in" != '' ]; then
   scp $ssh_connection_args scp://$vps_user@$vps_ip/$cmd_scp_in $cmd_scp_in
+fi
+
+if [ "$cmd_clipp_import" != '' ]; then
+  clipp_import $cmd_clipp_import $customer $user_name $password
+  #podman exec -it firebirdsql-v2_5 /usr/local/firebird/bin/isql /var/lib/firebird/data/clipp-12345678901.fdb
+  #clear;./cloud.sh --customer 12345678901 --clipp-import 2004-09-12 --user guest --password 123456
+fi
+
+if [ "$cmd_ssh" != '' ]; then
+  $exec
 fi

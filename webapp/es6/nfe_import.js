@@ -1,6 +1,6 @@
 import { showStatus, dataViewManager, loginResponse } from "./app.js";
 
-const regExpNfeChaveAcesso = /(?<nfeId>\b\d{22}\s?\d{22,27}\b)/;
+const regExpNfeChaveAcesso = /(?<nfeId>\b\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?(\d{2}\s?)?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{2,7}\b)/;
 let stoped = true;
 let nfeIdOld = null;
 
@@ -116,6 +116,12 @@ async function upload(text) {
 			log(`Processed ${count} of ${list.length}.`);
 			return;
 		}
+	} else if (text.includes("<nfeProc")) {
+		type = "xml";
+	} else if (text.includes("<b2wo:nfeProc")) {
+		text = text.replaceAll("b2wo:", "");
+		text = text.replaceAll("ns3:", "");
+		type = "xml";
 	}
 
 	const match = regExpNfeChaveAcesso.exec(text);
@@ -262,10 +268,12 @@ async function init(debug) {
 			}
 
 			const listDevices = [];
-			listDevices.push(`<option value="file">Importar arquivo</option>`);
+			const listDevicesOptions = [];
+			listDevicesOptions.push(`<option value="file">Importar arquivo</option>`);
 			const _stream = await navigator.mediaDevices.getUserMedia({video: {width: 1280, height: 720}, audio: false});
 
 			if (navigator.mediaDevices.enumerateDevices != undefined) {
+				let barcode_camera = null;
 				const devices = await navigator.mediaDevices.enumerateDevices();
 
 				devices.forEach(device => {
@@ -275,7 +283,12 @@ async function init(debug) {
 							log(navigator.mediaDevices.getSupportedConstraints());
 						}
 
-						listDevices.push(`<option value="${device.deviceId}">${device.label}</option>`);
+						listDevicesOptions.push(`<option value="${device.deviceId}">${device.label}</option>`);
+						listDevices.push(device.deviceId);
+
+						if (device.label.includes("back")) {
+							barcode_camera = device.deviceId;
+						}
 
 						if (device.getCapabilities != null) {
 							log(device.getCapabilities());
@@ -284,15 +297,25 @@ async function init(debug) {
 				});
 
 				const element = document.getElementById("nfe_import-video_input");
-				element.innerHTML = listDevices.join("");
+				element.innerHTML = listDevicesOptions.join("");
 				const div = document.getElementById("nfe_import-div_video_input");
 				div.hidden = false;
+
+				if (barcode_camera == null && listDevices.length == 1) {
+					barcode_camera = listDevices[0];
+				}
+
+				if (barcode_camera != null) {
+					setTimeout(() => {
+						element.value = barcode_camera;
+						deviceChange(barcode_camera);
+					}, 100);
+				}
 			} else {
 				console.error("enumerateDevices() not supported.");
 			}
 		} else {
 			console.error("mediaDevices() not supported.");
-			log("mediaDevices() not supported.");
 		}
 
 		const element = document.getElementById("nfe_import-qr_code");
@@ -301,6 +324,9 @@ async function init(debug) {
 			const element = document.getElementById("nfe_import-log");
 			element.value = "";
 			element.hidden = true;
+			const elementVideoInput = document.getElementById("nfe_import-video_input");
+			elementVideoInput.value = "file";
+			deviceChange(elementVideoInput.value);
 		}
 	}
 
@@ -335,7 +361,7 @@ async function init(debug) {
 		<input id="nfe_import-qr_code" type="text"></input>
     </div>
     <div class="form-group">
-		<label for="nfe_import-input_file" class="col-sm-2 control-label">Arquivo (site Sefaz) baixado</label>
+		<label for="nfe_import-input_file" class="col-sm-2 control-label">Arquivo XML baixado (ou página da consulta salva)</label>
 		<input id="nfe_import-input_file" type="file"></input>
     </div>
     <div class="form-group" ${inputFileHidden}>

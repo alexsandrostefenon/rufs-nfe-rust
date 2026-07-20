@@ -21,7 +21,7 @@ services:
       - ./nginx/etc/templates:/etc/nginx/templates:ro
       - ./www:/usr/share/nginx/html:ro
       - ./etc/letsencrypt:/etc/letsencrypt:ro
-      #- ./srvDsv/dist_none:/imobiliar:ro
+      - /imobiliar:/imobiliar:ro
     env_file:
       - .env
     environment:
@@ -78,6 +78,14 @@ services:
       - .env
     ports:
       - "${PGPORT}:5432"
+  curl:
+    container_name: curl
+    image: docker.io/curlimages/curl:latest
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: sleep infinity
+    tty: true
   rufs-nfe:
     container_name: rufs-nfe
     image: localhost/rufs-nfe-rust:latest
@@ -88,9 +96,9 @@ services:
     env_file:
       - .env
     working_dir: /app
-    #depends_on:
-      #- postgres
-      #- broker
+    depends_on:
+      - postgres
+      - redis
     deploy:
       resources:
         limits:
@@ -110,9 +118,9 @@ services:
       - ${HOME}/data:/app/data
     env_file:
       - .env
-    #depends_on:
-      #- broker
-      #- rufs-nfe
+    depends_on:
+      - redis
+      - rufs-nfe
     deploy:
       resources:
         limits:
@@ -128,14 +136,15 @@ services:
     env_file:
       - .env
     depends_on:
+      - curl
+      - redis
       - firebirdsql-v2_5
-      - broker
       - rufs-nfe
     deploy:
       resources:
         limits:
           cpus: '0.25'
-          memory: 100M
+          memory: 150M
   selenium-standalone-chrome:
     container_name: selenium-standalone-chrome
     image: docker.io/selenium/standalone-chrome
@@ -152,3 +161,5 @@ services:
     working_dir: /app
     command: /usr/bin/sh
     tty: true
+    depends_on:
+      - selenium-standalone-firefox

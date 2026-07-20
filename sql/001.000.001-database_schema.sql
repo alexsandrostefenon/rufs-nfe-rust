@@ -473,32 +473,32 @@ $account_balance_after_date$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION request_payment_change() RETURNS TRIGGER AS $request_payment_change$
 DECLARE
-		request_rec RECORD;
+	request_rec RECORD;
 BEGIN
-		PERFORM set_config('search_path', TG_TABLE_SCHEMA, true);
+	PERFORM set_config('search_path', TG_TABLE_SCHEMA, true);
 
-		IF (TG_OP = 'INSERT') THEN
-			  SELECT INTO request_rec * FROM request WHERE request.id = NEW.request;
-				PERFORM account_balance_after_date(
-					--NEW.rufs_group_owner,
-					NEW.account, GREATEST(NEW.due_date, NEW.payday), NEW.id, NEW.value, request_rec.type);
-				RETURN NEW;
-		ELSEIF (TG_OP = 'UPDATE') THEN
-			  SELECT INTO request_rec * FROM request WHERE request.id = OLD.request;
-				PERFORM account_balance_after_date(
-					--OLD.rufs_group_owner,
-					OLD.account, GREATEST(OLD.due_date, OLD.payday), OLD.id, OLD.value * (-1.0), request_rec.type);
-				PERFORM account_balance_after_date(
-					--NEW.rufs_group_owner,
-					NEW.account, GREATEST(NEW.due_date, NEW.payday), NEW.id, NEW.value, request_rec.type);
-				RETURN NEW;
-		ELSEIF (TG_OP = 'DELETE') THEN
-			  SELECT INTO request_rec * FROM request WHERE request.id = OLD.request;
-				PERFORM account_balance_after_date(
-					--OLD.rufs_group_owner,
-					OLD.account, GREATEST(OLD.due_date, OLD.payday), OLD.id, OLD.value * (-1.0), request_rec.type);
-				RETURN OLD;
-		END IF;
+	IF (TG_OP = 'INSERT') THEN
+		SELECT INTO request_rec * FROM request WHERE request.id = NEW.request;
+		PERFORM account_balance_after_date(
+			--NEW.rufs_group_owner,
+			NEW.account, GREATEST(NEW.due_date, NEW.payday), NEW.id, NEW.value, request_rec.type);
+		RETURN NEW;
+	ELSEIF (TG_OP = 'UPDATE') THEN
+		SELECT INTO request_rec * FROM request WHERE request.id = OLD.request;
+		PERFORM account_balance_after_date(
+			--OLD.rufs_group_owner,
+			OLD.account, GREATEST(OLD.due_date, OLD.payday), OLD.id, OLD.value * (-1.0), request_rec.type);
+		PERFORM account_balance_after_date(
+			--NEW.rufs_group_owner,
+			NEW.account, GREATEST(NEW.due_date, NEW.payday), NEW.id, NEW.value, request_rec.type);
+		RETURN NEW;
+	ELSEIF (TG_OP = 'DELETE') THEN
+		SELECT INTO request_rec * FROM request WHERE request.id = OLD.request;
+		PERFORM account_balance_after_date(
+			--OLD.rufs_group_owner,
+			OLD.account, GREATEST(OLD.due_date, OLD.payday), OLD.id, OLD.value * (-1.0), request_rec.type);
+		RETURN OLD;
+	END IF;
 
 	RETURN NULL;
 END;
@@ -508,19 +508,20 @@ CREATE TRIGGER request_payment_trigger AFTER INSERT OR UPDATE OR DELETE ON rufs_
 
 CREATE OR REPLACE FUNCTION request_payment_before() RETURNS TRIGGER AS $request_payment_before$
 DECLARE
-		rec_payment RECORD;
-		date_new timestamp;
+	rec_payment RECORD;
+	date_new timestamp;
 BEGIN
-		PERFORM set_config('search_path', TG_TABLE_SCHEMA, true);
-		date_new = GREATEST(NEW.payday,NEW.due_date);
+	PERFORM set_config('search_path', TG_TABLE_SCHEMA, true);
+	date_new = GREATEST(NEW.payday,NEW.due_date);
 
-		FOR rec_payment IN SELECT id,GREATEST(payday,due_date) as date_ref,balance FROM request_payment WHERE
-			--rufs_group_owner = NEW.rufs_group_owner AND
-			account = NEW.account AND GREATEST(payday,due_date) <= date_new ORDER BY date_ref desc,id desc LIMIT 1 LOOP
-			NEW.balance = rec_payment.balance;
-		END LOOP;
+	FOR rec_payment IN SELECT id,GREATEST(payday,due_date) as date_ref,balance FROM request_payment WHERE
+		--rufs_group_owner = NEW.rufs_group_owner AND
+		account = NEW.account AND GREATEST(payday,due_date) <= date_new ORDER BY date_ref desc,id desc LIMIT 1 
+	LOOP
+		NEW.balance = rec_payment.balance;
+	END LOOP;
 
-		RETURN NEW;
+	RETURN NEW;
 END;
 $request_payment_before$ LANGUAGE plpgsql;
 
