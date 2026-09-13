@@ -1,11 +1,10 @@
-import { addEventListener, dataViewManager, loginResponse } from "./app.js";
+import { addEventListener, dataViewManager, loginResponse, log } from "./app.js";
 
 let menuParams = null;
 let lastScannedCode = null;
 
 function onRufsEvent(params) {
     const event = JSON.parse(params);
-    console.log(event);
     // {"service":"request","action":"notify","primaryKey":{"id":2}}
     if (event.service == "request") {
         const regExMenuSearch = /\.(new|view|edit|search)(\?)?/;
@@ -13,7 +12,8 @@ function onRufsEvent(params) {
         let schema = loginResponse.path./*replaceAll("/", ".").*/replace(regExMenuSearch, regExMenuReplace);
 
         for (let element of document.querySelectorAll(`a[href='#!/app/${schema}']`)) {
-            element.click();
+    		//log(`[onRufsEvent] : #!/app/${schema}`);
+            //element.click();
         }
     }
 }

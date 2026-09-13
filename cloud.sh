@@ -1,12 +1,12 @@
 #!/bin/bash
+set -e
 set -x
 PS4=' $LINENO: '
-set -e
 
 cmd_env='./.env'
 cmd_target='release'
 
-PARSED=$(getopt --options='ei:' --longoptions='install,setup,build,env:,test,deploy,update,logs:,db-drop-tests-schemas,db-import:,db-backup,ssh,db-drop,target:,scp-in:,customer:,user:,password:,clipp-import:' --name "$0" -- "$@") || exit 2
+PARSED=$(getopt --options='cei:' --longoptions='install,setup,compile,build,env:,test,test-side,deploy,update,logs:,drop-schema:,db-import:,db-backup,ssh,db-drop,target:,scp-in:,customer:,user:,password:,clipp-import:' --name "$0" -- "$@") || exit 2
 eval set -- "$PARSED"
 
 while true; do
@@ -23,6 +23,10 @@ while true; do
     cmd_setup='yes'
     shift
     ;;
+  -c | --compile)
+    cmd_compile='yes'
+    shift
+    ;;
   --build)
     cmd_build='yes'
     shift
@@ -35,9 +39,9 @@ while true; do
     cmd_db_drop='yes'
     shift
     ;;
-  --db-drop-tests-schemas)
-    cmd_db_drop_tests_schemas='yes'
-    shift
+  --drop-schema)
+    cmd_drop_schema="$2"
+    shift 2
     ;;
   --db-backup)
     cmd_db_backup='yes'
@@ -53,6 +57,10 @@ while true; do
     ;;
   --test)
     cmd_test='yes'
+    shift
+    ;;
+  --test-side)
+    cmd_test_side='yes'
     shift
     ;;
   --deploy)
@@ -103,11 +111,16 @@ while true; do
   esac
 done
 
+set -a
 source "$cmd_env"
+set +a
+#set -a; source .env; set +a;PGHOST=localhost;
 docker_cli_local='podman'
 tls_no_verify='--tls-verify=false'
 compose_cli_local='podman-compose'
 exec=''
+
+#sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches
 
 function db_backup() {
   $exec $docker_cli_target exec postgres mkdir -p /app/data/backup/db
@@ -120,6 +133,7 @@ function db_backup() {
 
 function db_drop() {
   $compose_cli_local down rufs-nfe
+  $compose_cli_local up -d postgres
   rm -f $HOME/data/openapi-rufs_nfe.json
   rm -f $HOME/data/rufs_customer_template.sql
   $docker_cli_local exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "DROP DATABASE IF EXISTS rufs_nfe"
@@ -145,6 +159,52 @@ function clipp_import() {
 
   JWT=$($compose_cli_local exec curl curl -s http://rufs-nfe:8080/rest/login -H 'Content-Type: application/json' -d '{"user":"'$customer'.'$user_name'", "password": "'$password'"}' | grep -oP '[\w_\.\-]{128,}')
   $docker_cli_local exec -it redis redis-cli xadd clipp '*' data '{"customer": "'$customer'", "authorization": "'$JWT'", "dateInitial": "'$date_initial'", "dbUrl": "firebird://SYSDBA:masterkey@firebirdsql-v2_5:3050//var/lib/firebird/data/clipp-'$customer'.fdb?charset=WIN1252"}'
+}
+
+function compile() {
+  #$docker_cli_local pull --tls-verify=false localhost:5000/rust-runtime
+  #$docker_cli_local pull --tls-verify=false localhost:5000/rust-build
+
+  release_debug_server='--release'
+  release_debug_client='--release'
+
+  if [ "$cmd_target" = 'debug' ]; then
+    sed -i 's/git = "https:\/\/github.com\/alexsandrostefenon\/rufs-base-rust.git"/path = "\.\.\/rufs-base-rust"/' Cargo.toml
+    sed -i 's/#- \.\/webapp/- \.\/webapp/' compose.yml
+    sed -i 's/#- \.\/pkg/- \.\/pkg/' compose.yml
+    sed -i 's/#- \.\/sql/- \.\/sql/' compose.yml
+    sed -i 's/#- \.\/target/- \.\/target' compose.yml
+    release_debug_server=''
+    release_debug_client='--dev'
+  fi
+
+  exec="$docker_cli_local run --rm -v $PWD/../rufs-base-rust:$PWD/../rufs-base-rust -v $PWD:$PWD -w $PWD -it rust-build"
+  $exec cargo build $release_debug_server
+  $exec wasm-pack build $release_debug_client --target web
+}
+
+function test_side() {
+  $compose_cli_local up -d selenium-side-runner
+  sleep 8
+  mkdir -p ./tmp
+  rm -f ./tmp/*
+  jq '((.tests[] | select(.name | test("request_buy_new")).commands[]) | select(.target == "id=new-request--date") | select(.command == "//sendKeys")).command = "sendKeys"' tests.side > tmp0.json
+  jq '((.tests[] | select(.name | test("request_buy_new")).commands[]) | select(.target == "id=new-request--date") | select(.command == "type")).command = "//type"' tmp0.json > tests.json
+  #jq '((.tests[] | select(.name | test("request_buy_new_2")).commands[]) | select(.target == "id=table_row-col-search-account_balance--balance-0")).target = "id=table_row-col-search-account_balance--balance-2"' tmp1.json > tests.json
+
+  #$docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
+  #$compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_sefaz' -j '"--bail 1 --detectOpenHandles"' tests.json
+
+  $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
+  $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'main' -j '"--bail 1 --detectOpenHandles"' tests.json
+
+  if [[ -f 'data/clipp-12345678901.fdb' ]]; then
+    $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
+    clipp_import 2024-09-12 12345678901 guest 123456
+    $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_clipp' -j '"--bail 1 --detectOpenHandles"' tests.json
+  fi
+
+  #jq '((.tests[] | select(.name == "remove_request_2").commands[]) | select(.id == "12835e51-ee6c-4fed-a9df-8ede5f3e880a")).target = "id=table_row-edit-edit-request--search-request_product--1"' tests.json > tmp0.json;
 }
 
 if [ "$vps_provider" != 'local' ]; then
@@ -180,72 +240,55 @@ if [ "$cmd_install" = 'yes' ]; then
 fi
 
 if [ "$cmd_setup" = 'yes' ]; then
-    if [ "$vps_provider" = 'aws' ]; then
-      $exec sudo yum install -y docker postgresql16.x86_64
-      $exec sudo usermod -aG docker $vps_user
-      $exec sudo systemctl enable docker
-      $exec sudo systemctl start docker
-      $exec sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/bin/docker-compose
-      $exec sudo chmod 755 /usr/bin/docker-compose
-    fi
+  if [ "$vps_provider" = 'aws' ]; then
+    $exec sudo yum install -y docker postgresql16.x86_64
+    $exec sudo usermod -aG docker $vps_user
+    $exec sudo systemctl enable docker
+    $exec sudo systemctl start docker
+    $exec sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/bin/docker-compose
+    $exec sudo chmod 755 /usr/bin/docker-compose
+  fi
 
-    if [ "$vps_provider" = 'local' ]; then
-      $docker_cli_target build -t rust-runtime -f runtime.Dockerfile
-      $docker_cli_target build -v $PWD/../rufs-base-rust:$PWD/../rufs-base-rust -v $PWD:$PWD -t rust-build --build-arg working_dir=$PWD -f build.Dockerfile
-      $docker_cli_target build -t selenium-side-runner -f selenium-side-runner.Dockerfile
-      echo "Setup of containerized environment is done !"
-    fi
+  if [ "$vps_provider" = 'local' ]; then
+    $docker_cli_target build -t rust-runtime -f runtime.Dockerfile
+    $docker_cli_target build -v $PWD/../rufs-base-rust:$PWD/../rufs-base-rust -v $PWD:$PWD -t rust-build --build-arg working_dir=$PWD -f build.Dockerfile
+    $docker_cli_target build -t selenium-side-runner -f selenium-side-runner.Dockerfile
+    echo "Setup of containerized environment is done !"
+  fi
 
-    if [ "$vps_provider" != 'local' ]; then
-      scp $ssh_connection_args $cmd_env scp://$vps_user@$vps_ip:22/.env
-      scp $ssh_connection_args -r ./nginx scp://$vps_user@$vps_ip
-      scp $ssh_connection_args compose.yml scp://$vps_user@$vps_ip
-    fi
+  if [ "$vps_provider" != 'local' ]; then
+    scp $ssh_connection_args $cmd_env scp://$vps_user@$vps_ip:22/.env
+    scp $ssh_connection_args -r ./nginx scp://$vps_user@$vps_ip
+    scp $ssh_connection_args compose.yml scp://$vps_user@$vps_ip
+  fi
 
-    $exec mkdir -p data
-    $exec $compose_cli_local up -d postgres redis registry
-    sleep 15
-    $exec $docker_cli_target exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "CREATE USER $PGUSER WITH CREATEDB LOGIN PASSWORD '$PGPASSWORD'" &&
-    $exec $docker_cli_target exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "CREATE DATABASE rufs_nfe WITH OWNER $PGUSER" &&
-    $exec mkdir -p ./etc/letsencrypt
-    $exec mkdir -p ./var/lib/letsencrypt
+  $exec mkdir -p data
+  $exec $compose_cli_local up -d postgres redis registry
+  sleep 15
+  $exec $docker_cli_target exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "CREATE USER $PGUSER WITH CREATEDB LOGIN PASSWORD '$PGPASSWORD'" &&
+  $exec $docker_cli_target exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "CREATE DATABASE rufs_nfe WITH OWNER $PGUSER" &&
+  $exec mkdir -p ./etc/letsencrypt
+  $exec mkdir -p ./var/lib/letsencrypt
+  $exec $docker_cli_target run -it --rm --name certbot -p 80:80 -v "./etc/letsencrypt:/etc/letsencrypt" -v "./var/lib/letsencrypt:/var/lib/letsencrypt" certbot/certbot certonly;#select '1'
+  ##$exec $docker_cli_target  run --rm --entrypoint=cat nginx /etc/nginx/nginx.conf > ./nginx/etc/nginx.conf
+fi
 
-    #if [ "$vps_provider" != 'local' ]; then
-      #$exec $docker_cli_target run -it --rm --name certbot -p 80:80 -v "./etc/letsencrypt:/etc/letsencrypt" -v "./var/lib/letsencrypt:/var/lib/letsencrypt" certbot/certbot certonly;#select '1'
-      ##$exec $docker_cli_target  run --rm --entrypoint=cat nginx /etc/nginx/nginx.conf > ./nginx/etc/nginx.conf
-    #fi
+if [ "$cmd_compile" != '' ] || [ "$cmd_build" != '' ]; then
+  compile
 fi
 
 if [ "$cmd_build" != '' ]; then
-  #$docker_cli_local pull --tls-verify=false localhost:5000/rust-runtime
-  #$docker_cli_local pull --tls-verify=false localhost:5000/rust-build
-
-  release_debug_server='--release'
-  release_debug_client='--release'
-
-  if [ "$cmd_target" = 'debug' ]; then
-    sed -i 's/git = "https:\/\/github.com\/alexsandrostefenon\/rufs-base-rust.git"/path = "\.\.\/rufs-base-rust"/' Cargo.toml
-    release_debug_server=''
-    release_debug_client='--dev'
-  fi
-
-  exec="$docker_cli_local run --rm -v $PWD/../rufs-base-rust:$PWD/../rufs-base-rust -v $PWD:$PWD -w $PWD -it rust-build"
-  $exec cargo build $release_debug_server
-  $exec wasm-pack build $release_debug_client --target web
   version=$($exec cargo pkgid 2>/dev/null | grep -oP '\d+\.\d+\.\d+')
   $docker_cli_local build -v $PWD:$PWD -t rufs-nfe-rust:$version ./
   $docker_cli_local tag rufs-nfe-rust:$version rufs-nfe-rust:latest
   echo "Build of containerized application image is done !"
 fi
 
-if [ "$cmd_db_drop_tests_schemas" = 'yes' ]; then
-  sed -Ezi 's/"command": "\/\/type",(.\s*)?"target": "id=new-request--date"/"command": "type","target": "id=new-request--date"/g' tests.side
-  $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
+if [ "$cmd_drop_schema" != '' ]; then
+  $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_$cmd_drop_schema CASCADE"
 fi
 
 if [ "$cmd_test" = 'yes' ]; then
-  $compose_cli_local down selenium-side-runner
-  #$compose_cli_local down selenium-standalone-firefox
   $compose_cli_local down rufs-nfe
   $compose_cli_local down nfe-import
   $compose_cli_local down clipp-import
@@ -274,33 +317,21 @@ if [ "$cmd_test" = 'yes' ]; then
   fi
 
   $compose_cli_local up -d nginx
-  sleep 1;#8
-  $compose_cli_local up -d selenium-side-runner
-  mkdir -p ./tmp
-  rm -f ./tmp/*
-  sed -Ezi 's/"command": "type",(.\s*)?"target": "id=new-request--date"/"command": "\/\/type","target": "id=new-request--date"/g' tests.side
-
+  sleep 8;
   #$compose_cli_local up -d broker
   #$docker_cli_local exec -it broker /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic nfe
   #$compose_cli_local up -d redis
   $compose_cli_local up -d nfe-import
   #$compose_cli_local up -d rufs-nfe
-  sleep 1
-
-  $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
-  $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_sefaz' -j '"--bail 1 --detectOpenHandles"' tests.side
-
-  $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
-  $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'main' -j '"--bail 1 --detectOpenHandles"' tests.side
-
-  if [[ -f 'data/clipp-12345678901.fdb' ]]; then
-    $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
-    clipp_import 2024-09-12 12345678901 guest 123456
-    $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_clipp' -j '"--bail 1 --detectOpenHandles"' tests.side
-  fi
-
-  sed -i 's/"command": "\/\/type","target": "id=new-request--date"/"command": "type","target": "id=new-request--date"/g' tests.side
   $compose_cli_local down selenium-side-runner
+  #$compose_cli_local down selenium-standalone-firefox
+  sleep 5;
+  test_side
+  $compose_cli_local down selenium-side-runner
+fi
+
+if [ "$cmd_test_side" = 'yes' ]; then
+  test_side
 fi
 
 if [ "$cmd_deploy" = 'yes' ]; then
@@ -330,23 +361,27 @@ if [ "$cmd_db_backup" = 'yes' ]; then
 fi
 
 if [ "$cmd_update" = 'yes' ]; then
-    $exec $compose_cli_target down nginx
-    $exec $compose_cli_target down nfe-import
-    $exec $compose_cli_target down rufs-nfe
+  if [ "$vps_provider" = 'local' ]; then
+    exec=''
+  fi
 
-    if [ "$vps_provider" != 'local' ]; then
-      db_backup
-      $exec $docker_cli_target pull localhost:5000/rufs-nfe-rust:latest
-    fi
+  $exec $compose_cli_target down nginx
+  $exec $compose_cli_target down nfe-import
+  $exec $compose_cli_target down rufs-nfe
 
-    $exec $compose_cli_target up -d rufs-nfe
-    $exec $compose_cli_target up -d nfe-import
+  if [ "$vps_provider" != 'local' ]; then
+    db_backup
+    $exec $docker_cli_target pull localhost:5000/rufs-nfe-rust:latest
+  fi
 
-    if [ "$vps_provider" != 'local' ]; then
-      $exec $docker_cli_target run --rm --name certbot -p 80:80 -v "./etc/letsencrypt:/etc/letsencrypt" -v "./var/lib/letsencrypt:/var/lib/letsencrypt" certbot/certbot renew
-    fi
+  $exec $compose_cli_target up -d rufs-nfe
+  $exec $compose_cli_target up -d nfe-import
 
-    $exec $compose_cli_target up -d nginx
+  if [ "$vps_provider" != 'local' ]; then
+    $exec $docker_cli_target run --rm --name certbot -p 80:80 -v "./etc/letsencrypt:/etc/letsencrypt" -v "./var/lib/letsencrypt:/var/lib/letsencrypt" certbot/certbot renew
+  fi
+
+  $exec $compose_cli_target up -d nginx
 fi
 
 if [ "$cmd_logs" != '' ]; then
@@ -389,3 +424,7 @@ fi
 if [ "$cmd_ssh" != '' ]; then
   $exec
 fi
+
+PGHOST=localhost
+set +x
+set +e

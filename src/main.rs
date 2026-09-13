@@ -123,10 +123,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(not(target_arch = "wasm32"))]
 async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     use std::collections::HashMap;
-
-    use rufs_base_rust::rufs_micro_service::Claims;
     use serde_json::json;
     use serde_json::Value;
+    use rufs_base_rust::rufs_micro_service::Claims;
 
     async fn save_file(text :&str, ext :&str, token_payload: &Claims, headers: &std::collections::HashMap<String, String>) -> Result<String, Box<dyn std::error::Error>> {
         let mut text = text.replace("\n", "")
@@ -448,7 +447,8 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         }
 
         if let Some(field) = rufs.openapi.get_property_mut("requestPayment", "request") {
-            field.schema_data.extensions.insert("x-title".to_string(), Value::String("Lista de pagamentos".to_string()));
+            field.schema_data.extensions.insert("x-title".to_string(), json!("Lista de pagamentos"));
+            field.schema_data.extensions.insert("x-orderIndex".to_string(), json!(-6));
         }
 
         if let Some(field) = rufs.openapi.get_property_mut("person", "cnpjCpf") {
@@ -465,6 +465,14 @@ async fn server(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
 
         if let Some(field) = rufs.openapi.get_property_mut("account", "description") {
             field.schema_data.extensions.insert("x-shortDescription".to_string(), Value::Bool(true));
+        }
+
+        if let Some(field) = rufs.openapi.get_property_mut("requestPayment", "accountOther") {
+            field.schema_data.extensions.insert("x-orderIndex".to_string(), json!(-7));
+        }
+
+        if let Some(field) = rufs.openapi.get_property_mut("requestPayment", "account") {
+            field.schema_data.extensions.insert("x-orderIndex".to_string(), json!(-5));
         }
 
         rufs.store_open_api()?;

@@ -21,7 +21,7 @@ services:
       - ./nginx/etc/templates:/etc/nginx/templates:ro
       - ./www:/usr/share/nginx/html:ro
       - ./etc/letsencrypt:/etc/letsencrypt:ro
-      - /imobiliar:/imobiliar:ro
+      #- /imobiliar.tst:/imobiliar.tst:ro
     env_file:
       - .env
     environment:
@@ -92,7 +92,10 @@ services:
     restart: unless-stopped
     volumes:
       - ${HOME}/data:/app/data
-      #- ./webapp/es6:/app/webapp/es6
+      #- ./webapp:/app/webapp
+      #- ./pkg:/app/pkg
+      #- ./sql:/app/sql
+      #- ./target/release/rufs-nfe-rust:/app/rufs-nfe-rust
     env_file:
       - .env
     working_dir: /app
@@ -103,7 +106,7 @@ services:
       resources:
         limits:
           cpus: '0.50'
-          memory: 500M
+          #memory: 500M
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/nfe/"]
       interval: 60s
@@ -112,27 +115,28 @@ services:
   nfe-import:
     container_name: nfe-import
     image: localhost/rufs-nfe-rust:latest
-    entrypoint: ["/app/nfe_import"]
     working_dir: /app
     volumes:
       - ${HOME}/data:/app/data
+      #- ./target/release/nfe_import:/app/nfe_import
     env_file:
       - .env
     depends_on:
       - redis
       - rufs-nfe
+    entrypoint: ["/app/nfe_import"]
     deploy:
       resources:
         limits:
           cpus: '0.25'
-          memory: 100M
+          #memory: 100M
   clipp-import:
     container_name: clipp-import
     image: localhost/rufs-nfe-rust:latest
-    entrypoint: ["/app/clipp_import"]
     working_dir: /app
     volumes:
       - ${HOME}/data:/app/data
+      #- ./target/release/clipp_import:/app/clipp_import
     env_file:
       - .env
     depends_on:
@@ -140,14 +144,17 @@ services:
       - redis
       - firebirdsql-v2_5
       - rufs-nfe
+    entrypoint: ["/app/clipp_import"]
     deploy:
       resources:
         limits:
           cpus: '0.25'
-          memory: 150M
+          #memory: 150M
   selenium-standalone-chrome:
     container_name: selenium-standalone-chrome
     image: docker.io/selenium/standalone-chrome
+    env_file:
+      - .env
   selenium-standalone-firefox:
     container_name: selenium-standalone-firefox
     image: docker.io/selenium/standalone-firefox

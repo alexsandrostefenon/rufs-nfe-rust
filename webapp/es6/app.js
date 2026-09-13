@@ -9,6 +9,30 @@ const workingTimeout = urlParams.get("working_timeout") ? parseInt(urlParams.get
 let activeWorkingProcess = null;
 let lastClickHash = null;
 
+function log(message) {
+	if (workingTimeout > 100) {
+		http_log.innerHTML = `<p>${new Date(Date.now()).toISOString()} ${message}</p>${http_log.innerHTML}`;
+
+		if (http_log.hidden == true) {
+			http_log.hidden = false;
+		}
+	}
+
+	console.log(message);
+}
+
+function error(message) {
+	if (workingTimeout > 100) {
+		http_log.innerHTML = `<p style="color: red;">${message}</p>${http_log.innerHTML}`;
+
+		if (http_log.hidden == true) {
+			http_log.hidden = false;
+		}
+	}
+
+	console.error(message);
+}
+
 function data_view_show(form_id) {
 	const div_id = `div-${form_id}`;
 	let data_view = document.getElementById(div_id);
@@ -16,11 +40,11 @@ function data_view_show(form_id) {
 	if (data_view != null) {
 		if (data_view.hidden == true) {
 			if (urlParams.get("debug") == "true")
-				console.log(`${data_view.id}.hidden = false`);
+				log(`${data_view.id}.hidden = false`);
 			data_view.hidden = false;
 		}
 	} else {
-		console.error(`Missing data_view ${div_id}`);
+		error(`Missing data_view ${div_id}`);
 	}
 }
 
@@ -47,12 +71,12 @@ function updateChanges(event, changes) {
 		const divForm = document.getElementById(divFormId);
 
 		if (form == null) {
-			console.error(`Missing form ${instanceFormId}`);
+			error(`Missing form ${instanceFormId}`);
 			continue;
 		}
 
 		if (divForm == null) {
-			console.error(`Missing divForm ${divFormId}`);
+			error(`Missing divForm ${divFormId}`);
 			continue;
 		}
 
@@ -61,25 +85,25 @@ function updateChanges(event, changes) {
 		for (let [fieldName, value] of Object.entries(fields)) {
 			/*
 			if (form.hidden == true) {
-				console.log(`${form.id}.hidden = false`);
+				log(`${form.id}.hidden = false`);
 				form.hidden = false;
 			}
 			*/
 /*
 			if (divForm.hidden == true) {
-				console.log(`${divForm.id}.hidden = false`);
+				log(`${divForm.id}.hidden = false`);
 				divForm.hidden = false;
 			}
 */
 			if (Array.isArray(value)) {
-				console.error(`Unexpected array fild (${fieldName})`);
+				error(`Unexpected array fild (${fieldName})`);
 			} else if (value != null && typeof value === 'object') {
-				console.error(`Unexpected array fild (${fieldName})`);
+				error(`Unexpected array fild (${fieldName})`);
 			} else {
 				const element = form.elements[fieldName];
 
 				if (element == null) {
-					console.log(`Missing element ${fieldName} in form ${form.name} !`);
+					log(`Missing element ${fieldName} in form ${form.name} !`);
 					continue;
 				}
 
@@ -100,7 +124,7 @@ function updateChanges(event, changes) {
 
 					if (event.target != elementFlag) {
 						if (fieldName == "mask" && flagIndex== 3 && flagValue == true)
-							console.log(`${fieldName}-${flagIndex}.checked = ${flagValue};`);
+							log(`${fieldName}-${flagIndex}.checked = ${flagValue};`);
 
 						elementFlag.checked = flagValue;
 					} else {
@@ -110,6 +134,67 @@ function updateChanges(event, changes) {
 			}
 		}
 	}
+}
+
+function updateReferences(event, changes) {
+	if (changes == null) {
+		return;
+	}
+
+	if (changes instanceof Map) {
+		changes = Object.fromEntries(changes);
+	}
+
+	if (urlParams.get("debug") == "true") {
+		console.log(changes);
+	}
+
+	for (let [formId, fields] of Object.entries(changes)) {
+		if (fields instanceof Map) {
+			fields = Object.fromEntries(fields);
+		}
+
+		const form = document.getElementById(formId);
+
+		if (form == null) {
+			error(`Missing form ${formId}`);
+			continue;
+		}
+
+		for (let [fieldName, list] of Object.entries(fields)) {
+			if (Array.isArray(list) == false) {
+				error(`Content of dataviewResponse.references[${formId}][${fieldName}] is not array !`);
+			}
+
+			let element = form.elements[fieldName];
+
+			if (element == null) {
+				error(`Missing element (${fieldName}) in form ${formId}.`);
+				continue;
+			}
+
+			if (element.list != null) {
+				element = element.list;
+				element.innerHTML = "";
+			} else {
+				element.innerHTML = "";
+				element.appendChild(document.createElement('option'));
+			}
+
+			list.forEach(item => {
+				const option = document.createElement('option');
+				option.value = item;
+				option.innerText = item;
+				element.appendChild(option);
+			});
+		}
+	}
+	// data_view_response.references[data_view_id] = json!(map_list);
+	//
+	// <input class="form-control" id="{form_id}--{field_name}" name="{field_name}" list="list--{form_id}--{field_name}">
+	// <datalist ng-if="field.filterResultsStr.length >  20" id="list--{form_id}--{field_name}">{html_options_str}</datalist>
+	//
+	// <select class="form-control" id="{form_id}--{field_name}" name="{field_name}"><option value=""></option>{html_options_str}</select>
 }
 
 function updateTables(event, tables) {
@@ -126,15 +211,16 @@ function updateTables(event, tables) {
 		const div = document.getElementById(`div-table-${table_id}`);
 
 		if (div == null) {
-			console.error(`Missing table ${table_id}`);
+			error(`Missing table ${table_id}`);
 			continue;
 		}
 
 		div.innerHTML = html;
+		log(`[updateTables] ${div.id}`);
 
 		if (div.hidden == true) {
 			if (urlParams.get("debug") == "true")
-				console.log(`${div.id}.hidden = false`);
+				log(`${div.id}.hidden = false`);
 			div.hidden = false;
 		}
 
@@ -144,11 +230,11 @@ function updateTables(event, tables) {
 		if (divForm != null) {
 			if (divForm.hidden == true) {
 				if (urlParams.get("debug") == "true")
-					console.log(`${divForm.id}.hidden = false`);
+					log(`${divForm.id}.hidden = false`);
 				divForm.hidden = false;
 			}
 		} else {
-			console.error(`Missing divForm ${div_form_id}`);
+			error(`Missing divForm ${div_form_id}`);
 		}
 	}
 }
@@ -161,9 +247,15 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function notify(text) {
+	log(`[notify] : ${text}`);
+	document.querySelector('#http-notify').innerHTML = text;
+	document.querySelector('#http-notify').hidden = false;
+}
+
 function showStatus(text) {
 	if (urlParams.get("debug") == "true") {
-		console.log("[showStatus] : ", text);
+		log("[showStatus] : ", text);
 	}
 
 	document.querySelector('#http-error').innerHTML = "";
@@ -174,7 +266,7 @@ function showStatus(text) {
 
 function hideStatus() {
 	if (urlParams.get("debug") == "true") {
-		console.log("[hideStatus]");
+		log("[hideStatus]");
 	}
 
 	document.getElementById('http-working').hidden = true;
@@ -224,7 +316,7 @@ async function process(event, targetId, data, processViewResponse) {
 
 	for (let i = 0; i < 100 && activeWorkingProcess != null; i++) {
 		if (urlParams.get("debug") == "true")
-			console.log(`[process] waiting latest processing is done :\n${activeWorkingProcess}`);
+			log(`[process] waiting latest processing is done :\n${activeWorkingProcess}`);
 		await sleep(100);
 	}
 
@@ -243,7 +335,7 @@ async function process(event, targetId, data, processViewResponse) {
 		return viewResponse;
 	})
 	.catch(err => {
-		console.error(err);
+		error(err);
 		document.querySelector('#http-error').innerHTML = err;
 		document.querySelector('#http-error').hidden = false;
 		activeWorkingProcess = null;
@@ -265,21 +357,34 @@ async function process(event, targetId, data, processViewResponse) {
 }
 
 let appOnChange = async (event) => {
+	function processViewResponse(viewResponse) {
+		if (viewResponse instanceof Map) {
+			viewResponse = Object.fromEntries(viewResponse);
+		}
+
+		if (urlParams.get("debug") == "true") {
+			log(`appOnChange.updateChanges`);
+		}
+
+		updateChanges(event, viewResponse.changes);
+		updateTables(event, viewResponse.tables);
+		updateReferences(event, viewResponse.references);
+	}
+
 	if (urlParams.get("debug") == "true") {
 		console.log(`appOnChange`, event);
 	}
 
     let element = event.target;
 	const target = element.id;
-	http_log.innerHTML = `t:${target}, ${http_log.innerHTML}`;
 
 	if (element.value == null) {
-		console.error(`appOnChange with null value in field ${target}`);
+		error(`appOnChange with null value in field ${target}`);
 		return;
 	}
 
 	if (element.type == "number" && element.value.length == 0) {
-		console.error(`appOnChange with empty number value in field ${target}`);
+		error(`appOnChange with empty number value in field ${target}`);
 		return;
 	}
 
@@ -299,27 +404,150 @@ let appOnChange = async (event) => {
 	let data = {};
 	data[target] = value;
 
-	const processViewResponse = viewResponse => {
-		if (viewResponse instanceof Map) {
-			viewResponse = Object.fromEntries(viewResponse);
-		}
-
-		if (urlParams.get("debug") == "true") {
-			console.log(`appOnChange.updateChanges`);
-		}
-
-		updateChanges(event, viewResponse.changes);
-		updateTables(event, viewResponse.tables);
-	}
-
 	if (urlParams.get("debug") == "true") {
-		console.log(`[appOnChange] process : ${target}`);
+		log(`[appOnChange] process : ${target}`);
 	}
 
 	await process(event, target, data, processViewResponse);
 }
 
 let appOnClick = async (event) => {
+	function processViewResponse(viewResponse) {
+		if (viewResponse instanceof Map) {
+			viewResponse = Object.fromEntries(viewResponse);
+		}
+
+		if (urlParams.get("debug") == "true") {
+			console.log(viewResponse);
+		}
+
+		let html_map = viewResponse.html;
+
+		if (html_map instanceof Map) {
+			html_map = Object.fromEntries(html_map);
+		}
+
+		for (let [form_id, html] of Object.entries(html_map)) {
+			const div_id = `data_view_root-${form_id}`;
+			let dataView = document.getElementById(div_id);
+
+			if (dataView != null) {
+				dataView.remove();
+				dataView = null;
+			}
+
+			dataView = document.createElement("div");
+			dataView.id = div_id;
+			dataView.innerHTML = html;
+			document.querySelector('#main').prepend(dataView);
+			document.querySelector('#' + div_id).addEventListener('change', appOnChange, {passive: false});
+			document.querySelector('#' + div_id).addEventListener('click', appOnClick, {passive: false});
+			//document.querySelector('#' + div_id).addEventListener('keyup', appOnChange, {passive: false});
+
+			{
+				const element = document.querySelector('#apply-' + form_id);
+
+				if (element != null) {
+					//element.addEventListener('click', appOnClick);
+				}
+			}
+		}
+
+		if (urlParams.get("debug") == "true") {
+			log(`appOnClick.updateChanges`);
+		}
+
+		updateChanges(event, viewResponse.changes);
+		updateTables(event, viewResponse.tables);
+		updateReferences(event, viewResponse.references);
+
+		if (viewResponse.aggregates != null) {
+			if (viewResponse.aggregates instanceof Map) {
+				viewResponse.aggregates = Object.fromEntries(viewResponse.aggregates);
+			}
+
+			for (let [formId, aggregateResults] of Object.entries(viewResponse.aggregates)) {
+				if (aggregateResults instanceof Map) {
+					aggregateResults = Object.fromEntries(aggregateResults);
+				}
+
+				const id = `chart-aggregate--${formId}`;
+				const chart = document.getElementById(id);
+
+				if (chart == null) {
+					error(`Missing chart ${id}`);
+					continue;
+				}
+
+				const ctx = chart.getContext('2d');
+				const xData = Array.from(Object.keys(aggregateResults));
+				const yData = Array.from(Object.values(aggregateResults));
+
+				if (aggregateChartOptions[formId] == null) {
+					aggregateChartOptions[formId] = {type: 'bar', data: {labels: [], datasets: [{label: "", data: []}]}};
+					aggregateChart[formId] = new Chart(ctx, aggregateChartOptions[formId]);
+				}
+
+				aggregateChartOptions[formId].data.labels = xData;
+				aggregateChartOptions[formId].data.datasets[0].data = yData;
+				aggregateChart[formId].update();
+			}
+		}
+
+		if (viewResponse.forms != null) {
+			if (viewResponse.forms instanceof Map) {
+				viewResponse.forms = Object.fromEntries(viewResponse.forms);
+			}
+
+			for (let [form_id, form_state] of Object.entries(viewResponse.forms)) {
+				if (form_state instanceof Map) {
+					form_state = Object.fromEntries(form_state);
+				}
+
+				const data_view_root_id = `data_view_root-${form_id}`;
+				const data_view_root = document.getElementById(data_view_root_id);
+				const form = document.getElementById(form_id);
+				const fieldset_id = `fieldset-${form_id}`;
+				const fieldset = document.getElementById(fieldset_id);
+
+				if (form_state.hidden != null) {
+					if (data_view_root != null) {
+						data_view_root.hidden = form_state.hidden;
+					} else {
+						error(`Missing data_view_root ${form_id}`);
+					}
+
+					let data_view_id = `div-${form_id}`;
+					let data_view = document.getElementById(data_view_id);
+
+					if (data_view != null) {
+						data_view.hidden = form_state.hidden;
+					} else {
+						error(`Missing data_view ${data_view_id}`);
+					}
+
+					if (form != null) {
+						form.hidden = form_state.hidden;
+					} else {
+						error(`Missing form ${form_id}`);
+					}
+				}
+
+				if (fieldset != null) {
+					if (form_state.disabled == false && fieldset.disabled != false) {
+						fieldset.disabled = false;
+					}
+
+					if (form_state.disabled == true && fieldset.disabled != true) {
+						fieldset.disabled = true;
+					}
+				} else {
+					error(`Missing fieldset ${fieldset_id}`);
+				}
+			}
+		}
+	}
+
     let element = event.target;
 
 	if (["button", "i", "a"].includes(element.localName) == false && element.href == null) {
@@ -362,137 +590,6 @@ let appOnClick = async (event) => {
 		return;
 	}
 
-	const processViewResponse = viewResponse => {
-		if (viewResponse instanceof Map) {
-			viewResponse = Object.fromEntries(viewResponse);
-		}
-
-		if (urlParams.get("debug") == "true")
-			console.log(viewResponse);
-		let html_map = viewResponse.html;
-
-		if (html_map instanceof Map) {
-			html_map = Object.fromEntries(html_map);
-		}
-
-		for (let [form_id, html] of Object.entries(html_map)) {
-			const div_id = `data_view_root-${form_id}`;
-			let dataView = document.getElementById(div_id);
-
-			if (dataView != null) {
-				dataView.remove();
-				dataView = null;
-			}
-
-			dataView = document.createElement("div");
-			dataView.id = div_id;
-			dataView.innerHTML = html;
-			document.querySelector('#main').prepend(dataView);
-			document.querySelector('#' + div_id).addEventListener('change', appOnChange, {passive: false});
-			document.querySelector('#' + div_id).addEventListener('click', appOnClick, {passive: false});
-			//document.querySelector('#' + div_id).addEventListener('keyup', appOnChange, {passive: false});
-
-			{
-				const element = document.querySelector('#apply-' + form_id);
-
-				if (element != null) {
-					//element.addEventListener('click', appOnClick);
-				}
-			}
-		}
-
-		if (urlParams.get("debug") == "true")
-			console.log(`appOnClick.updateChanges`);
-		updateChanges(event, viewResponse.changes);
-		updateTables(event, viewResponse.tables);
-
-		if (viewResponse.aggregates != null) {
-			if (viewResponse.aggregates instanceof Map) {
-				viewResponse.aggregates = Object.fromEntries(viewResponse.aggregates);
-			}
-
-			for (let [formId, aggregateResults] of Object.entries(viewResponse.aggregates)) {
-				if (aggregateResults instanceof Map) {
-					aggregateResults = Object.fromEntries(aggregateResults);
-				}
-
-				const id = `chart-aggregate--${formId}`;
-				const chart = document.getElementById(id);
-
-				if (chart == null) {
-					console.error(`Missing chart ${id}`);
-					continue;
-				}
-
-				const ctx = chart.getContext('2d');
-				const xData = Array.from(Object.keys(aggregateResults));
-				const yData = Array.from(Object.values(aggregateResults));
-
-				if (aggregateChartOptions[formId] == null) {
-					aggregateChartOptions[formId] = {type: 'bar', data: {labels: [], datasets: [{label: "", data: []}]}};
-					aggregateChart[formId] = new Chart(ctx, aggregateChartOptions[formId]);
-				}
-
-				aggregateChartOptions[formId].data.labels = xData;
-				aggregateChartOptions[formId].data.datasets[0].data = yData;
-				aggregateChart[formId].update();
-			}
-		}
-
-		if (viewResponse.forms != null) {
-			if (viewResponse.forms instanceof Map) {
-				viewResponse.forms = Object.fromEntries(viewResponse.forms);
-			}
-
-			for (let [form_id, form_state] of Object.entries(viewResponse.forms)) {
-				if (form_state instanceof Map) {
-					form_state = Object.fromEntries(form_state);
-				}
-
-				const data_view_root_id = `data_view_root-${form_id}`;
-				const data_view_root = document.getElementById(data_view_root_id);
-				const form = document.getElementById(form_id);
-				const fieldset_id = `fieldset-${form_id}`;
-				const fieldset = document.getElementById(fieldset_id);
-
-				if (form_state.hidden != null) {
-					if (data_view_root != null) {
-						data_view_root.hidden = form_state.hidden;
-					} else {
-						console.error(`Missing data_view_root ${form_id}`);
-					}
-
-					let data_view_id = `div-${form_id}`;
-					let data_view = document.getElementById(data_view_id);
-
-					if (data_view != null) {
-						data_view.hidden = form_state.hidden;
-					} else {
-						console.error(`Missing data_view ${data_view_id}`);
-					}
-
-					if (form != null) {
-						form.hidden = form_state.hidden;
-					} else {
-						console.error(`Missing form ${form_id}`);
-					}
-				}
-
-				if (fieldset != null) {
-					if (form_state.disabled == false && fieldset.disabled != false) {
-						fieldset.disabled = false;
-					}
-
-					if (form_state.disabled == true && fieldset.disabled != true) {
-						fieldset.disabled = true;
-					}
-				} else {
-					console.error(`Missing fieldset ${fieldset_id}`);
-				}
-			}
-		}
-	}
-
 	let target = element.id;
 
 	if (target == "" && element.href != null && element.href.includes("#!/app/")) {
@@ -508,7 +605,7 @@ let appOnClick = async (event) => {
 	http_log.innerHTML = `..., ${http_log.innerHTML}`;
 
 	if (urlParams.get("debug") == "true") {
-		console.log(`[appOnClick] process : ${target}`);
+		log(`[appOnClick] process : ${target}`);
 	}
 
 	showStatus("Processando...");
@@ -547,11 +644,12 @@ function processLoginResponse(login_response, data_view_manager) {
 	let list = [];
 	list.push(`<ul class='nav nav-pills'>`);
 	addToParent(login_response.menu, list);
+	list.push(`<li class='nav-item'><a class='nav-link' href='#!/app/logout'>Sair</a></li>\n`);
 	list.push(`</ul>`);
 	const str = list.join("\n");
 	let div = document.createElement("div");
 	div.innerHTML = str;
-	div.addEventListener('click', appOnClick);
+	//div.addEventListener('click', appOnClick);
 	document.querySelector('#menu').appendChild(div);
 	let schema = login_response.path./*replaceAll("/", ".").*/replace(regExMenuSearch, regExMenuReplace);
 
@@ -566,19 +664,36 @@ function processLoginResponse(login_response, data_view_manager) {
 			return;
 		}
 
+		if (window.location.hash == "#!/app/logout") {
+			localStorage.clear();
+			sessionStorage.clear();
+			indexedDB.databases().then(dbs => {
+				dbs.forEach(db => {
+					if (db.name) indexedDB.deleteDatabase(db.name);
+				});
+			}).
+			then(() => caches.keys().then(cacheNames => Promise.all(cacheNames.map(name => caches.delete(name))))).
+			then(() => window.location.reload());
+			return;
+		}
+
 		if (urlParams.get("debug") == "true") {
-			console.log('URL hash changed to:', window.location.hash);
+			log(`URL hash changed to : ${window.location.hash}`);
 		}
 
 		let event = {target: {href: window.location.hash, id: "", localName: "a"}, type: "click"};
+		log(`hashchange : ${window.location.hash}`);
+		document.querySelector('#http-notify').hidden = true;
 		appOnClick(event);
 	});
 
 	window.rufs_js_callback = function(str) {
+		notify(str);
+
 		for (let callback of listeners) {
 			setTimeout(() => callback(str), 1000);
 		}
 	}
 }
 
-export {addEventListener, processLoginResponse, appOnClick, appOnChange, showStatus, dataViewManager, loginResponse};
+export {addEventListener, processLoginResponse, appOnClick, appOnChange, showStatus, dataViewManager, loginResponse, log};

@@ -2,7 +2,7 @@
   "id": "5ebf3ab3-7a16-4ca5-bc32-95e2ddbf6e1b",
   "version": "2.0",
   "name": "tests",
-  "url": "http://localhost:8081/?mode=ws&working_timeout=250&customer_id=987.654.321-09",
+  "url": "http://localhost:8080/nfe/?mode=wasm&working_timeout=250&customer_id=987.654.321-09",
   "tests": [{
     "id": "b77d46ed-2a97-4a13-a38e-cfab228e0b2a",
     "name": "create_person_provider",
@@ -1001,7 +1001,7 @@
         ["xpath=//form[@id='instance-request']/div/div/div/select", "xpath:idRelative"],
         ["xpath=//select", "xpath:position"]
       ],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "26ee6801-633b-4566-8c11-c032f09b1bec",
       "comment": "",
@@ -1053,39 +1053,26 @@
       "targets": [],
       "value": "1000"
     }, {
-      "id": "e97162a7-edce-4ad1-a64b-72c1b58c4054",
-      "comment": "",
-      "command": "//sendKeys",
-      "target": "id=new-request--date",
-      "targets": [],
-      "value": "31122018${KEY_TAB}2008"
-    }, {
-      "id": "e97162a7-edce-4ad1-a64b-62c1b58c4054",
-      "comment": "",
-      "command": "//sendKeys",
-      "target": "id=new-request--date",
-      "targets": [],
-      "value": "311220182008"
-    }, {
       "id": "e97162a7-edce-4ad1-a64b-52c1b58c4054",
       "comment": "",
-      "command": "sendKeys",
+      "command": "//sendKeys",
       "target": "id=new-request--date",
       "targets": [],
-      "value": "123120182008"
+      "value": "103120182008"
     }, {
       "id": "e97162a7-edce-4ad1-a64b-72c1b58c4000",
       "comment": "",
-      "command": "type","target": "id=new-request--date",
+      "command": "type",
+      "target": "id=new-request--date",
       "targets": [],
-      "value": "2018-12-31T20:08"
+      "value": "2018-10-31T20:08"
     }, {
       "id": "f6b802bf-2777-4a4f-8847-72c1b58c4055",
       "comment": "",
       "command": "assertValue",
       "target": "id=new-request--date",
       "targets": [],
-      "value": "2018-12-31T20:08"
+      "value": "2018-10-31T20:08"
     }, {
       "id": "349a50ea-1c48-4006-a550-7f85c99d766a",
       "comment": "",
@@ -1106,7 +1093,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "47e490bf-7222-4800-aa73-77e4d6541d58",
       "comment": "",
@@ -1120,14 +1107,14 @@
       "command": "waitForElementVisible",
       "target": "id=edit-request--date",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "f6b802bf-2777-4a4f-8847-e914bdb7ecdc",
       "comment": "",
       "command": "assertValue",
       "target": "id=edit-request--date",
       "targets": [],
-      "value": "2018-12-31T20:08"
+      "value": "2018-10-31T20:08"
     }, {
       "id": "7db649cb-1367-45af-9b51-ee3f739bfd6c",
       "comment": "",
@@ -1197,14 +1184,14 @@
       "command": "assertValue",
       "target": "id=edit-request--new-request_payment--dueDate",
       "targets": [],
-      "value": "2018-12-31T20:08"
+      "value": "2018-10-31T20:08"
     }, {
       "id": "3f6420b4-9bcf-42cb-9ada-4a362e091955",
       "comment": "",
       "command": "assertValue",
       "target": "id=edit-request--new-request_payment--payday",
       "targets": [],
-      "value": "2018-12-31T20:08"
+      "value": "2018-10-31T20:08"
     }, {
       "id": "b189939b-f34a-41cb-a175-5209b5a0a6e2",
       "comment": "",
@@ -1218,7 +1205,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "28b17041-3ea4-48fe-93df-3e741fc8b69f",
       "comment": "",
@@ -1239,7 +1226,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "25df249e-bf48-4888-83a2-1b0c3266a452",
       "comment": "",
@@ -1275,7 +1262,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "fe57e902-80df-49c1-bf9d-796cb9828216",
       "comment": "",
@@ -1299,23 +1286,13 @@
         ["xpath=//td/a[2]", "xpath:position"],
         ["xpath=//a[contains(.,' Edit')]", "xpath:innerText"]
       ],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "2a53ced9-6f5b-44be-96f3-0bd7e7b3b4bd",
       "comment": "",
-      "command": "assertText",
+      "command": "waitForText",
       "target": "id=table_row-col-search-request--person-0",
-      "targets": [
-        ["id=table_row-col-search-request--person-0", "id"],
-        ["linkText=93.209.765/0161-10 - WMS SUPERMERCADOS DO BRASIL LTDA", "linkText"],
-        ["css=#table_row-col-search-request--person-0", "css:finder"],
-        ["xpath=//a[contains(text(),'93.209.765/0161-10 - WMS SUPERMERCADOS DO BRASIL LTDA')]", "xpath:link"],
-        ["xpath=//a[@id='table_row-col-search-request--person-0']", "xpath:attributes"],
-        ["xpath=//table[@id='table-search-request']/tbody/tr/td[5]/a", "xpath:idRelative"],
-        ["xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93.209.765/0161-10')]", "xpath:href"],
-        ["xpath=//td[5]/a", "xpath:position"],
-        ["xpath=//a[contains(.,'93.209.765/0161-10 - WMS SUPERMERCADOS DO BRASIL LTDA')]", "xpath:innerText"]
-      ],
+      "targets": [],
       "value": "93.209.765/0161-10 - WMS SUPERMERCADOS DO BRASIL LTDA"
     }, {
       "id": "6f785467-5b3c-4790-915b-f918b0d4e5ea",
@@ -1401,7 +1378,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "b3e67d7b-5481-4090-84cf-1a649f3df631",
       "comment": "",
@@ -1409,6 +1386,20 @@
       "target": "id=http-error",
       "targets": [],
       "value": "1000"
+    }, {
+      "id": "8107f7e5-82af-4035-89f5-fcf977b5667c",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=http-notify",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "6608acb2-5ae1-4870-aba0-d3a575c18f60",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=table_row-edit-edit-request--search-request_payment--0",
+      "targets": [],
+      "value": "3000"
     }, {
       "id": "558580a1-7ea2-439d-b4da-009339fd49d2",
       "comment": "",
@@ -1471,7 +1462,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "edea57b3-eb8f-49ab-85de-2901b3d0d10f",
       "comment": "",
@@ -1500,7 +1491,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "6e9e3ebb-cbe8-4cae-b7d6-150033dcd987",
       "comment": "",
@@ -1515,6 +1506,76 @@
       "target": "id=table_row-col-search-request--paymentsValue-0",
       "targets": [],
       "value": "53.05"
+    }, {
+      "id": "b7f5a203-057f-4cee-aa02-35ec75a41e2e",
+      "comment": "",
+      "command": "click",
+      "target": "id=menu-Movimento",
+      "targets": [
+        ["id=menu-Movimento", "id"],
+        ["linkText=Movimento", "linkText"],
+        ["css=#menu-Movimento", "css:finder"],
+        ["xpath=//a[contains(text(),'Movimento')]", "xpath:link"],
+        ["xpath=//a[@id='menu-Movimento']", "xpath:attributes"],
+        ["xpath=//div[@id='menu']/div/ul/li[4]/a", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#')])[17]", "xpath:href"],
+        ["xpath=//div/ul/li[4]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'Movimento')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "82748574-3831-4a5c-bdd9-a70b494b24e6",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "b833656a-9cb1-483b-a8f6-e1751daf7a66",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "314c0ce6-796d-4763-8468-dd05f0e3873b",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "xpath=//a[contains(text(),'Financeiro')]",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "5edaad0c-50ed-4651-a82c-8d629225e974",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//a[contains(text(),'Financeiro')]",
+      "targets": [
+        ["linkText=Financeiro", "linkText"],
+        ["css=.show > li:nth-child(5) > .dropdown-item", "css:finder"],
+        ["xpath=//a[contains(text(),'Financeiro')]", "xpath:link"],
+        ["xpath=//div[@id='menu']/div/ul/li[4]/ul/li[5]/a", "xpath:idRelative"],
+        ["xpath=//a[contains(@href, '#!/app/request_payment/search')]", "xpath:href"],
+        ["xpath=//li[4]/ul/li[5]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'Financeiro')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "594dbaf6-f8c7-4ab6-adf4-830bf407db70",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=table_row-col-search-request_payment--balance-0",
+      "targets": [
+        ["id=table_row-col-search-request_payment--balance-0", "id"],
+        ["linkText=-37.13", "linkText"],
+        ["css=#table_row-col-search-request_payment--balance-0", "css:finder"],
+        ["xpath=//a[contains(text(),'-37.13')]", "xpath:link"],
+        ["xpath=//a[@id='table_row-col-search-request_payment--balance-0']", "xpath:attributes"],
+        ["xpath=//table[@id='table-search-request_payment']/tbody/tr/td[11]/a", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#')])[77]", "xpath:href"],
+        ["xpath=//td[11]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'-37.13')]", "xpath:innerText"]
+      ],
+      "value": "162.87"
     }]
   }, {
     "id": "459c824d-1825-4183-90db-145872eac86e",
@@ -1625,7 +1686,7 @@
       "id": "a1e80a65-d4ac-4bff-b603-d0855964967a",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?rufsGroupOwner=nfe_guest_group&name=guest')]",
+      "target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?name=guest')]",
       "targets": [],
       "value": ""
     }, {
@@ -1821,7 +1882,7 @@
       "id": "3df5c5b6-714d-4fa6-81a2-074e9a3554ec",
       "comment": "",
       "command": "click",
-      "target": "id=table_row-edit-edit-rufs_user--edit-roles--28",
+      "target": "id=table_row-edit-edit-rufs_user--edit-roles--29",
       "targets": [],
       "value": ""
     }, {
@@ -2008,7 +2069,7 @@
       "id": "efda4b56-b552-44bd-bca9-098021c6f6d3",
       "comment": "",
       "command": "setWindowSize",
-      "target": "1024x1920",
+      "target": "1280x1920",
       "targets": [],
       "value": ""
     }, {
@@ -2309,6 +2370,28 @@
       "target": "id=menu-Cadastros",
       "targets": [],
       "value": "30000"
+    }, {
+      "id": "d40e8889-0abf-4400-add1-42d67000b54f",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//a[contains(@href, '#!/app/logout')]",
+      "targets": [
+        ["linkText=Sair", "linkText"],
+        ["css=.nav-item:nth-child(6) > .nav-link", "css:finder"],
+        ["xpath=//a[contains(text(),'Sair')]", "xpath:link"],
+        ["xpath=//div[@id='menu']/div/ul/li[6]/a", "xpath:idRelative"],
+        ["xpath=//a[contains(@href, '#!/app/logout')]", "xpath:href"],
+        ["xpath=//div/ul/li[6]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'Sair')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "596c3ed5-a282-408c-bbfc-c6b43f855cdb",
+      "comment": "",
+      "command": "//waitForElementNotVisible",
+      "target": "id=menu-Cadastros",
+      "targets": [],
+      "value": "30000"
     }]
   }, {
     "id": "88ca5807-7d2d-4a44-8d9c-9b595cb5bebf",
@@ -2572,6 +2655,151 @@
       "id": "a5050478-100f-4875-97d5-0e1a248d7a15",
       "comment": "",
       "command": "click",
+      "target": "id=menu-Tabelas",
+      "targets": [
+        ["id=menu-Cadastros", "id"],
+        ["css=#single-button-form", "css"],
+        ["xpath=//button[@id='single-button-form']", "xpath:attributes"],
+        ["xpath=//div[3]/button", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "f33a98f8-52a6-4a65-82ee-11c8fadad50e",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//a[contains(@href, '#!/app/account_balance/search')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "ebd2b46c-8cb1-4976-9c33-54f3327dcf32",
+      "comment": "",
+      "command": "click",
+      "target": "id=table_row-delete-search-account_balance--2",
+      "targets": [
+        ["css=#table-row-edit-account-1", "css:finder"],
+        ["xpath=(//a[contains(text(),'Edit')])[2]", "xpath:link"],
+        ["xpath=//a[@id='table-row-edit-account-1']", "xpath:attributes"],
+        ["xpath=//table[@id='table-account']/tbody/tr[2]/td/a[2]", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#!/app/account/edit?id=1')])[2]", "xpath:href"],
+        ["xpath=//tr[2]/td/a[2]", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "0d8a7030-cd74-4c64-bf6a-bb071c17b967",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "a16a9ea4-a9b0-4c4d-8108-763cdd7bc516",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "e8f286a2-150d-4525-9bd1-5a2b8860aa67",
+      "comment": "",
+      "command": "waitForElementNotPresent",
+      "target": "id=table_row-delete-search-account_balance--2",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "a5419826-aeb3-490e-850d-0d0a0cc725c4",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=table_row-edit-search-account_balance--1",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "e69e8202-861b-45a3-bac9-5ffbb6f321aa",
+      "comment": "",
+      "command": "click",
+      "target": "id=table_row-edit-search-account_balance--1",
+      "targets": [
+        ["css=#table-row-edit-account-1", "css:finder"],
+        ["xpath=(//a[contains(text(),'Edit')])[2]", "xpath:link"],
+        ["xpath=//a[@id='table-row-edit-account-1']", "xpath:attributes"],
+        ["xpath=//table[@id='table-account']/tbody/tr[2]/td/a[2]", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#!/app/account/edit?id=1')])[2]", "xpath:href"],
+        ["xpath=//tr[2]/td/a[2]", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "cd831845-3d13-4058-bd86-1704651c693d",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=delete-edit-account_balance",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "bf360175-409d-4b54-a463-d8c0db97f9a3",
+      "comment": "",
+      "command": "click",
+      "target": "id=delete-edit-account_balance",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "ab1bb2a8-4795-466f-b05e-364d13c35c7b",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "2142e249-f5ac-40ea-8065-4e139aaed1ca",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "7ba5ec23-b104-49a3-b9e7-030a87fe1324",
+      "comment": "",
+      "command": "click",
+      "target": "id=table_row-edit-search-account_balance--0",
+      "targets": [
+        ["css=#table-row-edit-account-1", "css:finder"],
+        ["xpath=(//a[contains(text(),'Edit')])[2]", "xpath:link"],
+        ["xpath=//a[@id='table-row-edit-account-1']", "xpath:attributes"],
+        ["xpath=//table[@id='table-account']/tbody/tr[2]/td/a[2]", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#!/app/account/edit?id=1')])[2]", "xpath:href"],
+        ["xpath=//tr[2]/td/a[2]", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "a70b0c05-e418-4b38-ae1e-e4c366f48f98",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=delete-edit-account_balance",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "11a20b8b-f690-43a9-87e2-273bce24b455",
+      "comment": "",
+      "command": "click",
+      "target": "id=delete-edit-account_balance",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "0b966db7-28fc-4915-ac08-d70538ee981c",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "86c946cb-91c7-4df9-baf1-2d1c169478cb",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "cba97829-d338-4d70-a376-3a75c2eb0a06",
+      "comment": "",
+      "command": "click",
       "target": "id=menu-Cadastros",
       "targets": [
         ["id=menu-Cadastros", "id"],
@@ -2732,6 +2960,33 @@
       "targets": [],
       "value": ""
     }, {
+      "id": "e64adf3d-49b9-457e-bc39-b8415916d3e0",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "61592a70-37e8-4907-bb71-f770203541ee",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "67ee54d5-4777-425e-bf39-50450815d7f1",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=http-notify",
+      "targets": [
+        ["id=http-notify", "id"],
+        ["css=#http-notify", "css:finder"],
+        ["xpath=//div[@id='http-notify']", "xpath:attributes"],
+        ["xpath=//div[4]", "xpath:position"],
+        ["xpath=//div[contains(.,'{\"service\":\"person\",\"action\":\"delete\",\"primaryKey\":{\"cnpjCpf\":\"93.209.765/0161-10\"}}')]", "xpath:innerText"]
+      ],
+      "value": "{\"service\":\"person\",\"action\":\"delete\",\"primaryKey\":{\"cnpjCpf\":\"93.209.765/0161-10\"}}"
+    }, {
       "id": "92a3b14a-913d-4bfc-9359-cc86b42a95f5",
       "comment": "",
       "command": "waitForElementNotPresent",
@@ -2759,6 +3014,20 @@
       "target": "id=delete-edit-person",
       "targets": [],
       "value": ""
+    }, {
+      "id": "fdce813c-4bde-4db8-8499-45ce92f11aa2",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "b5ac2db8-0720-4ba6-9e72-797df26dcf5c",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
     }, {
       "id": "27999a6f-6ba9-4b10-856a-30f77ff17ab4",
       "comment": "",
@@ -2795,13 +3064,6 @@
       "targets": [],
       "value": "30000"
     }, {
-      "id": "ec7acbf0-41b8-4593-8af0-f5b0ab524d57",
-      "comment": "",
-      "command": "waitForElementNotPresent",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60.701.190/0001-04')]",
-      "targets": [],
-      "value": "30000"
-    }, {
       "id": "75244915-bd63-4fb1-9f6c-aa255ecbf1fd",
       "comment": "",
       "command": "waitForElementNotVisible",
@@ -2809,31 +3071,14 @@
       "targets": [],
       "value": "1000"
     }, {
-      "id": "77467e5d-417d-4286-b180-6b6b38812106",
-      "comment": "",
-      "command": "click",
-      "target": "id=table_row-delete-search-person--1",
-      "targets": [
-        ["id=table_row-delete-search-person--1", "id"],
-        ["linkText=Delete", "linkText"],
-        ["css=#table_row-delete-search-person--1", "css:finder"],
-        ["xpath=//a[contains(text(),'Delete')]", "xpath:link"],
-        ["xpath=//a[@id='table_row-delete-search-person--1']", "xpath:attributes"],
-        ["xpath=//table[@id='table-search-person']/tbody/tr/td/a[3]", "xpath:idRelative"],
-        ["xpath=(//a[contains(@href, '#')])[100]", "xpath:href"],
-        ["xpath=//td/a[3]", "xpath:position"],
-        ["xpath=//a[contains(.,' Delete')]", "xpath:innerText"]
-      ],
-      "value": ""
-    }, {
-      "id": "f45fd6dc-3817-463a-b1ee-defa874d7d57",
+      "id": "ec7acbf0-41b8-4593-8af0-f5b0ab524d57",
       "comment": "",
       "command": "waitForElementNotPresent",
-      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=75.315.333/0075-45')]",
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60.701.190/0001-04')]",
       "targets": [],
       "value": "30000"
     }, {
-      "id": "04978654-489f-4956-b6b8-9879a63d7b21",
+      "id": "77467e5d-417d-4286-b180-6b6b38812106",
       "comment": "",
       "command": "click",
       "target": "id=table_row-delete-search-person--2",
@@ -2849,6 +3094,84 @@
         ["xpath=//a[contains(.,' Delete')]", "xpath:innerText"]
       ],
       "value": ""
+    }, {
+      "id": "1e6276a2-f2b2-4031-abf2-7b81a0c91b4b",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "d5f07552-7df9-4f1f-b1a4-7ad54ee3ce21",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "7b1277dc-0e7f-4ba5-8900-199c9cd075ee",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=http-notify",
+      "targets": [
+        ["id=http-notify", "id"],
+        ["css=#http-notify", "css:finder"],
+        ["xpath=//div[@id='http-notify']", "xpath:attributes"],
+        ["xpath=//div[4]", "xpath:position"],
+        ["xpath=//div[contains(.,'{\"service\":\"person\",\"action\":\"delete\",\"primaryKey\":{\"cnpjCpf\":\"93.209.765/0161-10\"}}')]", "xpath:innerText"]
+      ],
+      "value": "{\"service\":\"person\",\"action\":\"delete\",\"primaryKey\":{\"cnpjCpf\":\"75.315.333/0075-45\"}}"
+    }, {
+      "id": "f45fd6dc-3817-463a-b1ee-defa874d7d57",
+      "comment": "",
+      "command": "waitForElementNotPresent",
+      "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=75.315.333/0075-45')]",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "04978654-489f-4956-b6b8-9879a63d7b21",
+      "comment": "",
+      "command": "click",
+      "target": "id=table_row-delete-search-person--0",
+      "targets": [
+        ["id=table_row-delete-search-person--1", "id"],
+        ["linkText=Delete", "linkText"],
+        ["css=#table_row-delete-search-person--1", "css:finder"],
+        ["xpath=//a[contains(text(),'Delete')]", "xpath:link"],
+        ["xpath=//a[@id='table_row-delete-search-person--1']", "xpath:attributes"],
+        ["xpath=//table[@id='table-search-person']/tbody/tr/td/a[3]", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#')])[100]", "xpath:href"],
+        ["xpath=//td/a[3]", "xpath:position"],
+        ["xpath=//a[contains(.,' Delete')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "016548e4-ba94-438f-ba8b-3afa9533d5a9",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "736e79cb-b9e7-4baa-890d-3d48f9dd0630",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "192d6926-e694-4517-8ef5-19952ef3a9ef",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=http-notify",
+      "targets": [
+        ["id=http-notify", "id"],
+        ["css=#http-notify", "css:finder"],
+        ["xpath=//div[@id='http-notify']", "xpath:attributes"],
+        ["xpath=//div[4]", "xpath:position"],
+        ["xpath=//div[contains(.,'{\"service\":\"person\",\"action\":\"delete\",\"primaryKey\":{\"cnpjCpf\":\"93.209.765/0161-10\"}}')]", "xpath:innerText"]
+      ],
+      "value": "{\"service\":\"person\",\"action\":\"delete\",\"primaryKey\":{\"cnpjCpf\":\"17.040.906/0188-56\"}}"
     }, {
       "id": "03557fb4-e753-42eb-b524-dc2d018f63da",
       "comment": "",
@@ -2891,6 +3214,20 @@
       "target": "id=table_row-edit-search-product--0",
       "targets": [],
       "value": ""
+    }, {
+      "id": "dce144bb-c643-4f3d-aabf-ff5a1afcfc42",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "484b20d9-eea4-43aa-a25d-86f9355ba0e7",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
     }, {
       "id": "bd6912d4-0634-4a59-8431-451f62700006",
       "comment": "",
@@ -2937,6 +3274,20 @@
       ],
       "value": ""
     }, {
+      "id": "f36038e5-a45c-4066-b8d1-36d8be071ca8",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "0b125db1-1aeb-4bef-bca0-a78601b552dc",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
       "id": "1ecca4b7-a442-48f8-b2ff-2d3c6337b4c0",
       "comment": "",
       "command": "waitForElementNotPresent",
@@ -2960,6 +3311,20 @@
         ["xpath=//a[contains(.,' Delete')]", "xpath:innerText"]
       ],
       "value": ""
+    }, {
+      "id": "71d78b77-e75c-44a9-9140-6c91a25775b9",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "d03c9848-4c85-4e84-8e62-53cc4809a90e",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
     }, {
       "id": "d7cf088e-79be-470c-8671-a4600aa5ce77",
       "comment": "",
@@ -2985,6 +3350,20 @@
       ],
       "value": ""
     }, {
+      "id": "cef2fec6-18b1-4092-b1ec-f43a2ea79a62",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "7e5e6888-5d78-435e-9eef-e4a502202be3",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
       "id": "6eddeb36-3806-4554-ac0a-2ad139128c6a",
       "comment": "",
       "command": "waitForElementNotPresent",
@@ -3008,6 +3387,20 @@
         ["xpath=//a[contains(.,' Delete')]", "xpath:innerText"]
       ],
       "value": ""
+    }, {
+      "id": "a5695add-5208-40b2-b618-eaa16f47727a",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "fa3fefaf-f14e-4d32-83e0-6be513b9a789",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
     }, {
       "id": "7b4e00f5-2d2e-4f95-a398-e1bccc42e728",
       "comment": "",
@@ -3529,6 +3922,13 @@
       "targets": [],
       "value": ""
     }, {
+      "id": "0d7297b9-ef42-42c3-bc54-5a39843c47d2",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=new-account--person",
+      "targets": [],
+      "value": "30000"
+    }, {
       "id": "490abbdd-1eba-4978-ac20-a9d7aa9cb45d",
       "comment": "",
       "command": "select",
@@ -3577,6 +3977,126 @@
       "target": "id=http-error",
       "targets": [],
       "value": "1000"
+    }, {
+      "id": "4917dbdd-a342-47d4-b407-67074d9d6f3b",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=table_row-col-search-account--description-0",
+      "targets": [],
+      "value": "Caixa Interno"
+    }, {
+      "id": "a0ffc744-1098-48f7-9574-39f196eab625",
+      "comment": "",
+      "command": "click",
+      "target": "id=menu-Tabelas",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "4747edd7-4953-4297-8549-dd106a71119b",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//a[contains(@href, '#!/app/account_balance/search')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "f034e4b7-ac3f-41ed-b29c-eaa36986cf5e",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//a[contains(@href, '#!/app/account_balance/new')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "ffc7ab4b-08f4-471f-af26-6b39879f8099",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=new-account_balance--account",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "7b47de0c-0b14-4ba0-90be-e7605883aea1",
+      "comment": "",
+      "command": "select",
+      "target": "id=new-account_balance--account",
+      "targets": [
+        ["id=new-account_balance--account", "id"],
+        ["name=account", "name"],
+        ["css=#new-account_balance--account", "css:finder"],
+        ["xpath=//select[@id='new-account_balance--account']", "xpath:attributes"],
+        ["xpath=//div[@id='div-col-new-account_balance--account']/select", "xpath:idRelative"],
+        ["xpath=//select", "xpath:position"]
+      ],
+      "value": "label=808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
+    }, {
+      "id": "2758795e-25de-4fd1-8947-6db123b8643c",
+      "comment": "",
+      "command": "//sendKeys",
+      "target": "id=new-account_balance--date",
+      "targets": [],
+      "value": "010120000000"
+    }, {
+      "id": "15a2edb2-8aee-4ba9-a2c4-fb96a71ee3f3",
+      "comment": "",
+      "command": "type",
+      "target": "id=new-account_balance--date",
+      "targets": [
+        ["id=new-account_balance--date", "id"],
+        ["name=date", "name"],
+        ["css=#new-account_balance--date", "css:finder"],
+        ["xpath=//input[@id='new-account_balance--date']", "xpath:attributes"],
+        ["xpath=//div[@id='div-col-new-account_balance--date']/input", "xpath:idRelative"],
+        ["xpath=//div[2]/div/div/input", "xpath:position"]
+      ],
+      "value": "2000-01-01T00:00"
+    }, {
+      "id": "02941600-3267-405d-b0c5-920c74aa409e",
+      "comment": "",
+      "command": "type",
+      "target": "id=new-account_balance--balance",
+      "targets": [
+        ["id=new-account_balance--balance", "id"],
+        ["name=balance", "name"],
+        ["css=#new-account_balance--balance", "css:finder"],
+        ["xpath=//input[@id='new-account_balance--balance']", "xpath:attributes"],
+        ["xpath=//div[@id='div-col-new-account_balance--balance']/input", "xpath:idRelative"],
+        ["xpath=//div[3]/div/div/input", "xpath:position"]
+      ],
+      "value": "200"
+    }, {
+      "id": "8a24be99-91bd-4e33-aee5-263b108e6e25",
+      "comment": "",
+      "command": "click",
+      "target": "id=apply-new-account_balance",
+      "targets": [
+        ["id=apply-new-account_balance", "id"],
+        ["name=apply", "name"],
+        ["css=#apply-new-account_balance", "css:finder"],
+        ["xpath=//button[@id='apply-new-account_balance']", "xpath:attributes"],
+        ["xpath=//div[@id='div-actions-new-account_balance']/button", "xpath:idRelative"],
+        ["xpath=//div[5]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'Aplicar')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "27a11e0f-d5de-431d-b9b2-c0be596764cb",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "603b109a-a54e-4fe1-9bbc-b2dd0e611f49",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "7ea4374d-2323-4221-81ac-dc73e0ebd3bf",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=table_row-col-search-account_balance--account-0",
+      "targets": [],
+      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
     }]
   }, {
     "id": "49ed59c5-f838-440a-9ece-b074b48036c6",
@@ -3615,7 +4135,7 @@
       "command": "select",
       "target": "id=new-account--person",
       "targets": [],
-      "value": "60.701.190/0001-04 - ITAÚ UNIBANCO S.A."
+      "value": "label=60.701.190/0001-04 - ITAÚ UNIBANCO S.A."
     }, {
       "id": "9b17fbb4-2864-48be-8126-655fc6cfc890",
       "comment": "",
@@ -3658,6 +4178,126 @@
       "target": "id=http-error",
       "targets": [],
       "value": "1000"
+    }, {
+      "id": "94a9e2bc-77c7-4aea-aa1a-c89604bcff26",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=table_row-col-search-account--description-1",
+      "targets": [],
+      "value": "Conta Bancária Principal"
+    }, {
+      "id": "f545d870-59e5-4a58-a1d4-a74527178eea",
+      "comment": "",
+      "command": "click",
+      "target": "id=menu-Tabelas",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "d0e3630f-ca45-4f0f-8083-fae908ee5ff8",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//a[contains(@href, '#!/app/account_balance/search')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "e2240ec0-bd43-4b24-bee1-47850c1f37a4",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//a[contains(@href, '#!/app/account_balance/new')]",
+      "targets": [],
+      "value": ""
+    }, {
+      "id": "fd3630df-6cd4-49ab-9340-c6f955b14573",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=new-account_balance--account",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "414c965b-6a5f-4456-b574-c7b761b329a1",
+      "comment": "",
+      "command": "select",
+      "target": "id=new-account_balance--account",
+      "targets": [
+        ["id=new-account_balance--account", "id"],
+        ["name=account", "name"],
+        ["css=#new-account_balance--account", "css:finder"],
+        ["xpath=//select[@id='new-account_balance--account']", "xpath:attributes"],
+        ["xpath=//div[@id='div-col-new-account_balance--account']/select", "xpath:idRelative"],
+        ["xpath=//select", "xpath:position"]
+      ],
+      "value": "label=60.701.190/0001-04 - ITAÚ UNIBANCO S.A. - Conta Bancária Principal"
+    }, {
+      "id": "c238fe12-c10a-42b9-8372-0e875f1973f2",
+      "comment": "",
+      "command": "//sendKeys",
+      "target": "id=new-account_balance--date",
+      "targets": [],
+      "value": "010120000000"
+    }, {
+      "id": "37be727f-0826-48d0-965c-426d477dd2bd",
+      "comment": "",
+      "command": "type",
+      "target": "id=new-account_balance--date",
+      "targets": [
+        ["id=new-account_balance--date", "id"],
+        ["name=date", "name"],
+        ["css=#new-account_balance--date", "css:finder"],
+        ["xpath=//input[@id='new-account_balance--date']", "xpath:attributes"],
+        ["xpath=//div[@id='div-col-new-account_balance--date']/input", "xpath:idRelative"],
+        ["xpath=//div[2]/div/div/input", "xpath:position"]
+      ],
+      "value": "2000-01-01T00:00"
+    }, {
+      "id": "1cb3b79b-d0e7-412e-9c0d-994aa8dd539d",
+      "comment": "",
+      "command": "type",
+      "target": "id=new-account_balance--balance",
+      "targets": [
+        ["id=new-account_balance--balance", "id"],
+        ["name=balance", "name"],
+        ["css=#new-account_balance--balance", "css:finder"],
+        ["xpath=//input[@id='new-account_balance--balance']", "xpath:attributes"],
+        ["xpath=//div[@id='div-col-new-account_balance--balance']/input", "xpath:idRelative"],
+        ["xpath=//div[3]/div/div/input", "xpath:position"]
+      ],
+      "value": "10000"
+    }, {
+      "id": "0d277238-86be-4002-9bcf-a95f6bcce859",
+      "comment": "",
+      "command": "click",
+      "target": "id=apply-new-account_balance",
+      "targets": [
+        ["id=apply-new-account_balance", "id"],
+        ["name=apply", "name"],
+        ["css=#apply-new-account_balance", "css:finder"],
+        ["xpath=//button[@id='apply-new-account_balance']", "xpath:attributes"],
+        ["xpath=//div[@id='div-actions-new-account_balance']/button", "xpath:idRelative"],
+        ["xpath=//div[5]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'Aplicar')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "fa303054-49e4-4ebe-b566-2b098a2595de",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "596d2f01-18f4-49ff-a2b0-4b86e7f1422a",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "c66742ec-d640-4ba1-a543-98a00056e8e4",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=table_row-col-search-account_balance--account-1",
+      "targets": [],
+      "value": "60.701.190/0001-04 - ITAÚ UNIBANCO S.A. - Conta Bancária Principal"
     }]
   }, {
     "id": "3d514cd3-dc09-488b-a766-f6febea5923a",
@@ -3719,7 +4359,7 @@
       "id": "f27f1d1e-982f-4836-abd1-591ddfe7ea5d",
       "comment": "",
       "command": "click",
-      "target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?rufsGroupOwner=nfe_guest_group&name=guest')]",
+      "target": "xpath=//a[contains(@href, '#!/app/rufs_user/edit?name=guest')]",
       "targets": [],
       "value": ""
     }, {
@@ -4708,39 +5348,26 @@
       "targets": [],
       "value": "1000"
     }, {
-      "id": "7d8fe2aa-53bc-43f6-b5b8-f4f4436ff425",
-      "comment": "",
-      "command": "//sendKeys",
-      "target": "id=new-request--date",
-      "targets": [],
-      "value": "31122018${KEY_TAB}2008"
-    }, {
-      "id": "b424e0d6-626e-4a67-b820-07d52a704a26",
-      "comment": "",
-      "command": "//sendKeys",
-      "target": "id=new-request--date",
-      "targets": [],
-      "value": "311220182008"
-    }, {
       "id": "717f9a13-0f33-4e9a-9250-c0df839c51ed",
       "comment": "",
-      "command": "sendKeys",
+      "command": "//sendKeys",
       "target": "id=new-request--date",
       "targets": [],
-      "value": "123120182008"
+      "value": "113020182008"
     }, {
       "id": "91a150ce-b8a3-4a47-825c-5cae5b683f4c",
       "comment": "",
-      "command": "type","target": "id=new-request--date",
+      "command": "type",
+      "target": "id=new-request--date",
       "targets": [],
-      "value": "2018-12-31T20:08"
+      "value": "2018-11-30T20:08"
     }, {
       "id": "24c3675f-b8d1-4249-881f-65af4924172d",
       "comment": "",
       "command": "assertValue",
       "target": "id=new-request--date",
       "targets": [],
-      "value": "2018-12-31T20:08"
+      "value": "2018-11-30T20:08"
     }, {
       "id": "a20b84c2-8d4b-46fa-acd9-4ffeb5cfbe58",
       "comment": "",
@@ -4782,7 +5409,7 @@
       "command": "assertValue",
       "target": "id=edit-request--date",
       "targets": [],
-      "value": "2018-12-31T20:08"
+      "value": "2018-11-30T20:08"
     }, {
       "id": "6f9235d2-5d50-43e8-9235-6c7e434b1979",
       "comment": "",
@@ -5013,14 +5640,14 @@
       "command": "assertValue",
       "target": "id=edit-request--new-request_payment--dueDate",
       "targets": [],
-      "value": "2018-12-31T20:08"
+      "value": "2018-11-30T20:08"
     }, {
       "id": "7403f904-7723-4d75-b718-a28c28b87f00",
       "comment": "",
       "command": "assertValue",
       "target": "id=edit-request--new-request_payment--payday",
       "targets": [],
-      "value": "2018-12-31T20:08"
+      "value": "2018-11-30T20:08"
     }, {
       "id": "79e11a4b-a0d6-44fa-9cc4-fac4e207670e",
       "comment": "",
@@ -5034,7 +5661,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "5586d3c7-e8f3-4bb4-a2c8-4dbccf4f3cbd",
       "comment": "",
@@ -5049,6 +5676,274 @@
       "target": "id=table_row-col-edit-request--search-request_payment--value-0",
       "targets": [],
       "value": "13.8"
+    }, {
+      "id": "d4a05479-89a7-45b1-8262-71476163db6a",
+      "comment": "",
+      "command": "click",
+      "target": "id=cancel-edit-request",
+      "targets": [
+        ["id=cancel-edit-request", "id"],
+        ["name=cancel", "name"],
+        ["css=#cancel-edit-request", "css:finder"],
+        ["xpath=//button[@id='cancel-edit-request']", "xpath:attributes"],
+        ["xpath=//div[@id='div-actions-edit-request']/button[4]", "xpath:idRelative"],
+        ["xpath=//button[4]", "xpath:position"],
+        ["xpath=//button[contains(.,'Fechar')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "a278eeb7-6985-4948-8422-f97f3630c8a2",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=cancel-edit-request",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "05c28339-a0c6-44fc-98be-d0379b8665f2",
+      "comment": "",
+      "command": "click",
+      "target": "id=menu-Movimento",
+      "targets": [
+        ["id=menu-Movimento", "id"],
+        ["linkText=Movimento", "linkText"],
+        ["css=#menu-Movimento", "css:finder"],
+        ["xpath=//a[contains(text(),'Movimento')]", "xpath:link"],
+        ["xpath=//a[@id='menu-Movimento']", "xpath:attributes"],
+        ["xpath=//div[@id='menu']/div/ul/li[4]/a", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#')])[17]", "xpath:href"],
+        ["xpath=//div/ul/li[4]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'Movimento')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "226ea3ed-982c-48de-ad02-035c94dd1910",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "xpath=//a[contains(text(),'Financeiro')]",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "ca405a0f-ec10-4143-9959-86ff6335d6a4",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//a[contains(text(),'Financeiro')]",
+      "targets": [
+        ["linkText=Financeiro", "linkText"],
+        ["css=.show > li:nth-child(5) > .dropdown-item", "css:finder"],
+        ["xpath=//a[contains(text(),'Financeiro')]", "xpath:link"],
+        ["xpath=//div[@id='menu']/div/ul/li[4]/ul/li[5]/a", "xpath:idRelative"],
+        ["xpath=//a[contains(@href, '#!/app/request_payment/search')]", "xpath:href"],
+        ["xpath=//li[4]/ul/li[5]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'Financeiro')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "66043f86-7140-47b1-9739-d63eb53e4e65",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=table_row-col-search-request_payment--value-1",
+      "targets": [],
+      "value": "13.8"
+    }, {
+      "id": "5798ae56-36bf-49a4-a39e-f1629bd1b10d",
+      "comment": "",
+      "command": "assertText",
+      "target": "id=table_row-col-search-request_payment--balance-1",
+      "targets": [
+        ["id=table_row-col-search-request_payment--balance-1", "id"],
+        ["linkText=149.07", "linkText"],
+        ["css=#table_row-col-search-request_payment--balance-1", "css:finder"],
+        ["xpath=//a[contains(text(),'149.07')]", "xpath:link"],
+        ["xpath=//a[@id='table_row-col-search-request_payment--balance-1']", "xpath:attributes"],
+        ["xpath=//table[@id='table-search-request_payment']/tbody/tr/td[11]/a", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#')])[77]", "xpath:href"],
+        ["xpath=//td[11]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'149.07')]", "xpath:innerText"]
+      ],
+      "value": "149.07"
+    }, {
+      "id": "5c845885-0ad6-489f-aacd-07050f61546a",
+      "comment": "",
+      "command": "click",
+      "target": "id=menu-Tabelas",
+      "targets": [
+        ["id=menu-Tabelas", "id"],
+        ["linkText=Tabelas", "linkText"],
+        ["css=#menu-Tabelas", "css:finder"],
+        ["xpath=//a[contains(text(),'Tabelas')]", "xpath:link"],
+        ["xpath=//a[@id='menu-Tabelas']", "xpath:attributes"],
+        ["xpath=//div[@id='menu']/div/ul/li[2]/a", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#')])[6]", "xpath:href"],
+        ["xpath=//div/ul/li[2]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'Tabelas')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "0e0c0dc8-bc91-4b29-afe1-087f09c1b278",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "27359f68-eea4-4628-95aa-5e6568c9e16e",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "db908017-4415-4dc3-a0ef-cde59c4b9ed7",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "xpath=//a[contains(text(),'Acerto Bancário/Caixa')]",
+      "targets": [],
+      "value": "30000"
+    }, {
+      "id": "8124865c-117c-41a8-8637-28e9266ba6af",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//a[contains(text(),'Acerto Bancário/Caixa')]",
+      "targets": [
+        ["linkText=Acerto Bancário/Caixa", "linkText"],
+        ["css=.show > li:nth-child(2) > .dropdown-item", "css:finder"],
+        ["xpath=//a[contains(text(),'Acerto Bancário/Caixa')]", "xpath:link"],
+        ["xpath=//div[@id='menu']/div/ul/li[2]/ul/li[2]/a", "xpath:idRelative"],
+        ["xpath=//a[contains(@href, '#!/app/account_balance/search')]", "xpath:href"],
+        ["xpath=//li[2]/ul/li[2]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'Acerto Bancário/Caixa')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "c9a48867-75c2-4cad-9bfb-0266c1ca7bb3",
+      "comment": "",
+      "command": "click",
+      "target": "id=create-search-account_balance",
+      "targets": [
+        ["css=#create-search-account_balance > .bi", "css:finder"],
+        ["xpath=//a[@id='create-search-account_balance']/i", "xpath:idRelative"],
+        ["xpath=//i", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "01398f9e-550c-4c2b-9578-257469ce431f",
+      "comment": "",
+      "command": "click",
+      "target": "id=new-account_balance--account",
+      "targets": [
+        ["id=new-account_balance--account", "id"],
+        ["name=account", "name"],
+        ["css=#new-account_balance--account", "css:finder"],
+        ["xpath=//select[@id='new-account_balance--account']", "xpath:attributes"],
+        ["xpath=//div[@id='div-col-new-account_balance--account']/select", "xpath:idRelative"],
+        ["xpath=//select", "xpath:position"]
+      ],
+      "value": ""
+    }, {
+      "id": "fe876ece-2e08-4907-a181-81761a66a55c",
+      "comment": "",
+      "command": "select",
+      "target": "id=new-account_balance--account",
+      "targets": [],
+      "value": "label=808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
+    }, {
+      "id": "0d9d4a2b-d3a3-4d60-a274-182818a8ed05",
+      "comment": "",
+      "command": "//sendKeys",
+      "target": "id=new-account_balance--date",
+      "targets": [],
+      "value": "113020182359"
+    }, {
+      "id": "4e54aa54-4193-4b04-a3d0-3cbe959a54c8",
+      "comment": "",
+      "command": "type",
+      "target": "id=new-account_balance--date",
+      "targets": [
+        ["id=new-account_balance--date", "id"],
+        ["name=date", "name"],
+        ["css=#new-account_balance--date", "css:finder"],
+        ["xpath=//input[@id='new-account_balance--date']", "xpath:attributes"],
+        ["xpath=//div[@id='div-col-new-account_balance--date']/input", "xpath:idRelative"],
+        ["xpath=//div[2]/div/div/input", "xpath:position"]
+      ],
+      "value": "2018-11-30T23:59"
+    }, {
+      "id": "632e6bcf-851b-4d10-9b7b-493d75b1ac6f",
+      "comment": "",
+      "command": "type",
+      "target": "id=new-account_balance--balance",
+      "targets": [
+        ["id=new-account_balance--balance", "id"],
+        ["name=balance", "name"],
+        ["css=#new-account_balance--balance", "css:finder"],
+        ["xpath=//input[@id='new-account_balance--balance']", "xpath:attributes"],
+        ["xpath=//div[@id='div-col-new-account_balance--balance']/input", "xpath:idRelative"],
+        ["xpath=//div[3]/div/div/input", "xpath:position"]
+      ],
+      "value": "1149.07"
+    }, {
+      "id": "e7d2b588-e90c-4e0a-930c-a4c3fd43f069",
+      "comment": "",
+      "command": "click",
+      "target": "id=apply-new-account_balance",
+      "targets": [
+        ["id=apply-new-account_balance", "id"],
+        ["name=apply", "name"],
+        ["css=#apply-new-account_balance", "css:finder"],
+        ["xpath=//button[@id='apply-new-account_balance']", "xpath:attributes"],
+        ["xpath=//div[@id='div-actions-new-account_balance']/button", "xpath:idRelative"],
+        ["xpath=//div[5]/button", "xpath:position"],
+        ["xpath=//button[contains(.,'Aplicar')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "bc03e1c0-dc54-4ef7-a3e4-cf17a1c1ccd4",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "f55e3328-78e3-489f-af6d-02000d16c2c1",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "44b7969d-dad3-4786-a77c-e91be558a6fe",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=table_row-col-search-account_balance--balance-0",
+      "targets": [
+        ["id=table_row-col-search-account_balance--balance-0", "id"],
+        ["linkText=1149.07", "linkText"],
+        ["css=#table_row-col-search-account_balance--balance-0", "css:finder"],
+        ["xpath=//a[contains(text(),'1149.07')]", "xpath:link"],
+        ["xpath=//a[@id='table_row-col-search-account_balance--balance-0']", "xpath:attributes"],
+        ["xpath=//table[@id='table-search-account_balance']/tbody/tr/td[4]/a", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#')])[52]", "xpath:href"],
+        ["xpath=//td[4]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'1149.07')]", "xpath:innerText"]
+      ],
+      "value": "3000"
+    }, {
+      "id": "3331d6ed-f541-4447-abc2-c54f91e9404a",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=table_row-col-search-account_balance--balance-2",
+      "targets": [
+        ["id=table_row-col-search-account_balance--balance-0", "id"],
+        ["linkText=1149.07", "linkText"],
+        ["css=#table_row-col-search-account_balance--balance-0", "css:finder"],
+        ["xpath=//a[contains(text(),'1149.07')]", "xpath:link"],
+        ["xpath=//a[@id='table_row-col-search-account_balance--balance-0']", "xpath:attributes"],
+        ["xpath=//table[@id='table-search-account_balance']/tbody/tr/td[4]/a", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#')])[52]", "xpath:href"],
+        ["xpath=//td[4]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'1149.07')]", "xpath:innerText"]
+      ],
+      "value": "1149.07"
     }]
   }, {
     "id": "8fce813f-9f66-4879-b744-004b1b69d0fe",
@@ -5071,20 +5966,34 @@
       "id": "12835e51-ee6c-4fed-a9df-8ede5f3e880a",
       "comment": "",
       "command": "click",
-      "target": "id=table_row-edit-edit-request--search-request_product--0",
+      "target": "id=table_row-edit-edit-request--search-request_product--1",
       "targets": [],
       "value": ""
+    }, {
+      "id": "c6ac0056-cafa-44a4-be8f-84a58fe2f428",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "76e49956-aa23-4381-9aa9-f3833deadf2c",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
     }, {
       "id": "68cddbbd-7d04-46ab-89cd-8fdc94b1b36b",
       "comment": "",
       "command": "waitForElementEditable",
       "target": "id=edit-request--edit-request_product--product",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "55b88962-304f-4a3a-baab-f0874b7812cf",
       "comment": "",
-      "command": "assertValue",
+      "command": "//assertValue",
       "target": "id=edit-request--edit-request_product--product",
       "targets": [],
       "value": "BATATA PALHA 100G"
@@ -6443,14 +7352,15 @@
     }, {
       "id": "2c749f4f-1d91-4aba-869c-273a933c87ad",
       "comment": "",
-      "command": "sendKeys",
+      "command": "//sendKeys",
       "target": "id=new-request--date",
       "targets": [],
       "value": "091720212008"
     }, {
       "id": "b0fc45b8-7cd4-41f9-884c-ea8fbedc1b4b",
       "comment": "",
-      "command": "type","target": "id=new-request--date",
+      "command": "type",
+      "target": "id=new-request--date",
       "targets": [],
       "value": "2021-09-17T20:08"
     }, {
@@ -6601,12 +7511,12 @@
       "targets": [],
       "value": ""
     }, {
-      "id": "fbe6e2e8-3ce7-4ea8-a76e-a5ffff224aad",
+      "id": "099ecb40-a1f8-4abc-a36e-a7abe9826feb",
       "comment": "",
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "724d44da-abfe-437f-87f5-f57bf3af9380",
       "comment": "",
@@ -6614,6 +7524,13 @@
       "target": "id=http-error",
       "targets": [],
       "value": "1000"
+    }, {
+      "id": "fbe6e2e8-3ce7-4ea8-a76e-a5ffff224aad",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=http-notify",
+      "targets": [],
+      "value": "{\"service\":\"requestPayment\",\"action\":\"notify\",\"primaryKey\":{\"id\":3}}"
     }, {
       "id": "e536aea8-05db-47c1-8599-26783cd0e3e8",
       "comment": "",
@@ -6628,6 +7545,105 @@
       "target": "id=edit-request--paymentsValue",
       "targets": [],
       "value": "66.34"
+    }, {
+      "id": "4a331d69-4cf4-4216-98e7-3338da963421",
+      "comment": "",
+      "command": "click",
+      "target": "id=cancel-edit-request",
+      "targets": [
+        ["id=cancel-edit-request", "id"],
+        ["name=cancel", "name"],
+        ["css=#cancel-edit-request", "css:finder"],
+        ["xpath=//button[@id='cancel-edit-request']", "xpath:attributes"],
+        ["xpath=//div[@id='div-actions-edit-request']/button[4]", "xpath:idRelative"],
+        ["xpath=//button[4]", "xpath:position"],
+        ["xpath=//button[contains(.,'Fechar')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "cdea0200-d982-46ef-a1b3-f8eaded2509d",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "1b72ed9e-f6df-406c-816d-94c4350d3ec5",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "3a815bd4-b4d9-4f95-9c5b-f598948c2762",
+      "comment": "",
+      "command": "click",
+      "target": "id=menu-Movimento",
+      "targets": [
+        ["id=menu-Movimento", "id"],
+        ["linkText=Movimento", "linkText"],
+        ["css=#menu-Movimento", "css:finder"],
+        ["xpath=//a[contains(text(),'Movimento')]", "xpath:link"],
+        ["xpath=//a[@id='menu-Movimento']", "xpath:attributes"],
+        ["xpath=//div[@id='menu']/div/ul/li[4]/a", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#')])[17]", "xpath:href"],
+        ["xpath=//div/ul/li[4]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'Movimento')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "bd2742f4-aa87-4504-b6dc-d7f0710d3d3e",
+      "comment": "",
+      "command": "click",
+      "target": "xpath=//a[contains(text(),'Financeiro')]",
+      "targets": [
+        ["linkText=Financeiro", "linkText"],
+        ["css=.show > li:nth-child(5) > .dropdown-item", "css:finder"],
+        ["xpath=//a[contains(text(),'Financeiro')]", "xpath:link"],
+        ["xpath=//div[@id='menu']/div/ul/li[4]/ul/li[5]/a", "xpath:idRelative"],
+        ["xpath=//a[contains(@href, '#!/app/request_payment/search')]", "xpath:href"],
+        ["xpath=//li[4]/ul/li[5]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'Financeiro')]", "xpath:innerText"]
+      ],
+      "value": ""
+    }, {
+      "id": "d98e67d6-2ca3-4c87-a96d-71ffcdc55b9e",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-working",
+      "targets": [],
+      "value": "3000"
+    }, {
+      "id": "f6eaae05-e168-4a34-93c8-666f7f388356",
+      "comment": "",
+      "command": "waitForElementNotVisible",
+      "target": "id=http-error",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "d39104ba-715f-4251-93f5-dd6f135c09d7",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=table_row-col-search-request_payment--request-2",
+      "targets": [
+        ["id=table_row-col-search-request_payment--request-2", "id"],
+        ["linkText=17.040.906/0188-56 - PMP DROGARIA - 808.037.920-34 - ALEXSANDRO STEFENON - 2021-09-17T20:08:00", "linkText"],
+        ["css=#table_row-col-search-request_payment--request-2", "css:finder"],
+        ["xpath=//a[contains(text(),'17.040.906/0188-56 - PMP DROGARIA - 808.037.920-34 - ALEXSANDRO STEFENON - 2021-09-17T20:08:00')]", "xpath:link"],
+        ["xpath=//a[@id='table_row-col-search-request_payment--request-2']", "xpath:attributes"],
+        ["xpath=//table[@id='table-search-request_payment']/tbody/tr/td[3]/a", "xpath:idRelative"],
+        ["xpath=//a[contains(@href, '#!/app/request/view?id=3')]", "xpath:href"],
+        ["xpath=//td[3]/a", "xpath:position"],
+        ["xpath=//a[contains(.,'17.040.906/0188-56 - PMP DROGARIA - 808.037.920-34 - ALEXSANDRO STEFENON - 2021-09-17T20:08:00')]", "xpath:innerText"]
+      ],
+      "value": "3000"
+    }, {
+      "id": "2632bc2a-df5d-4c49-b497-8846703a1fe4",
+      "comment": "",
+      "command": "//assertText",
+      "target": "id=table_row-col-search-request_payment--balance-2",
+      "targets": [],
+      "value": "1082.73"
     }]
   }, {
     "id": "64f2bb5f-babb-467f-85d7-ee77b277b96d",
@@ -7012,19 +8028,26 @@
       "targets": [],
       "value": ""
     }, {
-      "id": "46cb28db-6d6f-4f17-aa72-3f3b7964c574",
+      "id": "ef998ef5-98e9-45e0-ba97-8cf3c5cc02ca",
       "comment": "",
-      "command": "click",
+      "command": "waitForElementVisible",
       "target": "id=edit-request--new-request_product--product",
       "targets": [],
-      "value": ""
+      "value": "3000"
     }, {
       "id": "5322b229-e04c-41ad-a1b3-97170f07cf53",
       "comment": "",
       "command": "waitForElementEditable",
       "target": "id=edit-request--new-request_product--product",
       "targets": [],
-      "value": "5000"
+      "value": "3000"
+    }, {
+      "id": "46cb28db-6d6f-4f17-aa72-3f3b7964c574",
+      "comment": "",
+      "command": "click",
+      "target": "id=edit-request--new-request_product--product",
+      "targets": [],
+      "value": ""
     }, {
       "id": "9c63c027-4a95-4952-9b33-b83ec74a6c80",
       "comment": "",
@@ -8133,7 +9156,7 @@
     }, {
       "id": "932dd23c-59f3-40b1-98a2-2bd77b2a33ba",
       "comment": "",
-      "command": "assertText",
+      "command": "waitForText",
       "target": "id=table_row-col-edit-request--search-request_product--valueItem-1",
       "targets": [],
       "value": "7.5"
@@ -8289,7 +9312,7 @@
       "id": "625a4a00-0572-4eb8-ae23-85115ec4f0f6",
       "comment": "",
       "command": "assertElementPresent",
-      "target": "xpath=//a[contains(text(),'75.315.333/0075-45 - ATACADAO S.A. - 808.037.920-34 - ALEXSANDRO STEFENON - 2018-12-31T20:08:00')]",
+      "target": "xpath=//a[contains(text(),'75.315.333/0075-45 - ATACADAO S.A. - 808.037.920-34 - ALEXSANDRO STEFENON - 2018-11-30T20:08:00')]",
       "targets": [
         ["id=table_row-col-search-request_product--request-1", "id"],
         ["linkText=75.315.333/0075-45 - ATACADAO S.A. - 808.037.920-34 - ALEXSANDRO STEFENON - 2018-12-31T20:08:00", "linkText"],
@@ -8306,7 +9329,7 @@
       "id": "70655925-ac47-4ab7-864b-eeb8cd27c916",
       "comment": "",
       "command": "assertElementPresent",
-      "target": "xpath=//a[contains(text(),'93.209.765/0161-10 - WMS SUPERMERCADOS DO BRASIL LTDA - 808.037.920-34 - ALEXSANDRO STEFENON - 2018-12-31T20:08:00')]",
+      "target": "xpath=//a[contains(text(),'93.209.765/0161-10 - WMS SUPERMERCADOS DO BRASIL LTDA - 808.037.920-34 - ALEXSANDRO STEFENON - 2018-10-31T20:08:00')]",
       "targets": [
         ["id=table_row-col-search-request_product--request-0", "id"],
         ["linkText=93.209.765/0161-10 - WMS SUPERMERCADOS DO BRASIL LTDA - 808.037.920-34 - ALEXSANDRO STEFENON - 2018-12-31T20:08:00", "linkText"],

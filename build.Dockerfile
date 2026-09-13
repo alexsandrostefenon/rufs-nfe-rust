@@ -1,4 +1,4 @@
-FROM localhost:5000/rust:latest
+FROM rust:latest
 RUN apt-get update -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends firebird-dev \
     && apt-get autoremove -y \

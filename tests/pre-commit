@@ -46,6 +46,10 @@ EOF
 fi
 
 sed -i 's/path = "\.\.\/rufs-base-rust"/git = "https:\/\/github.com\/alexsandrostefenon\/rufs-base-rust.git"/' Cargo.toml
+sed -i 's/- \.\/webapp/#- \.\/webapp/' compose.yml
+sed -i 's/- \.\/pkg/#- \.\/pkg/' compose.yml
+sed -i 's/- \.\/sql/#- \.\/sql/' compose.yml
+sed -i 's/- \.\/target/#- \.\/target' compose.yml
 podman-compose down rufs-nfe
 ./cloud.sh --build
 podman-compose up -d rufs-nfe

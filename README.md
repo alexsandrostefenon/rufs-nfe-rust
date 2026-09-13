@@ -6,8 +6,6 @@ You need podman (or docker) and podman-compose (or docker-compose).
 
 Podman is my preferency because run in user-space.
 
-Requires browser with support to dynamic ES6 modules (tested with Chrome versions >= 64)
-
 ## Containerized application
 
 Open terminal and clone this repository with :
@@ -19,7 +17,7 @@ git clone https://github.com/alexsandrostefenon/rufs-nfe-rust
 ```
 cd rufs-nfe-rust
 ```
-Edit ".env" with your personal data and execute:
+Replace variables in ".env" with your customized data and execute:
 ```
 ./cloud.sh --setup
 ```
@@ -42,8 +40,12 @@ In EcmaScript2017 compliance browser open url
 
 `http://localhost:8080/nfe/`
 
-For custom service configuration or user edition, use user 'admin' with password of first login.
+The system is fully multi-tenant data (splited in postgres schemas). Each tenant have one group key id (like as brazlian CPNJ) with your dedicated user 'admin'.
 
-Utils
+At first acess, enter with your preferd login name and one secury password.
+
+For users management, login with user 'admin' and same password of first login.
+
+## TODO Features
 https://portaldatransparencia.gov.br/pessoa-juridica/<cnpj>;
 https://servicos.receita.fazenda.gov.br/servicos/cpf/consultasituacao/consultapublica.asp (<cpf> <data_nascimento>);
