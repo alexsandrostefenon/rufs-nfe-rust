@@ -6,7 +6,7 @@ PS4=' $LINENO: '
 cmd_env='./.env'
 cmd_target='release'
 
-PARSED=$(getopt --options='cei:' --longoptions='install,setup,compile,build,env:,test,test-side,deploy,update,logs:,drop-schema:,db-import:,db-backup,ssh,db-drop,target:,scp-in:,customer:,user:,password:,clipp-import:' --name "$0" -- "$@") || exit 2
+PARSED=$(getopt --options='cei:' --longoptions='install,setup,compile,build,env:,test,test-side,deploy,update,logs:,drop-schema:,db-import:,db-backup,ssh,db-drop,target:,scp-in:,customer:,user:,password:,clipp-import:,psql' --name "$0" -- "$@") || exit 2
 eval set -- "$PARSED"
 
 while true; do
@@ -100,6 +100,10 @@ while true; do
     cmd_clipp_import="$2"
     shift 2
     ;;
+  --psql)
+    cmd_psql='yes'
+    shift
+    ;;
   --)
     shift
     break
@@ -134,6 +138,7 @@ function db_backup() {
 function db_drop() {
   $compose_cli_local down rufs-nfe
   $compose_cli_local up -d postgres
+  sleep 8
   rm -f $HOME/data/openapi-rufs_nfe.json
   rm -f $HOME/data/rufs_customer_template.sql
   $docker_cli_local exec -it postgres psql postgresql://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/template1 -c "DROP DATABASE IF EXISTS rufs_nfe"
@@ -141,10 +146,10 @@ function db_drop() {
 }
 
 function clipp_import() {
-  #$compose_cli_local up -d selenium-side-runner
-  #$compose_cli_local up -d firebirdsql-v2_5
+  $compose_cli_local up -d firebirdsql-v2_5
+  sleep 8
   $compose_cli_local up -d clipp-import
-  sleep 1
+  sleep 8
   local date_initial=$1
   local customer=$2
   local user_name=$3
@@ -168,12 +173,15 @@ function compile() {
   release_debug_server='--release'
   release_debug_client='--release'
 
-  if [ "$cmd_target" = 'debug' ]; then
+  if [ -d '../rufs-base-rust' ]; then
     sed -i 's/git = "https:\/\/github.com\/alexsandrostefenon\/rufs-base-rust.git"/path = "\.\.\/rufs-base-rust"/' Cargo.toml
     sed -i 's/#- \.\/webapp/- \.\/webapp/' compose.yml
     sed -i 's/#- \.\/pkg/- \.\/pkg/' compose.yml
     sed -i 's/#- \.\/sql/- \.\/sql/' compose.yml
-    sed -i 's/#- \.\/target/- \.\/target' compose.yml
+    sed -i 's/#- \.\/target/- \.\/target/' compose.yml
+  fi
+
+  if [ "$cmd_target" = 'debug' ]; then
     release_debug_server=''
     release_debug_client='--dev'
   fi
@@ -184,27 +192,31 @@ function compile() {
 }
 
 function test_side() {
+  $compose_cli_local down selenium-side-runner
+  sleep 4
+  $compose_cli_local up -d selenium-standalone-firefox
+  sleep 4
   $compose_cli_local up -d selenium-side-runner
-  sleep 8
+  sleep 4
   mkdir -p ./tmp
   rm -f ./tmp/*
-  jq '((.tests[] | select(.name | test("request_buy_new")).commands[]) | select(.target == "id=new-request--date") | select(.command == "//sendKeys")).command = "sendKeys"' tests.side > tmp0.json
-  jq '((.tests[] | select(.name | test("request_buy_new")).commands[]) | select(.target == "id=new-request--date") | select(.command == "type")).command = "//type"' tmp0.json > tests.json
-  #jq '((.tests[] | select(.name | test("request_buy_new_2")).commands[]) | select(.target == "id=table_row-col-search-account_balance--balance-0")).target = "id=table_row-col-search-account_balance--balance-2"' tmp1.json > tests.json
+  jq '((.tests[] | select(.name | test("request_buy_new|create_account")).commands[]) | select(.target | test("^id=new-\\w+--date")) | select(.command == "//sendKeys")).command = "sendKeys"' tests.side > ./tmp/tmp0.json
+  jq '((.tests[] | select(.name | test("request_buy_new|create_account")).commands[]) | select(.target | test("^id=new-\\w+--date")) | select(.command == "type")).command = "//type"' ./tmp/tmp0.json > ./tmp/tests.json
+  #jq '((.tests[] | select(.name | test("request_buy_new_2")).commands[]) | select(.target == "id=table_row-col-search-account_balance--balance-0")).target = "id=table_row-col-search-account_balance--balance-2"' ./tmp/tmp1.json > ./tmp/tests.json
 
   #$docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
-  #$compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_sefaz' -j '"--bail 1 --detectOpenHandles"' tests.json
+  #$compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_sefaz' -j '"--bail 1 --detectOpenHandles"' ./tmp/tests.json
 
   $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
-  $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'main' -j '"--bail 1 --detectOpenHandles"' tests.json
+  $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'main' -j '"--bail 1 --detectOpenHandles"' ./tmp/tests.json
 
-  if [[ -f 'data/clipp-12345678901.fdb' ]]; then
+  if [[ -f 'data/_clipp-12345678901.fdb' ]]; then
     $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_12345678901 CASCADE"
     clipp_import 2024-09-12 12345678901 guest 123456
-    $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_clipp' -j '"--bail 1 --detectOpenHandles"' tests.json
+    $compose_cli_local exec selenium-side-runner selenium-side-runner -f 'import_from_clipp' -j '"--bail 1 --detectOpenHandles"' ./tmp/tests.json
   fi
 
-  #jq '((.tests[] | select(.name == "remove_request_2").commands[]) | select(.id == "12835e51-ee6c-4fed-a9df-8ede5f3e880a")).target = "id=table_row-edit-edit-request--search-request_product--1"' tests.json > tmp0.json;
+  #jq '((.tests[] | select(.name == "remove_request_2").commands[]) | select(.id == "12835e51-ee6c-4fed-a9df-8ede5f3e880a")).target = "id=table_row-edit-edit-request--search-request_product--1"' ./tmp/tests.json > ./tmp/tmp0.json;
 }
 
 if [ "$vps_provider" != 'local' ]; then
@@ -288,44 +300,44 @@ if [ "$cmd_drop_schema" != '' ]; then
   $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -c "DROP SCHEMA IF EXISTS rufs_customer_$cmd_drop_schema CASCADE"
 fi
 
-if [ "$cmd_test" = 'yes' ]; then
-  $compose_cli_local down rufs-nfe
-  $compose_cli_local down nfe-import
-  $compose_cli_local down clipp-import
-  $compose_cli_local down firebirdsql-v2_5
-  $compose_cli_local down redis
-  #$compose_cli_local down broker
-  $compose_cli_local down nginx
-  $compose_cli_local down postgres
+if [ "$cmd_db_drop" = 'yes' ]; then
+  db_drop
+fi
 
-  $compose_cli_local up -d postgres
-  sleep 5
+if [ "$cmd_import" != '' ]; then
+  if [ "$cmd_import" = 'remote' ]; then
+    ##psql -c 'select nfe_id from rufs_customer_80803792034.request_nfe order by nfe_id' | sed 's/\s//g' > /tmp/nfe_id_db_sorted.txt
+    ##grep -hoP '\d{10,}\s\d{10,}' tests/nfg-20*.csv | sort | uniq | sed 's/\s//g' > /tmp/nfe_id_csv_sorted.txt
+    ##psql -c 'drop schema if exists rufs_customer_12345678901 cascade';
+    ##psql -c 'ALTER SCHEMA rufs_customer_80803792034 RENAME TO rufs_customer_12345678901';
+    db_backup
+    cmd_import=$backup_file
+    source "./.env"
+  fi
 
-  if [ "$cmd_db_drop" = 'yes' ]; then
+  if [ "$vps_provider" = 'local' ]; then
     db_drop
   fi
 
-  if [ "$cmd_import" != '' ]; then
-    echo 'SET session_replication_role = replica;' > /tmp/tmp.sql
-    gunzip -c $cmd_import >> /tmp/tmp.sql
-    cat /tmp/tmp.sql | $docker_cli_local exec -i postgres psql -1 postgres://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/rufs_nfe
+  echo 'SET session_replication_role = replica;' > /tmp/tmp.sql
+  gunzip -c $cmd_import >> /tmp/tmp.sql
+  cat /tmp/tmp.sql | $docker_cli_local exec -i postgres psql -1 postgres://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/rufs_nfe
+fi
 
-    if [ "$cmd_db_drop" = 'yes' ]; then
-      echo '{"openapi": "3.0.3","info": {"title": "rufs-nfe","version": "1.0.23"},"paths": {},"components": {"schemas": {}}}' > $HOME/data/openapi-rufs_nfe.json
-      $docker_cli_local exec postgres pg_dump -n rufs_customer_template --inserts postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -f /app/data/rufs_customer_template.sql
-    fi
-  fi
-
-  $compose_cli_local up -d nginx
-  sleep 8;
+if [ "$cmd_test" = 'yes' ]; then
+  $compose_cli_local down clipp-import
+  $compose_cli_local down rufs-nfe
+  $compose_cli_local down nfe-import
+  $compose_cli_local up -d postgres
+  sleep 4;
   #$compose_cli_local up -d broker
   #$docker_cli_local exec -it broker /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic nfe
   #$compose_cli_local up -d redis
   $compose_cli_local up -d nfe-import
   #$compose_cli_local up -d rufs-nfe
-  $compose_cli_local down selenium-side-runner
-  #$compose_cli_local down selenium-standalone-firefox
-  sleep 5;
+  $compose_cli_local down nginx
+  $compose_cli_local up -d nginx
+  sleep 4;
   test_side
   $compose_cli_local down selenium-side-runner
 fi
@@ -388,29 +400,6 @@ if [ "$cmd_logs" != '' ]; then
   $exec $compose_cli_target logs -f $cmd_logs
 fi
 
-if [ "$cmd_test" != 'yes' ] && [ "$cmd_db_drop" = 'yes' ]; then
-  db_drop
-fi
-
-if [ "$cmd_test" != 'yes' ] && [ "$cmd_import" != '' ]; then
-  if [ "$cmd_import" = 'remote' ]; then
-    ##psql -c 'select nfe_id from rufs_customer_80803792034.request_nfe order by nfe_id' | sed 's/\s//g' > /tmp/nfe_id_db_sorted.txt
-    ##grep -hoP '\d{10,}\s\d{10,}' tests/nfg-20*.csv | sort | uniq | sed 's/\s//g' > /tmp/nfe_id_csv_sorted.txt
-    ##psql -c 'drop schema if exists rufs_customer_12345678901 cascade';
-    ##psql -c 'ALTER SCHEMA rufs_customer_80803792034 RENAME TO rufs_customer_12345678901';
-    db_backup
-    cmd_import=$backup_file
-    source "./.env"
-    db_drop
-  fi
-
-  echo 'SET session_replication_role = replica;' > /tmp/tmp.sql
-  gunzip -c $cmd_import >> /tmp/tmp.sql
-  cat /tmp/tmp.sql | $docker_cli_local exec -i postgres psql -1 postgres://postgres:$POSTGRES_PASSWORD@localhost:$PGPORT/rufs_nfe
-  echo '{"openapi": "3.0.3","info": {"title": "rufs-nfe","version": "1.0.23"},"paths": {},"components": {"schemas": {}}}' > $HOME/data/openapi-rufs_nfe.json
-  $docker_cli_local exec postgres pg_dump -n rufs_customer_template --inserts postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe -f /app/data/rufs_customer_template.sql
-fi
-
 if [ "$cmd_scp_in" != '' ]; then
   scp $ssh_connection_args scp://$vps_user@$vps_ip/$cmd_scp_in $cmd_scp_in
 fi
@@ -423,6 +412,10 @@ fi
 
 if [ "$cmd_ssh" != '' ]; then
   $exec
+fi
+
+if [ "$cmd_psql" != '' ]; then
+  $docker_cli_local exec -it postgres psql postgres://$PGUSER:$PGPASSWORD@localhost:$PGPORT/rufs_nfe
 fi
 
 PGHOST=localhost
