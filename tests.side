@@ -2,7 +2,7 @@
   "id": "5ebf3ab3-7a16-4ca5-bc32-95e2ddbf6e1b",
   "version": "2.0",
   "name": "tests",
-  "url": "http://localhost:8080/nfe/?mode=wasm&working_timeout=250&customer_id=987.654.321-09",
+  "url": "http://localhost:8080/nfe/?mode=wasm&working_timeout=250&customer_id=987.654.321-09&debug=true",
   "tests": [{
     "id": "b77d46ed-2a97-4a13-a38e-cfab228e0b2a",
     "name": "create_person_provider",
@@ -44,7 +44,7 @@
       "command": "waitForElementVisible",
       "target": "xpath=//a[contains(@href, '#!/app/person/new')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "76fad755-7025-41cb-b573-9d4c65015765",
       "comment": "",
@@ -58,14 +58,14 @@
       "command": "waitForElementVisible",
       "target": "id=new-person--cnpjCpf",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "f3caa676-3edd-4a64-971e-c4ae043e2c30",
       "comment": "",
       "command": "waitForElementEditable",
       "target": "id=new-person--cnpjCpf",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "9390572d-411a-439e-ba60-85b6b5c96060",
       "comment": "",
@@ -107,7 +107,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "975235a6-d534-45b5-bf79-00e32e03c0a2",
       "comment": "",
@@ -135,7 +135,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "f268ae28-e99b-4325-84d0-00da5e552388",
       "comment": "",
@@ -163,7 +163,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "90e1a6d4-f0e7-453d-8962-0000519899f9",
       "comment": "",
@@ -205,7 +205,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "8b3c4fac-a40b-4eb7-8798-00526db26652",
       "comment": "",
@@ -233,7 +233,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "18a3a55e-c691-4f89-a186-00fef80d26cb",
       "comment": "",
@@ -261,7 +261,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "047bdbc1-0f89-49bf-8779-006b25518c5b",
       "comment": "",
@@ -317,7 +317,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "35187401-fae8-421a-a1ff-00612fd8e120",
       "comment": "",
@@ -373,7 +373,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "9e1ad3de-6064-4b2a-a7f4-008217439791",
       "comment": "",
@@ -394,14 +394,14 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "f2fc7dae-cd39-419d-9aa0-0503d4f0f960",
       "comment": "",
       "command": "waitForElementVisible",
       "target": "id=apply-new-person",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "f2fc7dae-cd39-419d-9aad-8503d4f0f969",
       "comment": "",
@@ -415,7 +415,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "823d9d3f-d606-4be1-ae2f-0b66f82a51b4",
       "comment": "",
@@ -431,12 +431,29 @@
       "targets": [],
       "value": "10000"
     }, {
-      "id": "8dec4991-6118-4e6b-83d6-e682463482ab",
+      "id": "def93e81-e0bd-46ab-9775-889a1c5623ef",
       "comment": "",
       "command": "waitForElementVisible",
       "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93.209.765/0161-10')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
+    }, {
+      "id": "8dec4991-6118-4e6b-83d6-e682463482ab",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=sort_toggle-search-person--dateLastChange",
+      "targets": [
+        ["id=sort_toggle-search-person--cnpjCpf", "id"],
+        ["linkText=Cnpj Cpf", "linkText"],
+        ["css=#sort_toggle-search-person--cnpjCpf", "css:finder"],
+        ["xpath=//a[contains(text(),'Cnpj Cpf')]", "xpath:link"],
+        ["xpath=//a[@id='sort_toggle-search-person--cnpjCpf']", "xpath:attributes"],
+        ["xpath=//table[@id='table-search-person']/thead/tr/th[2]/a[2]", "xpath:idRelative"],
+        ["xpath=(//a[contains(@href, '#')])[45]", "xpath:href"],
+        ["xpath=//a[2]", "xpath:position"],
+        ["xpath=//a[contains(.,'Cnpj Cpf')]", "xpath:innerText"]
+      ],
+      "value": "3000"
     }, {
       "id": "65b87c97-8797-416f-ab0e-8703810817d6",
       "comment": "",
@@ -464,7 +481,7 @@
       "command": "waitForElementVisible",
       "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93.209.765/0161-10')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "c0457880-30e9-4805-a38a-006c08b8849e",
       "comment": "",
@@ -478,7 +495,7 @@
       "command": "waitForElementVisible",
       "target": "id=view-person--name",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "a71b6115-2a3d-44b4-8a50-2466bcabf334",
       "comment": "",
@@ -1067,19 +1084,19 @@
       "targets": [],
       "value": "2018-10-31T20:08"
     }, {
-      "id": "f6b802bf-2777-4a4f-8847-72c1b58c4055",
-      "comment": "",
-      "command": "assertValue",
-      "target": "id=new-request--date",
-      "targets": [],
-      "value": "2018-10-31T20:08"
-    }, {
       "id": "349a50ea-1c48-4006-a550-7f85c99d766a",
       "comment": "",
       "command": "waitForElementNotVisible",
       "target": "id=http-error",
       "targets": [],
       "value": "1000"
+    }, {
+      "id": "f6b802bf-2777-4a4f-8847-72c1b58c4055",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=new-request--date",
+      "targets": [],
+      "value": "2018-10-31T20:08"
     }, {
       "id": "733a0f0b-6cb7-421e-a672-49af814128bd",
       "comment": "",
@@ -1174,10 +1191,10 @@
     }, {
       "id": "85231d53-6ed1-4fc3-ba5f-b8cde5cf7f19",
       "comment": "",
-      "command": "//assertSelectedValue",
+      "command": "assertSelectedValue",
       "target": "id=edit-request--new-request_payment--account",
       "targets": [],
-      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
+      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa interno"
     }, {
       "id": "876d0341-3fad-4e4c-8e5c-c490a730a2bb",
       "comment": "",
@@ -1221,26 +1238,19 @@
       "targets": [],
       "value": "1000"
     }, {
-      "id": "cddf1dbe-8197-48d1-90d4-d95df33fface",
-      "comment": "",
-      "command": "waitForElementNotVisible",
-      "target": "id=http-working",
-      "targets": [],
-      "value": "3000"
-    }, {
-      "id": "25df249e-bf48-4888-83a2-1b0c3266a452",
-      "comment": "",
-      "command": "waitForElementNotVisible",
-      "target": "id=http-error",
-      "targets": [],
-      "value": "1000"
-    }, {
       "id": "85e6a828-4cee-4001-802f-7bfe1ad3c0c4",
       "comment": "",
       "command": "assertText",
       "target": "id=table_row-col-edit-request--search-request_payment--value-0",
       "targets": [],
       "value": "15.92"
+    }, {
+      "id": "fc5aef64-e250-4ec0-8768-a8a599ce7b3e",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=http-notify",
+      "targets": [],
+      "value": "3000"
     }, {
       "id": "b9fcdcab-2059-45dd-ac11-103fc1cd19c1",
       "comment": "",
@@ -1318,6 +1328,13 @@
         ["xpath=//a[contains(.,' Edit')]", "xpath:innerText"]
       ],
       "value": ""
+    }, {
+      "id": "747d9593-9772-455f-b1fa-96c44965e5a3",
+      "comment": "",
+      "command": "assertText",
+      "target": "id=table_row-col-edit-request--search-request_payment--balance-0",
+      "targets": [],
+      "value": "184.08"
     }, {
       "id": "3a0ad64d-4cf2-4901-9300-9d13506f56dd",
       "comment": "",
@@ -1543,7 +1560,7 @@
       "command": "waitForElementVisible",
       "target": "xpath=//a[contains(text(),'Financeiro')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "5edaad0c-50ed-4651-a82c-8d629225e974",
       "comment": "",
@@ -2746,7 +2763,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "2142e249-f5ac-40ea-8065-4e139aaed1ca",
       "comment": "",
@@ -2788,7 +2805,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "86c946cb-91c7-4df9-baf1-2d1c169478cb",
       "comment": "",
@@ -2849,7 +2866,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "92f3a660-a2dd-4a42-8720-11d0ee6b1ebb",
       "comment": "",
@@ -2873,7 +2890,7 @@
         ["xpath=//td/a[2]", "xpath:position"],
         ["xpath=//a[contains(.,'Edit')]", "xpath:innerText"]
       ],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "eb4c954f-9f56-477a-870c-29b6ccdeb509",
       "comment": "",
@@ -2911,7 +2928,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "38bd0375-9d65-4218-b09e-d0117529cf63",
       "comment": "",
@@ -2965,7 +2982,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "61592a70-37e8-4907-bb71-f770203541ee",
       "comment": "",
@@ -2989,10 +3006,10 @@
     }, {
       "id": "92a3b14a-913d-4bfc-9359-cc86b42a95f5",
       "comment": "",
-      "command": "waitForElementNotPresent",
+      "command": "waitForElementNotVisible",
       "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=93.209.765/0161-10')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "4f9b2f1f-a223-4c57-b9ee-057351aec9e8",
       "comment": "",
@@ -3020,7 +3037,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "b5ac2db8-0720-4ba6-9e72-797df26dcf5c",
       "comment": "",
@@ -3031,10 +3048,10 @@
     }, {
       "id": "27999a6f-6ba9-4b10-856a-30f77ff17ab4",
       "comment": "",
-      "command": "waitForElementNotPresent",
+      "command": "waitForElementNotVisible",
       "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=808.037.920-34')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "9960881e-93c9-41bc-817f-8f8d0fff568a",
       "comment": "",
@@ -3062,7 +3079,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "75244915-bd63-4fb1-9f6c-aa255ecbf1fd",
       "comment": "",
@@ -3073,15 +3090,15 @@
     }, {
       "id": "ec7acbf0-41b8-4593-8af0-f5b0ab524d57",
       "comment": "",
-      "command": "waitForElementNotPresent",
+      "command": "waitForElementNotVisible",
       "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=60.701.190/0001-04')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "77467e5d-417d-4286-b180-6b6b38812106",
       "comment": "",
       "command": "click",
-      "target": "id=table_row-delete-search-person--2",
+      "target": "id=table_row-delete-search-person--1",
       "targets": [
         ["id=table_row-delete-search-person--1", "id"],
         ["linkText=Delete", "linkText"],
@@ -3100,7 +3117,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "d5f07552-7df9-4f1f-b1a4-7ad54ee3ce21",
       "comment": "",
@@ -3124,15 +3141,15 @@
     }, {
       "id": "f45fd6dc-3817-463a-b1ee-defa874d7d57",
       "comment": "",
-      "command": "waitForElementNotPresent",
+      "command": "waitForElementNotVisible",
       "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=75.315.333/0075-45')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "04978654-489f-4956-b6b8-9879a63d7b21",
       "comment": "",
       "command": "click",
-      "target": "id=table_row-delete-search-person--0",
+      "target": "id=table_row-delete-search-person--2",
       "targets": [
         ["id=table_row-delete-search-person--1", "id"],
         ["linkText=Delete", "linkText"],
@@ -3151,7 +3168,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "736e79cb-b9e7-4baa-890d-3d48f9dd0630",
       "comment": "",
@@ -3175,10 +3192,10 @@
     }, {
       "id": "03557fb4-e753-42eb-b524-dc2d018f63da",
       "comment": "",
-      "command": "waitForElementNotPresent",
+      "command": "waitForElementNotVisible",
       "target": "xpath=//a[contains(@href, '#!/app/person/view?cnpjCpf=17.040.906/0188-56')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "e4c68e73-7fe7-41fa-b89c-d202a82c7266",
       "comment": "",
@@ -3192,7 +3209,7 @@
       "command": "waitForElementVisible",
       "target": "xpath=//a[contains(@href, '#!/app/product/search')]",
       "targets": [],
-      "value": "60000"
+      "value": "3000"
     }, {
       "id": "60275aa3-fc19-497e-b681-fe156b456cb6",
       "comment": "",
@@ -3206,7 +3223,7 @@
       "command": "waitForElementVisible",
       "target": "id=table_row-edit-search-product--0",
       "targets": [],
-      "value": "60000"
+      "value": "3000"
     }, {
       "id": "9a559199-0b48-4d4e-a18c-48f6e8033adb",
       "comment": "",
@@ -3220,7 +3237,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "484b20d9-eea4-43aa-a25d-86f9355ba0e7",
       "comment": "",
@@ -3248,7 +3265,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "fe15869e-e774-4ada-a7b3-bad9931b0d25",
       "comment": "",
@@ -3279,7 +3296,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "0b125db1-1aeb-4bef-bca0-a78601b552dc",
       "comment": "",
@@ -3290,10 +3307,10 @@
     }, {
       "id": "1ecca4b7-a442-48f8-b2ff-2d3c6337b4c0",
       "comment": "",
-      "command": "waitForElementNotPresent",
+      "command": "waitForElementNotVisible",
       "target": "xpath=//a[contains(@href, '#!/app/product/view?id=4')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "98b82884-82e0-4f31-b04b-d77b2a52c8a1",
       "comment": "",
@@ -3317,7 +3334,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "d03c9848-4c85-4e84-8e62-53cc4809a90e",
       "comment": "",
@@ -3328,10 +3345,10 @@
     }, {
       "id": "d7cf088e-79be-470c-8671-a4600aa5ce77",
       "comment": "",
-      "command": "waitForElementNotPresent",
+      "command": "waitForElementNotVisible",
       "target": "xpath=//a[contains(@href, '#!/app/product/view?id=5')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "fb0f2876-6b84-4e26-bae7-5fe27ee06690",
       "comment": "",
@@ -3355,7 +3372,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "7e5e6888-5d78-435e-9eef-e4a502202be3",
       "comment": "",
@@ -3366,10 +3383,10 @@
     }, {
       "id": "6eddeb36-3806-4554-ac0a-2ad139128c6a",
       "comment": "",
-      "command": "waitForElementNotPresent",
+      "command": "waitForElementNotVisible",
       "target": "xpath=//a[contains(@href, '#!/app/product/view?id=3')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "865f9cf2-14b9-436d-a453-3c2ce8e247ab",
       "comment": "",
@@ -3393,7 +3410,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "fa3fefaf-f14e-4d32-83e0-6be513b9a789",
       "comment": "",
@@ -3404,10 +3421,10 @@
     }, {
       "id": "7b4e00f5-2d2e-4f95-a398-e1bccc42e728",
       "comment": "",
-      "command": "waitForElementNotPresent",
+      "command": "waitForElementNotVisible",
       "target": "xpath=//a[contains(@href, '#!/app/product/view?id=2')]",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }]
   }, {
     "id": "9d483cf8-5f6b-4c7a-a575-2baf733398ae",
@@ -3927,7 +3944,7 @@
       "command": "waitForElementVisible",
       "target": "id=new-account--person",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "490abbdd-1eba-4978-ac20-a9d7aa9cb45d",
       "comment": "",
@@ -3941,14 +3958,14 @@
       "command": "click",
       "target": "id=new-account--description",
       "targets": [],
-      "value": "Caixa Interno"
+      "value": ""
     }, {
       "id": "7cfaa811-5ecc-430e-9c70-5303c55854f3",
       "comment": "",
       "command": "type",
       "target": "id=new-account--description",
       "targets": [],
-      "value": "Caixa Interno"
+      "value": "Caixa interno"
     }, {
       "id": "60eef641-9804-4fc8-8e09-028c964ad579",
       "comment": "",
@@ -3969,7 +3986,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "c91f80c3-3ec8-4c82-ab70-089b43bb03d0",
       "comment": "",
@@ -3983,7 +4000,7 @@
       "command": "waitForText",
       "target": "id=table_row-col-search-account--description-0",
       "targets": [],
-      "value": "Caixa Interno"
+      "value": "Caixa interno"
     }, {
       "id": "a0ffc744-1098-48f7-9574-39f196eab625",
       "comment": "",
@@ -4011,7 +4028,14 @@
       "command": "waitForElementVisible",
       "target": "id=new-account_balance--account",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
+    }, {
+      "id": "e2ca7f33-3f8b-4e37-a0c0-85fe07c01fa4",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=new-account_balance--balance",
+      "targets": [],
+      "value": "0"
     }, {
       "id": "7b47de0c-0b14-4ba0-90be-e7605883aea1",
       "comment": "",
@@ -4025,7 +4049,7 @@
         ["xpath=//div[@id='div-col-new-account_balance--account']/select", "xpath:idRelative"],
         ["xpath=//select", "xpath:position"]
       ],
-      "value": "label=808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
+      "value": "label=808.037.920-34 - ALEXSANDRO STEFENON - Caixa interno"
     }, {
       "id": "2758795e-25de-4fd1-8947-6db123b8643c",
       "comment": "",
@@ -4034,7 +4058,7 @@
       "targets": [],
       "value": "010120000000"
     }, {
-      "id": "15a2edb2-8aee-4ba9-a2c4-fb96a71ee3f3",
+      "id": "337eae41-605c-4d09-a98c-79d4aef8976e",
       "comment": "",
       "command": "type",
       "target": "id=new-account_balance--date",
@@ -4062,6 +4086,13 @@
       ],
       "value": "200"
     }, {
+      "id": "15a2edb2-8aee-4ba9-a2c4-fb96a71ee3f3",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=new-account_balance--date",
+      "targets": [],
+      "value": "2000-01-01T00:00"
+    }, {
       "id": "8a24be99-91bd-4e33-aee5-263b108e6e25",
       "comment": "",
       "command": "click",
@@ -4082,21 +4113,35 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "2000"
     }, {
-      "id": "603b109a-a54e-4fe1-9bbc-b2dd0e611f49",
+      "id": "3485557a-d12f-421b-b9f8-c60f4be7f78b",
       "comment": "",
       "command": "waitForElementNotVisible",
       "target": "id=http-error",
       "targets": [],
       "value": "1000"
     }, {
-      "id": "7ea4374d-2323-4221-81ac-dc73e0ebd3bf",
+      "id": "603b109a-a54e-4fe1-9bbc-b2dd0e611f49",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=http-notify",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "e2fb32da-7bb9-40e7-96c6-d20f40ed95da",
       "comment": "",
       "command": "waitForText",
       "target": "id=table_row-col-search-account_balance--account-0",
       "targets": [],
-      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
+      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa interno"
+    }, {
+      "id": "7ea4374d-2323-4221-81ac-dc73e0ebd3bf",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=table_row-col-search-account_balance--date-0",
+      "targets": [],
+      "value": "2000-01-01T23:59:59"
     }]
   }, {
     "id": "49ed59c5-f838-440a-9ece-b074b48036c6",
@@ -4128,28 +4173,28 @@
       "command": "waitForElementVisible",
       "target": "id=new-account--person",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "13134fae-f0ef-48a1-abc4-0f3f5e9aa657",
       "comment": "",
       "command": "select",
       "target": "id=new-account--person",
       "targets": [],
-      "value": "label=60.701.190/0001-04 - ITAÚ UNIBANCO S.A."
+      "value": "label=808.037.920-34 - ALEXSANDRO STEFENON"
     }, {
       "id": "9b17fbb4-2864-48be-8126-655fc6cfc890",
       "comment": "",
       "command": "click",
       "target": "id=new-account--description",
       "targets": [],
-      "value": "Conta Bancária Principal"
+      "value": ""
     }, {
       "id": "9b17fbb4-2864-48be-8126-655fc6cfc894",
       "comment": "",
       "command": "type",
       "target": "id=new-account--description",
       "targets": [],
-      "value": "Conta Bancária Principal"
+      "value": "Conta corrente"
     }, {
       "id": "87202ac2-1d6b-4577-8d9c-b17fc8dfe3db",
       "comment": "",
@@ -4170,7 +4215,7 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
       "id": "9c86093a-b7d2-4327-bcf2-c7b6ed766558",
       "comment": "",
@@ -4184,7 +4229,7 @@
       "command": "waitForText",
       "target": "id=table_row-col-search-account--description-1",
       "targets": [],
-      "value": "Conta Bancária Principal"
+      "value": "Conta corrente"
     }, {
       "id": "f545d870-59e5-4a58-a1d4-a74527178eea",
       "comment": "",
@@ -4212,7 +4257,14 @@
       "command": "waitForElementVisible",
       "target": "id=new-account_balance--account",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
+    }, {
+      "id": "f1f96ed2-a77c-4526-b39c-60f882fdd53f",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=new-account_balance--balance",
+      "targets": [],
+      "value": "0"
     }, {
       "id": "414c965b-6a5f-4456-b574-c7b761b329a1",
       "comment": "",
@@ -4226,7 +4278,7 @@
         ["xpath=//div[@id='div-col-new-account_balance--account']/select", "xpath:idRelative"],
         ["xpath=//select", "xpath:position"]
       ],
-      "value": "label=60.701.190/0001-04 - ITAÚ UNIBANCO S.A. - Conta Bancária Principal"
+      "value": "label=808.037.920-34 - ALEXSANDRO STEFENON - Conta corrente"
     }, {
       "id": "c238fe12-c10a-42b9-8372-0e875f1973f2",
       "comment": "",
@@ -4235,7 +4287,7 @@
       "targets": [],
       "value": "010120000000"
     }, {
-      "id": "37be727f-0826-48d0-965c-426d477dd2bd",
+      "id": "8b79cc93-9cf8-476b-ab45-071e10ce512f",
       "comment": "",
       "command": "type",
       "target": "id=new-account_balance--date",
@@ -4247,6 +4299,13 @@
         ["xpath=//div[@id='div-col-new-account_balance--date']/input", "xpath:idRelative"],
         ["xpath=//div[2]/div/div/input", "xpath:position"]
       ],
+      "value": "2000-01-01T00:00"
+    }, {
+      "id": "37be727f-0826-48d0-965c-426d477dd2bd",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=new-account_balance--date",
+      "targets": [],
       "value": "2000-01-01T00:00"
     }, {
       "id": "1cb3b79b-d0e7-412e-9c0d-994aa8dd539d",
@@ -4261,7 +4320,7 @@
         ["xpath=//div[@id='div-col-new-account_balance--balance']/input", "xpath:idRelative"],
         ["xpath=//div[3]/div/div/input", "xpath:position"]
       ],
-      "value": "10000"
+      "value": "1000"
     }, {
       "id": "0d277238-86be-4002-9bcf-a95f6bcce859",
       "comment": "",
@@ -4283,21 +4342,35 @@
       "command": "waitForElementNotVisible",
       "target": "id=http-working",
       "targets": [],
-      "value": "30000"
+      "value": "3000"
     }, {
-      "id": "596d2f01-18f4-49ff-a2b0-4b86e7f1422a",
+      "id": "adc76d54-e344-405e-82e7-cde0c52b6a8f",
       "comment": "",
       "command": "waitForElementNotVisible",
       "target": "id=http-error",
       "targets": [],
       "value": "1000"
     }, {
-      "id": "c66742ec-d640-4ba1-a543-98a00056e8e4",
+      "id": "596d2f01-18f4-49ff-a2b0-4b86e7f1422a",
+      "comment": "",
+      "command": "waitForElementVisible",
+      "target": "id=http-notify",
+      "targets": [],
+      "value": "1000"
+    }, {
+      "id": "7deeb69c-abc5-402c-919b-9744893da53e",
       "comment": "",
       "command": "waitForText",
       "target": "id=table_row-col-search-account_balance--account-1",
       "targets": [],
-      "value": "60.701.190/0001-04 - ITAÚ UNIBANCO S.A. - Conta Bancária Principal"
+      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Conta corrente"
+    }, {
+      "id": "c66742ec-d640-4ba1-a543-98a00056e8e4",
+      "comment": "",
+      "command": "waitForText",
+      "target": "id=table_row-col-search-account_balance--date-1",
+      "targets": [],
+      "value": "2000-01-01T23:59:59"
     }]
   }, {
     "id": "3d514cd3-dc09-488b-a766-f6febea5923a",
@@ -5362,19 +5435,19 @@
       "targets": [],
       "value": "2018-11-30T20:08"
     }, {
-      "id": "24c3675f-b8d1-4249-881f-65af4924172d",
-      "comment": "",
-      "command": "assertValue",
-      "target": "id=new-request--date",
-      "targets": [],
-      "value": "2018-11-30T20:08"
-    }, {
       "id": "a20b84c2-8d4b-46fa-acd9-4ffeb5cfbe58",
       "comment": "",
       "command": "waitForElementNotVisible",
       "target": "id=http-error",
       "targets": [],
       "value": "1000"
+    }, {
+      "id": "24c3675f-b8d1-4249-881f-65af4924172d",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=new-request--date",
+      "targets": [],
+      "value": "2018-11-30T20:08"
     }, {
       "id": "dad6e035-95cc-4b32-9309-8b19299e5dfc",
       "comment": "",
@@ -5633,7 +5706,7 @@
       "command": "//assertSelectedValue",
       "target": "id=edit-request--new-request_payment--account",
       "targets": [],
-      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
+      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa interno"
     }, {
       "id": "f2bde462-5955-45a5-a56a-b94b579ef41a",
       "comment": "",
@@ -5845,7 +5918,7 @@
       "command": "select",
       "target": "id=new-account_balance--account",
       "targets": [],
-      "value": "label=808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
+      "value": "label=808.037.920-34 - ALEXSANDRO STEFENON - Caixa interno"
     }, {
       "id": "0d9d4a2b-d3a3-4d60-a274-182818a8ed05",
       "comment": "",
@@ -5866,6 +5939,13 @@
         ["xpath=//div[@id='div-col-new-account_balance--date']/input", "xpath:idRelative"],
         ["xpath=//div[2]/div/div/input", "xpath:position"]
       ],
+      "value": "2018-11-30T23:59"
+    }, {
+      "id": "88186719-3b01-47b0-9050-7bd939141de9",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=new-account_balance--date",
+      "targets": [],
       "value": "2018-11-30T23:59"
     }, {
       "id": "632e6bcf-851b-4d10-9b7b-493d75b1ac6f",
@@ -7364,19 +7444,19 @@
       "targets": [],
       "value": "2021-09-17T20:08"
     }, {
-      "id": "afce43ff-ea4a-40af-89ba-5c28333ebdbb",
-      "comment": "",
-      "command": "assertValue",
-      "target": "id=new-request--date",
-      "targets": [],
-      "value": "2021-09-17T20:08"
-    }, {
       "id": "728aabf9-ed0d-48b6-97c0-5a22ca6fa7f8",
       "comment": "",
       "command": "waitForElementNotVisible",
       "target": "id=http-error",
       "targets": [],
       "value": "1000"
+    }, {
+      "id": "afce43ff-ea4a-40af-89ba-5c28333ebdbb",
+      "comment": "",
+      "command": "assertValue",
+      "target": "id=new-request--date",
+      "targets": [],
+      "value": "2021-09-17T20:08"
     }, {
       "id": "86378c53-baba-46d2-81e4-e3ed5d41a37d",
       "comment": "",
@@ -7488,7 +7568,7 @@
       "command": "//assertSelectedValue",
       "target": "id=edit-request--new-request_payment--account",
       "targets": [],
-      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa Interno"
+      "value": "808.037.920-34 - ALEXSANDRO STEFENON - Caixa interno"
     }, {
       "id": "cb36a22e-bd4e-4161-b05b-83e622aae189",
       "comment": "",
@@ -7640,7 +7720,7 @@
     }, {
       "id": "2632bc2a-df5d-4c49-b497-8846703a1fe4",
       "comment": "",
-      "command": "//assertText",
+      "command": "assertText",
       "target": "id=table_row-col-search-request_payment--balance-2",
       "targets": [],
       "value": "1082.73"
