@@ -1,7 +1,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 pub mod import;
 
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime};
 use rufs_base_rust::client::{DataView, DataViewWatch, ServerConnection, DataViewFormType, HtmlElementId};
 #[cfg(target_arch = "wasm32")]
 use rufs_base_rust::client::DataViewManagerWrapper;
@@ -69,20 +69,28 @@ impl RufsNfe {
                 data_view_payment.params.instance.get("type").unwrap_or(&json!(1)).as_u64().unwrap_or(1)
             };
 
-            let accounts = data_view_payment.field_results_str.get("account").ok_or("expected list of accounts")?;
+            let Some(accounts) = data_view_payment.field_results_str.get("account") else {
+                return Ok(());
+            };
 
-            if typ == 1 {
-                if accounts.len() > 0 {
-                    let account = server_connection.get_item_from_description("account", &accounts[accounts.len()-1])?.ok_or("Broken xxx")?;
-                    let account_id = account.get("id").ok_or("missing field id in account")?;
-                    data_view_payment.set_value(server_connection, watcher, "account", account_id, None).await?;
+            let mut account = None;
+
+            for str in accounts {
+                if str.to_lowercase().contains("caixa") {
+                    if typ == 1 {
+                        account = Some(str);
+                        break;
+                    }
+                } else if typ == 2 {
+                    account = Some(str);
+                    break;
                 }
-            } else {
-                if accounts.len() > 1 {
-                    let account = server_connection.get_item_from_description("account", &accounts[accounts.len()-2])?.ok_or("Broken xxx")?;
-                    let account_id = account.get("id").ok_or("missing field id in account")?;
-                    data_view_payment.set_value(server_connection, watcher, "account", account_id, None).await?;
-                }
+            }
+
+            if let Some(description) = account {
+                let account = server_connection.get_item_from_description("account", description)?.ok_or("Unexpect broken - account")?;
+                let account_id = account.get("id").ok_or("Missing field 'id' in account")?;
+                data_view_payment.set_value(server_connection, watcher, "account", account_id, None).await?;
             }
         }
 
@@ -96,6 +104,16 @@ impl RufsNfe {
 impl DataViewWatch for RufsNfe {
 
     async fn check_set_value(&self, data_view: &mut DataView, element_id: &HtmlElementId, server_connection: &ServerConnection, field_name: &str, field_value: &Value) -> Result<bool, Box<dyn std::error::Error>> {
+        if ["date", "dueDate"].contains(&field_name) {
+            match field_value {
+                Value::String(str) => if /*str.as_str() < "2000-01-01" ||*/ str.as_str() > "2100-01-01" {
+                    return Err(format!("[check_set_value] invalid date : '{field_value}', choose date in range [2000-01-01, 2100-01-01]."))?
+                },
+                Value::Null => {},
+                _ => return Err(format!("[check_set_value] invalid date : '{field_value}'"))?,
+            }
+        }
+
         if data_view.data_view_id.schema_name == "request" {
             let schema_name = &element_id.data_view_id.schema_name;
 
@@ -234,6 +252,16 @@ impl DataViewWatch for RufsNfe {
 
                     let payments_value_new = payments_value_old + scale * payment_value;
                     data_view.set_value(server_connection, self, "paymentsValue", &json!(payments_value_new), None).await?;
+                }
+            }
+        } else if data_view.data_view_id.schema_name == "account_balance" {
+            if let Some(instance) = data_view.params.instance.get_mut("date") {
+                match instance {
+                    Value::Null => {},
+                    Value::String(_str) => {
+                        //*str = str.replace("00:00:00", "23:59:59");
+                    },
+                    _ => todo!(),
                 }
             }
         }

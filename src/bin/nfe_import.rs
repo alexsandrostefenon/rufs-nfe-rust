@@ -828,10 +828,14 @@ async fn import(message :&Value) -> Result<(), Box<dyn std::error::Error>> {
         file.read_to_end(&mut bytes).await?;
         bytes
     };
-	
+
+	let regex = Regex::new(r#"(\d{8,14})"#)?;
+	let customer = regex.find(file_path).ok_or("Broken customer_id")?.as_str();
+
     if let Some(_pos_ini) = find_subsequence(&contents, b"<nfeProc") {
 		let xml = std::str::from_utf8(&contents)?;
-        let document = parse_xml(xml).await?;
+        let mut document = parse_xml(xml).await?;
+        document["customer"] = json!(customer);
 		import_document(auth_token, document, true, false).await?;
 	} else if let Some(_pos_ini) = find_subsequence(&contents, b"Content/css/SiteSefaz.css") {
 		// processa site da sefaz RS
@@ -846,24 +850,7 @@ async fn import(message :&Value) -> Result<(), Box<dyn std::error::Error>> {
 				let request_nfe_snake = obj.get("request_nfe").ok_or("Missing structure request_nfe in parsed object")?;
 				let mut document = convert_obj(request_nfe_snake, &[])?;
 				document["person"] = convert_obj_child(&obj, "person", &[], "nfe_import.1")?;
-				let mut person_dest = convert_obj_child(&obj, "person_dest", &[], "nfe_import.1")?;
-
-				if person_dest.get("cnpjCpf").is_none() {
-					let regex = Regex::new(r#"(\d{8,14})"#)?;
-					let s = regex.find(file_path).ok_or("Broken customer_id")?.as_str();
-
-					let cnpj_cpf = if s.len() > 11 {
-						let s = format!("{:014}", s);
-						format!("{}.{}.{}/{}-{}", &s[0..2], &s[2..5], &s[5..8], &s[8..12], &s[12..14])
-					} else {
-						let s = format!("{:011}", s);
-						format!("{}.{}.{}-{}", &s[0..3], &s[3..6], &s[6..9], &s[9..11])
-					};
-
-					person_dest["cnpjCpf"] = json!(cnpj_cpf);
-				}
-
-				document["personDest"] = person_dest;
+				document["personDest"] = convert_obj_child(&obj, "person_dest", &[], "nfe_import.1")?;
 				document["requestFreight"] = convert_obj_child(&obj, "request_freight", &[], "nfe_import.1")?;
 				document["requestProduct"] = obj.get("request_product").ok_or("Missing field 'request_product'")?.clone();
 				convert_obj_copy(&mut document, request_nfe_snake.get("emissao").ok_or("Missing 'emissao'")?, &[])?;
@@ -895,6 +882,7 @@ async fn import(message :&Value) -> Result<(), Box<dyn std::error::Error>> {
 					}
 				}
 
+		        document["customer"] = json!(customer);
 				import_document(auth_token, document, true, true).await?;
             }
         }
@@ -1031,7 +1019,7 @@ mod tests {
     #[tokio::test]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
 		let list = [
-  			"33191200776574001390550050218069231186030638.xml",
+  			"00000000000000000000000000000000000000000000.xml",
 		];
 
 		let customer_user = "12345678901.guest";

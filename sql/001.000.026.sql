@@ -97,7 +97,7 @@ BEGIN
         CREATE TABLE account_balance (
             account integer NOT NULL references account,
             date timestamp NOT NULL,
-            balance numeric(9,2) DEFAULT 0.000 NOT NULL,
+            balance numeric(9,2) DEFAULT 0.00 NOT NULL,
             date_last_change timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
             PRIMARY KEY(account,date)
         );

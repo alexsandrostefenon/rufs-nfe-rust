@@ -48,7 +48,7 @@ function data_view_show(form_id) {
 	}
 }
 
-function updateChanges(event, changes) {
+function updateChanges(event, changes, changesReferences) {
 	if (changes == null) {
 		return;
 	}
@@ -57,8 +57,9 @@ function updateChanges(event, changes) {
 		changes = Object.fromEntries(changes);
 	}
 
-	if (urlParams.get("debug") == "true")
+	if (urlParams.get("debug") == "true") {
 		console.log(changes);
+	}
 
 	for (let [formId, fields] of Object.entries(changes)) {
 		if (fields instanceof Map) {
@@ -131,6 +132,37 @@ function updateChanges(event, changes) {
 						setTimeout(() => elementFlag.checked = flagValue, 100);
 					}
 				}
+			}
+		}
+	}
+
+	if (changesReferences == null) {
+		return;
+	}
+
+	if (changesReferences instanceof Map) {
+		changesReferences = Object.fromEntries(changesReferences);
+	}
+
+	for (let [formId, fields] of Object.entries(changesReferences)) {
+		if (fields instanceof Map) {
+			fields = Object.fromEntries(fields);
+		}
+
+		for (let [fieldName, value] of Object.entries(fields)) {
+			//reference-view-edit-request--state
+			const id = `reference-view-${formId}--${fieldName}`;
+			const element = document.getElementById(id);
+
+			if (element == null) {
+				log(`Missing element ${fieldName} in form ${formId} !`);
+				continue;
+			}
+
+			if (value == null || value == undefined) {
+				element.href = "#";
+			} else {
+				element.href = value;
 			}
 		}
 	}
@@ -366,7 +398,7 @@ let appOnChange = async (event) => {
 			log(`appOnChange.updateChanges`);
 		}
 
-		updateChanges(event, viewResponse.changes);
+		updateChanges(event, viewResponse.changes, viewResponse.changesReferences);
 		updateTables(event, viewResponse.tables);
 		updateReferences(event, viewResponse.references);
 	}
@@ -457,7 +489,7 @@ let appOnClick = async (event) => {
 			log(`appOnClick.updateChanges`);
 		}
 
-		updateChanges(event, viewResponse.changes);
+		updateChanges(event, viewResponse.changes, viewResponse.changesReferences);
 		updateTables(event, viewResponse.tables);
 		updateReferences(event, viewResponse.references);
 
@@ -592,7 +624,7 @@ let appOnClick = async (event) => {
 
 	let target = element.id;
 
-	if (target == "" && element.href != null && element.href.includes("#!/app/")) {
+	if (element.href != null && element.href.includes("#!/app/")) {
 		const posIni = element.href.indexOf("#!/app/");
 		lastClickHash = element.href.substring(posIni);
 		target = lastClickHash;

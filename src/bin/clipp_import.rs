@@ -309,6 +309,7 @@ async fn import(message: &Value) -> Result<(), Box<dyn std::error::Error>> {
     for (_id_import, mut document) in map_documents {
         println!("[clipp_import] rufs_nfe_rust::import::import_document {}/{}.", i, size);
         i += 1;
+        document["customer"] = json!(customer);
         document["person"] = json!({"cnpjCpf": customer});
         let _request = rufs_nfe_rust::import::import_document(auth_token, document, false, false).await?;
         //let request_id = request.get("id").ok_or("broken request id")?.as_u64().ok_or("broken u64")?;

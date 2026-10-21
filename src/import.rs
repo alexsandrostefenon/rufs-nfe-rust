@@ -155,10 +155,29 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 		return Ok(obj);
 	};
 
+	let customer_cnpj_cpf = document.get("customer").ok_or("Missing field 'customer' in 'document'")?.as_str().ok_or("field 'customer' is not 'str'")?;
+
+	let customer_cnpj_cpf = if customer_cnpj_cpf.len() > 11 {
+		let s = format!("{:014}", customer_cnpj_cpf);
+		format!("{}.{}.{}/{}-{}", &s[0..2], &s[2..5], &s[5..8], &s[8..12], &s[12..14])
+	} else {
+		let s = format!("{:011}", customer_cnpj_cpf);
+		format!("{}.{}.{}-{}", &s[0..3], &s[3..6], &s[6..9], &s[9..11])
+	};
+
+	let person_dest = document.get_mut("personDest").ok_or("Broken personDest")?;
+
+	let person_dest_cnpj_cpf = if let Some(value) = person_dest.get("cnpjCpf") {
+		value.as_str().ok_or("cnpjCpf : Bad type")?.to_string()
+	} else {
+		person_dest["cnpjCpf"] = json!(customer_cnpj_cpf);
+		customer_cnpj_cpf.clone()
+	};
+
+	publish("person", &["cnpjCpf"], &[], person_dest, false).await?;
+
 	let person = document.get("person").ok_or("Broken person")?;
 	publish("person", &["cnpjCpf"], &[], &person, false).await?;
-	let person_dest = document.get("personDest").ok_or("Broken personDest")?;
-	publish("person", &["cnpjCpf"], &[], person_dest, false).await?;
 
 	if let Some(value) = document.get("nfeId") {
 		let nfe_id = value.as_str().ok_or("Expected 'string' type")?;
@@ -186,14 +205,6 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 
 	let date = document.get("date").ok_or("Missing field 'date' in 'document'")?.as_str().ok_or("field 'date' is not 'str'")?.to_string()+"+03:00";
 
-	let person_dest_cnpj_cpf = if let Some(value) = person_dest.get("cnpjCpf") {
-		value.as_str().ok_or("cnpjCpf : Bad type")?.to_string()
-	} else if let Some(value) = person_dest.get("idImport") {
-		value.as_str().ok_or("idImport : Bad type")?.to_string()
-	} else {
-		return Err("Missing cnpjCpf in person_dest")?;
-	};
-
 	let mut request = {
 		let person_cnpj_cpf = person.get("cnpjCpf").ok_or("Missing cnpjCpf in person")?.as_str().ok_or("Bad type")?.to_string();
 		let date_min = DateTime::parse_from_rfc3339(&date)?.checked_sub_months(Months::new(1)).ok_or("broken 'date_min'")?.to_rfc3339();
@@ -210,6 +221,10 @@ pub async fn import_document(auth_token :&str, mut document :Value, require_requ
 
 			match list.len() {
 				0 => {
+					if person_dest_cnpj_cpf == customer_cnpj_cpf && document["type"] == 1 {
+						document["type"] = json!(0);
+					}
+
 					document["state"] = json!(80);
 					document["personDest"] = json!(person_dest_cnpj_cpf);
 					document["person"] = json!(person_cnpj_cpf);
